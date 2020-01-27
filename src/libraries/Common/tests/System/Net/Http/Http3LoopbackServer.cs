@@ -67,11 +67,7 @@ namespace System.Net.Test.Common
     {
         public static Http3LoopbackServerFactory Singleton { get; } = new Http3LoopbackServerFactory();
 
-        public override bool IsHttp11 => false;
-
-        public override bool IsHttp2 => false;
-
-        public override bool IsHttp3 => true;
+        public override Version Version => HttpVersion.Version30;
 
         public override GenericLoopbackServer CreateServer(GenericLoopbackOptions options = null)
         {
