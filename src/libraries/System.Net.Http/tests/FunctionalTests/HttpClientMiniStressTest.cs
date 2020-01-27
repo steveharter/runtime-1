@@ -30,8 +30,7 @@ namespace System.Net.Http.Functional.Tests
         }
     }
 
-    // TODO: public to test HTTP/3.
-    internal sealed class SocketsHttpHandler_HttpClientMiniStress_Http3 : HttpClientMiniStress
+    public sealed class SocketsHttpHandler_HttpClientMiniStress_Http3 : HttpClientMiniStress
     {
         public SocketsHttpHandler_HttpClientMiniStress_Http3(ITestOutputHelper output) : base(output) { }
         protected override Version UseVersion => HttpVersion.Version30;

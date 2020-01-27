@@ -35,7 +35,7 @@ namespace System.Net.Http
         /// <summary>The origin authority used to construct the <see cref="HttpConnectionPool"/>.</summary>
         private readonly HttpAuthority _originAuthority;
 
-        /// <summary>Initially set identical to <see cref="_originAuthority"/> (i.e. what came in the request URL), this can be updated based on Alt-Svc.</summary>
+        /// <summary>Initially set to null, this can be set to enable HTTP/3 based on Alt-Svc.</summary>
         private volatile HttpAuthority _http3Authority;
 
         /// <summary>A timer to expire <see cref="_http3Authority"/> and return the pool to <see cref="_originAuthority"/>. Initialized on first use.</summary>
@@ -109,7 +109,11 @@ namespace System.Net.Http
             if (host != null)
             {
                 _originAuthority = new HttpAuthority(host, port);
-                _http3Authority = _originAuthority;
+
+                if (_poolManager.Settings._assumePrenegotiatedHttp3ForTesting)
+                {
+                    _http3Authority = _originAuthority;
+                }
             }
 
             _http2Enabled = _poolManager.Settings._maxHttpVersion >= HttpVersion.Version20;
@@ -626,7 +630,7 @@ namespace System.Net.Http
             if (http3Connection != null)
             {
                 TimeSpan pooledConnectionLifetime = _poolManager.Settings._pooledConnectionLifetime;
-                if (http3Connection.LifetimeExpired(Environment.TickCount64, pooledConnectionLifetime) && http3Connection.Authority == _http3Authority)
+                if (http3Connection.LifetimeExpired(Environment.TickCount64, pooledConnectionLifetime) || http3Connection.Authority != authority)
                 {
                     // Connection expired.
                     http3Connection.Dispose();
@@ -790,7 +794,7 @@ namespace System.Net.Http
                     // 'clear' should be the only value present.
                     if (value == AltSvcHeaderValue.Clear)
                     {
-                        _http3Authority = _originAuthority;
+                        ExpireAltSvcAuthority();
                         _authorityExpireTimer.Change(Timeout.Infinite, Timeout.Infinite);
                         break;
                     }
@@ -849,7 +853,7 @@ namespace System.Net.Http
                             var wr = (WeakReference<HttpConnectionPool>)o;
                             if (wr.TryGetTarget(out HttpConnectionPool @this))
                             {
-                                @this._http3Authority = @this._originAuthority;
+                                @this.ExpireAltSvcAuthority();
                             }
                         }, thisRef, nextAuthorityMaxAge, Timeout.InfiniteTimeSpan);
                     }
@@ -862,6 +866,15 @@ namespace System.Net.Http
                     _persistAuthority = nextAuthorityPersist;
                 }
             }
+        }
+
+        /// <summary>
+        /// Expires the current Alt-Svc authority, resetting the connection back to origin.
+        /// </summary>
+        private void ExpireAltSvcAuthority()
+        {
+            // If we ever support prenegotiated HTTP/3, this should be set to origin, not nulled out.
+            _http3Authority = null;
         }
 
         /// <summary>
@@ -915,7 +928,7 @@ namespace System.Net.Http
             {
                 if (_http3Authority == badAuthority)
                 {
-                    _http3Authority = _originAuthority;
+                    ExpireAltSvcAuthority();
                     _authorityExpireTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
@@ -946,9 +959,9 @@ namespace System.Net.Http
         {
             lock (SyncObj)
             {
-                if (_http3Authority != _originAuthority && _persistAuthority == false)
+                if (_http3Authority != null && _persistAuthority == false)
                 {
-                    _http3Authority = _originAuthority;
+                    ExpireAltSvcAuthority();
                     _authorityExpireTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
