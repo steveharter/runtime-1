@@ -19,29 +19,11 @@ namespace System.Text.Json
             throw new ArgumentException(SR.Format(SR.DeserializeWrongType, type, value.GetType()));
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static NotSupportedException GetNotSupportedException_SerializationNotSupported(Type propertyType, Type? parentType, MemberInfo? memberInfo)
-        {
-            if (parentType != null && parentType != typeof(object) && memberInfo != null)
-            {
-                return new NotSupportedException(SR.Format(SR.SerializationNotSupported, propertyType, $"{parentType}.{memberInfo.Name}"));
-            }
-
-            return new NotSupportedException(SR.Format(SR.SerializationNotSupportedType, propertyType));
-        }
-
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static NotSupportedException ThrowNotSupportedException_SerializationNotSupported(Type propertyType, Type? parentType = null, MemberInfo? memberInfo = null)
+        public static void ThrowNotSupportedException_SerializationNotSupported(Type propertyType)
         {
-            throw GetNotSupportedException_SerializationNotSupported(propertyType, parentType, memberInfo);
-        }
-
-        [DoesNotReturn]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowInvalidOperationException_SerializerCycleDetected(int maxDepth)
-        {
-            throw new JsonException(SR.Format(SR.SerializerCycleDetected, maxDepth));
+            throw new NotSupportedException(SR.Format(SR.SerializationNotSupportedType, propertyType));
         }
 
         [DoesNotReturn]
@@ -69,6 +51,13 @@ namespace System.Text.Json
             var ex = new JsonException(SR.Format(SR.SerializationConverterWrite, converter));
             ex.AppendPathInformation = true;
             throw ex;
+        }
+
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowJsonException_SerializerCycleDetected(int maxDepth)
+        {
+            throw new JsonException(SR.Format(SR.SerializerCycleDetected, maxDepth));
         }
 
         [DoesNotReturn]
@@ -152,6 +141,12 @@ namespace System.Text.Json
         }
 
         [DoesNotReturn]
+        public static void ThrowInvalidOperationException_SerializerConverterFactoryReturnsNull(Type converterType)
+        {
+            throw new InvalidOperationException(SR.Format(SR.SerializerConverterFactoryReturnsNull, converterType));
+        }
+
+        [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ReThrowWithPath(in ReadStack state, JsonReaderException ex)
         {
@@ -179,11 +174,11 @@ namespace System.Text.Json
         public static void ReThrowWithPath(in ReadStack state, in Utf8JsonReader reader, Exception ex)
         {
             JsonException jsonException = new JsonException(null, ex);
-            AddExceptionInformation(state, reader, jsonException);
+            AddJsonExceptionInformation(state, reader, jsonException);
             throw jsonException;
         }
 
-        public static void AddExceptionInformation(in ReadStack state, in Utf8JsonReader reader, JsonException ex)
+        public static void AddJsonExceptionInformation(in ReadStack state, in Utf8JsonReader reader, JsonException ex)
         {
             long lineNumber = reader.CurrentState._lineNumber;
             ex.LineNumber = lineNumber;
@@ -216,16 +211,75 @@ namespace System.Text.Json
             }
         }
 
+        public static NotSupportedException GetNotSupportedException(in ReadStack state, in Utf8JsonReader reader, NotSupportedException ex)
+        {
+            string message = ex.Message;
+
+            // If the message already contains Path, don't continue to add Path and re-throw.
+            // This could occur in serializer re-entry cases.
+            // To get proper Path semantics in re-entry cases, APIs that take 'state' need to be used.
+            if (message.Contains(" Path: "))
+            {
+                return ex;
+            }
+
+            long lineNumber = reader.CurrentState._lineNumber;
+            long bytePositionInLine = reader.CurrentState._bytePositionInLine;
+
+            Type? propertyType = state.Current.JsonPropertyInfo?.RuntimePropertyType;
+            if (propertyType == null)
+            {
+                propertyType = state.Current.JsonClassInfo?.Type;
+            }
+
+            if (message.Length == 0)
+            {
+                message = SR.Format(SR.SerializationNotSupportedType, propertyType);
+            }
+
+            message += $" Path: {state.JsonPath()} | LineNumber: {lineNumber} | BytePositionInLine: {bytePositionInLine}.";
+
+            return new NotSupportedException(message, ex);
+        }
+
+        public static NotSupportedException GetNotSupportedException(in WriteStack state, NotSupportedException ex)
+        {
+            string message = ex.Message;
+
+            // If the message already contains Path, don't continue to add Path and re-throw.
+            // This could occur in serializer re-entry cases.
+            // To get proper Path semantics in re-entry cases, APIs that take 'state' need to be used.
+            if (message.Contains(" Path: "))
+            {
+                return ex;
+            }
+
+            Type? propertyType = state.Current.DeclaredJsonPropertyInfo?.RuntimePropertyType;
+            if (propertyType == null)
+            {
+                propertyType = state.Current.JsonClassInfo?.Type;
+            }
+
+            if (message.Length == 0)
+            {
+                message = SR.Format(SR.SerializationNotSupportedType, propertyType);
+            }
+
+            message += $" Path: {state.PropertyPath()}.";
+
+            return new NotSupportedException(message, ex);
+        }
+
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ReThrowWithPath(in WriteStack state, Exception ex)
         {
             JsonException jsonException = new JsonException(null, ex);
-            AddExceptionInformation(state, jsonException);
+            AddJsonExceptionInformation(state, jsonException);
             throw jsonException;
         }
 
-        public static void AddExceptionInformation(in WriteStack state, JsonException ex)
+        public static void AddJsonExceptionInformation(in WriteStack state, JsonException ex)
         {
             string path = state.PropertyPath();
             ex.Path = path;

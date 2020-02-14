@@ -24,7 +24,7 @@ namespace System.Text.Json.Serialization.Converters
                 ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(state.Current.JsonClassInfo.Type);
             }
 
-            state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
+            state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject!();
         }
 
         protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)

@@ -9,100 +9,30 @@ namespace System.Text.Json
 {
     public static partial class JsonSerializer
     {
-        private static void VerifyValueAndType(object? value, Type type)
+        private static void WriteCore<TValue>(Utf8JsonWriter writer, TValue value, Type inputType, JsonSerializerOptions options)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-            else if (value != null)
-            {
-                if (!type.IsAssignableFrom(value.GetType()))
-                {
-                    ThrowHelper.ThrowArgumentException_DeserializeWrongType(type, value);
-                }
-            }
-        }
-
-        private static byte[] WriteCoreBytes(object? value, Type type, JsonSerializerOptions? options)
-        {
-            if (options == null)
-            {
-                options = JsonSerializerOptions.s_defaultOptions;
-            }
-
-            byte[] result;
-
-            using (var output = new PooledByteBufferWriter(options.DefaultBufferSize))
-            {
-                WriteCore(output, value, type, options);
-                result = output.WrittenMemory.ToArray();
-            }
-
-            return result;
-        }
-
-        private static string WriteCoreString(object? value, Type type, JsonSerializerOptions? options)
-        {
-            if (options == null)
-            {
-                options = JsonSerializerOptions.s_defaultOptions;
-            }
-
-            string result;
-
-            using (var output = new PooledByteBufferWriter(options.DefaultBufferSize))
-            {
-                WriteCore(output, value, type, options);
-                result = JsonReaderHelper.TranscodeHelper(output.WrittenMemory.Span);
-            }
-
-            return result;
-        }
-
-        private static void WriteValueCore(Utf8JsonWriter writer, object? value, Type type, JsonSerializerOptions? options)
-        {
-            if (options == null)
-            {
-                options = JsonSerializerOptions.s_defaultOptions;
-            }
-
-            if (writer == null)
-            {
-                throw new ArgumentNullException(nameof(writer));
-            }
-
-            WriteCore(writer, value, type, options);
-        }
-
-        private static void WriteCore(PooledByteBufferWriter output, object? value, Type type, JsonSerializerOptions options)
-        {
-            using (var writer = new Utf8JsonWriter(output, options.GetWriterOptions()))
-            {
-                WriteCore(writer, value, type, options);
-            }
-        }
-
-        private static void WriteCore(Utf8JsonWriter writer, object? value, Type type, JsonSerializerOptions options)
-        {
-            Debug.Assert(type != null || value == null);
             Debug.Assert(writer != null);
 
-            if (value == null)
+            //  We treat typeof(object) special and allow polymorphic behavior.
+            if (inputType == typeof(object) && value != null)
             {
-                writer.WriteNullValue();
+                inputType = value!.GetType();
+            }
+
+            WriteStack state = default;
+            state.InitializeFromRootApi(inputType, options, supportContinuation: false);
+
+            JsonConverter converterBase = state.Current.JsonClassInfo!.PolicyProperty.ConverterBase;
+            if (converterBase is JsonConverter<TValue> converter)
+            {
+                // Call the strongly-typed ReadCore that will not box structs.
+                bool success = converter.WriteCore(writer, value, options, ref state);
+                Debug.Assert(success);
             }
             else
             {
-                //  We treat typeof(object) special and allow polymorphic behavior.
-                if (type == typeof(object))
-                {
-                    type = value.GetType();
-                }
-
-                WriteStack state = default;
-                state.InitializeRoot(type!, options, supportContinuation: false);
-                WriteCore(writer, value, options, ref state, state.Current.JsonClassInfo!.PolicyProperty!.ConverterBase);
+                bool success = converterBase.WriteCoreAsObject(writer, value, options, ref state);
+                Debug.Assert(success);
             }
 
             writer.Flush();

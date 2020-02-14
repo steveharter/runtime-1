@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -41,6 +40,8 @@ namespace System.Text.Json
         public ClassType ClassType { get; private set; }
 
         public JsonPropertyInfo? DataExtensionProperty { get; private set; }
+
+        public bool IsInitialized { get; private set; }
 
         // If enumerable, the JsonClassInfo for the element type.
         private JsonClassInfo? _elementClassInfo;
@@ -110,113 +111,237 @@ namespace System.Text.Json
             frame.PropertyRefCache = null;
         }
 
-        public JsonClassInfo(Type type, JsonSerializerOptions options)
+        public JsonClassInfo(Type type, bool skipInitialization, JsonSerializerOptions options)
         {
             Type = type;
             Options = options;
 
-            ClassType = GetClassType(
-                type,
-                parentClassType: type,
-                propertyInfo: null,
-                out Type? runtimeType,
-                out Type? elementType,
-                out JsonConverter? converter,
-                options);
+            Construct();
+
+            if (!skipInitialization)
+            {
+                Initialize();
+            }
+        }
+
+        public JsonClassInfo(Type type, bool skipInitialization, JsonSerializerOptions options, ref ReadStack state)
+        {
+            Type = type;
+            Options = options;
+
+            Construct();
+
+            if (!skipInitialization)
+            {
+                Initialize(ref state);
+            }
+        }
+
+        public JsonClassInfo(Type type, bool skipInitialization, JsonSerializerOptions options, ref WriteStack state)
+        {
+            Type = type;
+            Options = options;
+
+            Construct();
+
+            if (!skipInitialization)
+            {
+                Initialize(ref state);
+            }
+        }
+
+        private void Construct()
+        {
+            JsonConverter converter = GetConverter(
+                Type,
+                parentClassType: null, // A ClassInfo never has a "parent" class.
+                propertyInfo: null, // A ClassInfo never has a "parent" property.
+                out Type runtimeType,
+                Options);
+
+            ClassType = converter.ClassType;
+            PolicyProperty = CreatePolicyProperty(Type, runtimeType, converter, Options);
+        }
+
+        public void Initialize()
+        {
+            Debug.Assert(!IsInitialized);
+
+            if (ClassType == ClassType.Object)
+            {
+                PropertyInfo[] properties = Type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+                Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
+
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    AddObjectProperty(properties[i], cache);
+                }
+
+                InitializeObject(cache);
+            }
+            else
+            {
+                InitializeOther();
+            }
+
+            // Add to the cache. If already added to the cache by another thread, we'll just use our local copy.
+            Options.TryAddClass(this);
+        }
+
+        public void Initialize(ref ReadStack state)
+        {
+            Debug.Assert(!IsInitialized);
+
+            if (ClassType == ClassType.Object)
+            {
+                PropertyInfo[] properties = Type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+                Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
+
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    PropertyInfo property = properties[i];
+
+                    // Set the current property so we can calculate Path if a NotSupportedException is thrown.
+                    state.Current.JsonPropertyNameAsString = property.Name;
+
+                    AddObjectProperty(property, cache);
+                }
+
+                state.Current.JsonPropertyNameAsString = null;
+                InitializeObject(cache);
+            }
+            else
+            {
+                InitializeOther();
+            }
+
+            // Add to the cache. If already added to the cache by another thread, we'll just use our local copy.
+            Options.TryAddClass(this);
+        }
+
+        public void Initialize(ref WriteStack state)
+        {
+            Debug.Assert(!IsInitialized);
+
+            if (ClassType == ClassType.Object)
+            {
+                PropertyInfo[] properties = Type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+                Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
+
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    PropertyInfo property = properties[i];
+
+                    // Set the current property so we can calculate Path if a NotSupportedException is thrown.
+                    state.Current.JsonPropertyNameAsString = property.Name;
+
+                    AddObjectProperty(property, cache);
+                }
+
+                state.Current.JsonPropertyNameAsString = null;
+                InitializeObject(cache);
+            }
+            else
+            {
+                InitializeOther();
+            }
+
+            // Add to the cache. If already added to the cache by another thread, we'll just use our local copy.
+            Options.TryAddClass(this);
+        }
+
+        private void AddObjectProperty(PropertyInfo propertyInfo, Dictionary<string, JsonPropertyInfo> cache)
+        {
+            // Ignore indexers
+            if (propertyInfo.GetIndexParameters().Length > 0)
+            {
+                return;
+            }
+
+            // For now we only support public getters\setters
+            if (propertyInfo.GetMethod?.IsPublic == true ||
+                propertyInfo.SetMethod?.IsPublic == true)
+            {
+                JsonPropertyInfo jsonPropertyInfo = AddProperty(propertyInfo.PropertyType, propertyInfo, Type, Options);
+                Debug.Assert(jsonPropertyInfo != null && jsonPropertyInfo.NameAsString != null);
+
+                // If the JsonPropertyNameAttribute or naming policy results in collisions, throw an exception.
+                if (!JsonHelpers.TryAdd(cache, jsonPropertyInfo.NameAsString, jsonPropertyInfo))
+                {
+                    JsonPropertyInfo other = cache[jsonPropertyInfo.NameAsString];
+
+                    if (other.ShouldDeserialize == false && other.ShouldSerialize == false)
+                    {
+                        // Overwrite the one just added since it has [JsonIgnore].
+                        cache[jsonPropertyInfo.NameAsString] = jsonPropertyInfo;
+                    }
+                    else if (jsonPropertyInfo.ShouldDeserialize == true || jsonPropertyInfo.ShouldSerialize == true)
+                    {
+                        ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameConflict(this, jsonPropertyInfo);
+                    }
+                    // else ignore jsonPropertyInfo since it has [JsonIgnore].
+                }
+            }
+        }
+
+        private void InitializeObject(Dictionary<string, JsonPropertyInfo> cache)
+        {
+            // It is possible more than one thread is calling the method for a given instance; this is
+            // fine since we overwrite the cached values.
+
+            Debug.Assert(ClassType == ClassType.Object);
+            CreateObject = Options.MemberAccessorStrategy.CreateConstructor(Type);
+
+            JsonPropertyInfo[] cacheArray;
+            if (DetermineExtensionDataProperty(cache))
+            {
+                // Remove from cache since it is handled independently.
+                cache.Remove(DataExtensionProperty!.NameAsString!);
+
+                cacheArray = new JsonPropertyInfo[cache.Count + 1];
+
+                // Set the last element to the extension property.
+                cacheArray[cache.Count] = DataExtensionProperty;
+            }
+            else
+            {
+                cacheArray = new JsonPropertyInfo[cache.Count];
+            }
+
+            // Set fields when finished to avoid concurrency issues.
+            PropertyCache = cache;
+            cache.Values.CopyTo(cacheArray, 0);
+            PropertyCacheArray = cacheArray;
+
+            IsInitialized = true;
+        }
+
+        private void InitializeOther()
+        {
+            // It is possible more than one thread is calling the method for a given instance; this is
+            // fine since we overwrite the cached values.
 
             switch (ClassType)
             {
-                case ClassType.Object:
-                    {
-                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
-
-                        PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-                        Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
-
-                        foreach (PropertyInfo propertyInfo in properties)
-                        {
-                            // Ignore indexers
-                            if (propertyInfo.GetIndexParameters().Length > 0)
-                            {
-                                continue;
-                            }
-
-                            // For now we only support public getters\setters
-                            if (propertyInfo.GetMethod?.IsPublic == true ||
-                                propertyInfo.SetMethod?.IsPublic == true)
-                            {
-                                JsonPropertyInfo jsonPropertyInfo = AddProperty(propertyInfo.PropertyType, propertyInfo, type, options);
-                                Debug.Assert(jsonPropertyInfo != null && jsonPropertyInfo.NameAsString != null);
-
-                                // If the JsonPropertyNameAttribute or naming policy results in collisions, throw an exception.
-                                if (!JsonHelpers.TryAdd(cache, jsonPropertyInfo.NameAsString, jsonPropertyInfo))
-                                {
-                                    JsonPropertyInfo other = cache[jsonPropertyInfo.NameAsString];
-
-                                    if (other.ShouldDeserialize == false && other.ShouldSerialize == false)
-                                    {
-                                        // Overwrite the one just added since it has [JsonIgnore].
-                                        cache[jsonPropertyInfo.NameAsString] = jsonPropertyInfo;
-                                    }
-                                    else if (jsonPropertyInfo.ShouldDeserialize == true || jsonPropertyInfo.ShouldSerialize == true)
-                                    {
-                                        ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameConflict(this, jsonPropertyInfo);
-                                    }
-                                    // else ignore jsonPropertyInfo since it has [JsonIgnore].
-                                }
-                            }
-                        }
-
-                        JsonPropertyInfo[] cacheArray;
-                        if (DetermineExtensionDataProperty(cache))
-                        {
-                            // Remove from cache since it is handled independently.
-                            cache.Remove(DataExtensionProperty!.NameAsString!);
-
-                            cacheArray = new JsonPropertyInfo[cache.Count + 1];
-
-                            // Set the last element to the extension property.
-                            cacheArray[cache.Count] = DataExtensionProperty;
-                        }
-                        else
-                        {
-                            cacheArray = new JsonPropertyInfo[cache.Count];
-                        }
-
-                        // Set fields when finished to avoid concurrency issues.
-                        PropertyCache = cache;
-                        cache.Values.CopyTo(cacheArray, 0);
-                        PropertyCacheArray = cacheArray;
-
-                        // Create the policy property.
-                        PolicyProperty = CreatePolicyProperty(type, runtimeType, converter!, ClassType, options);
-                    }
-                    break;
                 case ClassType.Enumerable:
                 case ClassType.Dictionary:
                     {
-                        ElementType = elementType;
-                        PolicyProperty = CreatePolicyProperty(type, runtimeType, converter!, ClassType, options);
-                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(PolicyProperty.RuntimePropertyType!);
+                        ElementType = PolicyProperty.ConverterBase.ElementType;
+                        CreateObject = Options.MemberAccessorStrategy.CreateConstructor(PolicyProperty.RuntimePropertyType!);
                     }
                     break;
                 case ClassType.Value:
                 case ClassType.NewValue:
                     {
-                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
-                        PolicyProperty = CreatePolicyProperty(type, runtimeType, converter!, ClassType, options);
-                    }
-                    break;
-                case ClassType.Invalid:
-                    {
-                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
+                        CreateObject = Options.MemberAccessorStrategy.CreateConstructor(Type);
                     }
                     break;
                 default:
                     Debug.Fail($"Unexpected class type: {ClassType}");
                     break;
             }
+
+            IsInitialized = true;
         }
 
         private bool DetermineExtensionDataProperty(Dictionary<string, JsonPropertyInfo> cache)
@@ -399,7 +524,7 @@ namespace System.Text.Json
             return new Dictionary<string, JsonPropertyInfo>(capacity, comparer);
         }
 
-        public JsonPropertyInfo? PolicyProperty { get; private set; }
+        public JsonPropertyInfo PolicyProperty { get; private set; } = null!;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryIsPropertyRefEqual(in PropertyRef propertyRef, ReadOnlySpan<byte> propertyName, ulong key, [NotNullWhen(true)] ref JsonPropertyInfo? info)
@@ -516,23 +641,19 @@ namespace System.Text.Json
         // - runtime type,
         // - element type (if the type is a collection),
         // - the converter (either native or custom), if one exists.
-        public static ClassType GetClassType(
+        public static JsonConverter GetConverter(
             Type type,
-            Type parentClassType,
+            Type? parentClassType,
             PropertyInfo? propertyInfo,
-            out Type? runtimeType,
-            out Type? elementType,
-            out JsonConverter? converter,
+            out Type runtimeType,
             JsonSerializerOptions options)
         {
             Debug.Assert(type != null);
 
-            converter = options.DetermineConverter(parentClassType, type, propertyInfo);
+            JsonConverter converter = options.DetermineConverter(parentClassType, type, propertyInfo)!;
             if (converter == null)
             {
-                runtimeType = null;
-                elementType = null;
-                return ClassType.Invalid;
+                ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
             }
 
             // The runtimeType is the actual value being assigned to the property.
@@ -569,14 +690,13 @@ namespace System.Text.Json
                     }
                     else
                     {
-                        throw ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type, parentClassType, propertyInfo);
+                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
+                        runtimeType = default;
                     }
                 }
             }
 
-            elementType = converter.ElementType;
-
-            return converter.ClassType;
+            return converter;
         }
     }
 }

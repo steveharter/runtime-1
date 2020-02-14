@@ -273,16 +273,10 @@ namespace System.Text.Json.Serialization.Converters
         internal override bool OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, ref WriteStack state)
         {
             // Minimize boxing for structs by only boxing once here
-            object? objectValue = value;
+            object objectValue = value!;
 
             if (!state.SupportContinuation)
             {
-                if (objectValue == null)
-                {
-                    writer.WriteNullValue();
-                    return true;
-                }
-
                 writer.WriteStartObject();
 
                 if (options.ReferenceHandling.ShouldWritePreservedReferences())

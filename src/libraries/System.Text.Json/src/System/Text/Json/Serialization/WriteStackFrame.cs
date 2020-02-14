@@ -104,7 +104,7 @@ namespace System.Text.Json
             // Set for exception handling calculation of JsonPath.
             JsonPropertyNameAsString = propertyName;
 
-            PolymorphicJsonPropertyInfo = newClassInfo.PolicyProperty!;
+            PolymorphicJsonPropertyInfo = newClassInfo.PolicyProperty;
             return PolymorphicJsonPropertyInfo.ConverterBase;
         }
 

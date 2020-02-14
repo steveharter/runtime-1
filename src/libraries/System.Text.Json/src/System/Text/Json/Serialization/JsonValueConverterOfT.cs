@@ -19,7 +19,7 @@ namespace System.Text.Json.Serialization
             }
 
             ReadStack state = default;
-            state.InitializeRoot(typeToConvert, options);
+            state.Initialize(typeToConvert, options);
             TryRead(ref reader, typeToConvert, options, ref state, out T value);
             return value;
         }
@@ -33,7 +33,7 @@ namespace System.Text.Json.Serialization
             }
 
             WriteStack state = default;
-            state.InitializeRoot(typeof(T), options, supportContinuation: false);
+            state.Initialize(typeof(T), options);
             TryWrite(writer, value, options, ref state);
         }
     }

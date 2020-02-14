@@ -191,5 +191,29 @@ namespace System.Text.Json.Serialization.Tests
                 await Assert.ThrowsAsync<JsonException>(async () => await JsonSerializer.DeserializeAsync<SimpleStruct>(stream));
             }
         }
+
+        [Fact]
+        public static void DeserializeDictionaryWithNullValues()
+        {
+            {
+                Dictionary<string, string> dict = JsonSerializer.Deserialize<Dictionary<string, string>>(@"{""key"":null}");
+                Assert.Null(dict["key"]);
+            }
+
+            {
+                Dictionary<string, object> dict = JsonSerializer.Deserialize<Dictionary<string, object>>(@"{""key"":null}");
+                Assert.Null(dict["key"]);
+            }
+
+            {
+                Dictionary<string, Dictionary<string, string>> dict = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(@"{""key"":null}");
+                Assert.Null(dict["key"]);
+            }
+
+            {
+                Dictionary<string, Dictionary<string, object>> dict = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(@"{""key"":null}");
+                Assert.Null(dict["key"]);
+            }
+        }
     }
 }

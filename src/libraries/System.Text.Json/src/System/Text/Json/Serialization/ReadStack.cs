@@ -71,20 +71,42 @@ namespace System.Text.Json
             _count++;
         }
 
-        public void InitializeRoot(Type type, JsonSerializerOptions options)
+        /// <summary>
+        /// Initialize the state without delayed initialization of the JsonClassInfo.
+        /// </summary>
+        public void Initialize(Type type, JsonSerializerOptions options)
         {
             JsonClassInfo jsonClassInfo = options.GetOrAddClass(type);
-            Debug.Assert(jsonClassInfo.ClassType != ClassType.Invalid);
 
             Current.JsonClassInfo = jsonClassInfo;
 
             // The initial JsonPropertyInfo will be used to obtain the converter.
-            Current.JsonPropertyInfo = jsonClassInfo.PolicyProperty!;
+            Current.JsonPropertyInfo = jsonClassInfo.PolicyProperty;
 
             if (options.ReferenceHandling.ShouldReadPreservedReferences())
             {
                 ReferenceResolver = new DefaultReferenceResolver(writing: false);
             }
+        }
+
+        /// <summary>
+        /// Initialize the state with delayed initialization of the JsonClassInfo so
+        /// NotSupportedException can be caught from the common exception handler.
+        /// </summary>
+        public void InitializeFromRootApi(Type type, JsonSerializerOptions options, bool supportContinuation)
+        {
+            JsonClassInfo jsonClassInfo = options.GetOrCreateClass(type, ref this);
+            Current.JsonClassInfo = jsonClassInfo;
+
+            // The initial JsonPropertyInfo will be used to obtain the converter.
+            Current.JsonPropertyInfo = jsonClassInfo.PolicyProperty;
+
+            if (options.ReferenceHandling.ShouldReadPreservedReferences())
+            {
+                ReferenceResolver = new DefaultReferenceResolver(writing: false);
+            }
+
+            SupportContinuation = supportContinuation;
         }
 
         public void Push()
@@ -113,7 +135,7 @@ namespace System.Text.Json
                     Current.Reset();
 
                     Current.JsonClassInfo = jsonClassInfo;
-                    Current.JsonPropertyInfo = jsonClassInfo.PolicyProperty!;
+                    Current.JsonPropertyInfo = jsonClassInfo.PolicyProperty;
                 }
             }
             else if (_continuationCount == 1)

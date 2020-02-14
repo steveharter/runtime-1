@@ -329,15 +329,39 @@ namespace System.Text.Json
             }
         }
 
-        internal JsonClassInfo GetOrAddClass(Type classType)
+        internal JsonClassInfo GetOrAddClass(Type type)
         {
             _haveTypesBeenCreated = true;
 
             // todo: for performance and reduced instances, consider using the converters and JsonClassInfo from s_defaultOptions by cloning (or reference directly if no changes).
             // https://github.com/dotnet/runtime/issues/32357
-            if (!_classes.TryGetValue(classType, out JsonClassInfo? result))
+            if (!_classes.TryGetValue(type, out JsonClassInfo? result))
             {
-                result = _classes.GetOrAdd(classType, new JsonClassInfo(classType, this));
+                result = _classes.GetOrAdd(type, new JsonClassInfo(type, skipInitialization: false, this));
+            }
+
+            return result;
+        }
+
+        internal JsonClassInfo GetOrCreateClass(Type type, ref ReadStack state)
+        {
+            _haveTypesBeenCreated = true;
+
+            if (!_classes.TryGetValue(type, out JsonClassInfo? result))
+            {
+                result = new JsonClassInfo(type, skipInitialization: true, this, ref state);
+            }
+
+            return result;
+        }
+
+        internal JsonClassInfo GetOrCreateClass(Type type, ref WriteStack state)
+        {
+            _haveTypesBeenCreated = true;
+
+            if (!_classes.TryGetValue(type, out JsonClassInfo? result))
+            {
+                result = new JsonClassInfo(type, skipInitialization: true, this, ref state);
             }
 
             return result;
@@ -363,6 +387,11 @@ namespace System.Text.Json
                 SkipValidation = true
 #endif
             };
+        }
+
+        internal void TryAddClass(JsonClassInfo classInfo)
+        {
+            _classes.TryAdd(classInfo.Type, classInfo);
         }
 
         internal void VerifyMutable()
