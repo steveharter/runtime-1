@@ -35,10 +35,24 @@ namespace System.Text.Json.Serialization.Converters
 
             if (constructor == null || typeToConvert.IsAbstract || parameters!.Length == 0)
             {
-                converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
+                if (typeToConvert.IsValueType && JsonSerializerOptions.SupportsRefEmit)
+                {
+                    // To avoid boxing, create a strongly-typed converter.
+                    // todo: do we need to do this if the JsonPropertyInfo is strongly typed?
+                    converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
+                }
+                else
+                {
+                    return new ObjectDefaultConverter<object>(typeToConvert);
+                }
             }
             else
             {
+                if (!JsonSerializerOptions.SupportsRefEmit)
+                {
+                    ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(typeToConvert);
+                }
+
                 int parameterCount = parameters.Length;
 
                 if (parameterCount <= JsonConstants.UnboxedParameterCountThreshold)

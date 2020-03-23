@@ -9,6 +9,8 @@ namespace System.Text.Json.Serialization
     /// </summary>
     internal abstract class JsonCollectionConverter<TCollection, TElement> : JsonResumableConverter<TCollection>
     {
+        internal JsonCollectionConverter() { }
+        internal JsonCollectionConverter(Type typeToConvert) : base(typeToConvert) { }
         internal sealed override ClassType ClassType => ClassType.Enumerable;
         internal override Type ElementType => typeof(TElement);
         internal sealed override bool GenerateConstructor => true;

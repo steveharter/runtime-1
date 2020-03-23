@@ -15,6 +15,10 @@ namespace System.Text.Json.Serialization.Converters
         : IEnumerableDefaultConverter<TCollection, TElement>
         where TCollection : IEnumerable<TElement>
     {
+        internal IEnumerableOfTConverter() { }
+
+        internal IEnumerableOfTConverter(Type typeToConvert) : base(typeToConvert) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
             Debug.Assert(state.Current.ReturnValue is List<TElement>);

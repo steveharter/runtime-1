@@ -175,8 +175,16 @@ namespace System.Text.Json.Serialization.Converters
             // IEnumerable<>, types assignable from List<>
             else if ((actualTypeToConvert = typeToConvert.GetCompatibleGenericInterface(typeof(IEnumerable<>))) != null)
             {
-                converterType = typeof(IEnumerableOfTConverter<,>);
                 elementType = actualTypeToConvert.GetGenericArguments()[0];
+
+                if (elementType.IsValueType && JsonSerializerOptions.SupportsRefEmit)
+                {
+                    converterType = typeof(IEnumerableOfTConverter<,>);
+                }
+                else
+                {
+                    return new IEnumerableOfTConverter<IEnumerable<object>, object>(elementType);
+                }
             }
             // Check for non-generics after checking for generics.
             else if (typeof(IDictionary).IsAssignableFrom(typeToConvert))

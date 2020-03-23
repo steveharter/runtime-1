@@ -54,8 +54,8 @@ namespace Temp
             //JsonSerializer.SerializeToUtf8Bytes(result);
 
             //Manual(result); // 8
-            // Auto(result); //50
-            Custom(result); // 22 --> 21
+            Auto(result); //50
+            //Custom(result); // 22 --> 21
         }
 
         static void Manual(IEnumerable<WeatherForecast> result)

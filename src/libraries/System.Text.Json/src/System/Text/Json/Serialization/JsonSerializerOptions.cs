@@ -365,6 +365,19 @@ namespace System.Text.Json
             };
         }
 
+        internal static bool SupportsRefEmit
+        {
+            get
+            {
+#if NETFRAMEWORK || NETCOREAPP
+                return true;
+#else
+                // todo: if (RuntimeFeature.IsDynamicCodeSupported)
+                return false;
+#endif
+            }
+        }
+
         internal void VerifyMutable()
         {
             // The default options are hidden and thus should be immutable.

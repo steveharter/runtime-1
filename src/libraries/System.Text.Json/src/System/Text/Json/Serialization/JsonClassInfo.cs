@@ -171,11 +171,6 @@ namespace System.Text.Json
                         CreateObject = options.MemberAccessorStrategy.CreateConstructor(runtimeType);
                     }
                     break;
-                case ClassType.None:
-                    {
-                        ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
-                    }
-                    break;
             }
         }
 

@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 
 namespace System.Text.Json.Serialization
 {
@@ -13,10 +14,24 @@ namespace System.Text.Json.Serialization
     /// <typeparam name="T">The <see cref="Type"/> to convert.</typeparam>
     public abstract partial class JsonConverter<T> : JsonConverter
     {
+        private Type _typeToConvert;
+
         /// <summary>
         /// When overidden, constructs a new <see cref="JsonConverter{T}"/> instance.
         /// </summary>
         protected internal JsonConverter()
+        {
+            _typeToConvert = typeof(T);
+            Initialize();
+        }
+
+        internal JsonConverter(Type typeToConvert)
+        {
+            _typeToConvert = typeToConvert;
+            Initialize();
+        }
+
+        internal void Initialize()
         {
             // Today only typeof(object) can have polymorphic writes.
             // In the future, this will be check for !IsSealed (and excluding value types).
@@ -37,7 +52,7 @@ namespace System.Text.Json.Serialization
         /// <returns>True if the type can be converted, False otherwise.</returns>
         public override bool CanConvert(Type typeToConvert)
         {
-            return typeToConvert == typeof(T);
+            return typeToConvert == _typeToConvert;
         }
 
         internal override ClassType ClassType => ClassType.Value;

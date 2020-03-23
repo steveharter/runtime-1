@@ -13,6 +13,10 @@ namespace System.Text.Json.Serialization.Converters
     internal abstract class IEnumerableDefaultConverter<TCollection, TElement>
         : JsonCollectionConverter<TCollection, TElement>
     {
+        internal IEnumerableDefaultConverter() { }
+
+        internal IEnumerableDefaultConverter(Type typeToConvert) : base(typeToConvert) { }
+
         protected abstract void Add(TElement value, ref ReadStack state);
         protected abstract void CreateCollection(ref ReadStack state, JsonSerializerOptions options);
         protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }

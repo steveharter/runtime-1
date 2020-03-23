@@ -12,6 +12,10 @@ namespace System.Text.Json.Serialization.Converters
     /// </summary>
     internal class ObjectDefaultConverter<T> : JsonObjectConverter<T> where T : notnull
     {
+        public ObjectDefaultConverter() { }
+
+        public ObjectDefaultConverter(Type typeToConvert) : base(typeToConvert) { }
+
         internal sealed override bool GenerateConstructor => true;
 
         internal override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, [MaybeNullWhen(false)] out T value)

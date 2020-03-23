@@ -11,6 +11,9 @@ namespace System.Text.Json.Serialization
     /// <typeparam name="T"></typeparam>
     internal abstract class JsonResumableConverter<T> : JsonConverter<T>
     {
+        public JsonResumableConverter() { }
+        public JsonResumableConverter(Type typeToConvert) : base(typeToConvert) { }
+
         public override sealed T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             // Bridge from resumable to value converters.
