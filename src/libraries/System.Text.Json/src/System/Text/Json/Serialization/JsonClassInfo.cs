@@ -88,15 +88,10 @@ namespace System.Text.Json
 
             ClassType = converter.ClassType;
 
-            PropertyInfoForClassInfo = null!;
-            //PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(Type, runtimeType, converter, Options);
+            PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(Type, runtimeType, converter, Options);
 
             switch (ClassType)
             {
-                case ClassType.Value:
-                case ClassType.NewValue:
-                    break;
-
                 case ClassType.Object:
                     {
                         PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(type, runtimeType, converter!, options);
@@ -181,9 +176,6 @@ namespace System.Text.Json
                         ThrowHelper.ThrowNotSupportedException_SerializationNotSupported(type);
                     }
                     break;
-                default:
-                    Debug.Fail($"Unexpected class type: {ClassType}");
-                    throw new InvalidOperationException();
             }
         }
 
