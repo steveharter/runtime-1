@@ -87,13 +87,18 @@ namespace System.Text.Json
                 Options);
 
             ClassType = converter.ClassType;
-            PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(Type, runtimeType, converter, Options);
+
+            PropertyInfoForClassInfo = null!;
+            //PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(Type, runtimeType, converter, Options);
 
             switch (ClassType)
             {
+                case ClassType.Value:
+                case ClassType.NewValue:
+                    break;
+
                 case ClassType.Object:
                     {
-                        // Create the policy property.
                         PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(type, runtimeType, converter!, options);
 
                         CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
@@ -169,12 +174,6 @@ namespace System.Text.Json
                     {
                         ElementType = converter.ElementType;
                         CreateObject = options.MemberAccessorStrategy.CreateConstructor(runtimeType);
-                    }
-                    break;
-                case ClassType.Value:
-                case ClassType.NewValue:
-                    {
-                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
                     }
                     break;
                 case ClassType.None:
