@@ -35,8 +35,7 @@ namespace System.Text.Json
         {
             JsonPropertyInfo jsonPropertyInfo = new JsonPropertyInfo<sbyte>();
             jsonPropertyInfo.Options = options;
-            jsonPropertyInfo.PropertyInfo = propertyInfo;
-            jsonPropertyInfo.DeterminePropertyName();
+            jsonPropertyInfo.DeterminePropertyName(propertyInfo);
             jsonPropertyInfo.IsIgnored = true;
 
             Debug.Assert(!jsonPropertyInfo.ShouldDeserialize);
@@ -47,14 +46,16 @@ namespace System.Text.Json
 
         public Type DeclaredPropertyType { get; private set; } = null!;
 
-        private void DeterminePropertyName()
+        private void DeterminePropertyName(PropertyInfo? propertyInfo)
         {
-            if (PropertyInfo == null)
+            if (propertyInfo == null)
             {
                 return;
             }
 
-            JsonPropertyNameAttribute? nameAttribute = GetAttribute<JsonPropertyNameAttribute>(PropertyInfo);
+            ClrNameAsString = propertyInfo.Name;
+
+            JsonPropertyNameAttribute? nameAttribute = GetAttribute<JsonPropertyNameAttribute>(propertyInfo);
             if (nameAttribute != null)
             {
                 string name = nameAttribute.Name;
@@ -67,7 +68,7 @@ namespace System.Text.Json
             }
             else if (Options.PropertyNamingPolicy != null)
             {
-                string name = Options.PropertyNamingPolicy.ConvertName(PropertyInfo.Name);
+                string name = Options.PropertyNamingPolicy.ConvertName(propertyInfo.Name);
                 if (name == null)
                 {
                     ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameNull(ParentClassType, this);
@@ -77,7 +78,7 @@ namespace System.Text.Json
             }
             else
             {
-                NameAsString = PropertyInfo.Name;
+                NameAsString = propertyInfo.Name;
             }
 
             Debug.Assert(NameAsString != null);
@@ -87,9 +88,6 @@ namespace System.Text.Json
 
             // Cache the escaped property name.
             EscapedName = JsonEncodedText.Encode(Name, Options.Encoder);
-
-            ulong key = JsonClassInfo.GetKey(Name);
-            PropertyNameKey = key;
         }
 
         private void DetermineSerializationCapabilities()
@@ -118,10 +116,6 @@ namespace System.Text.Json
             }
         }
 
-        // The escaped name passed to the writer.
-        // Use a field here (not a property) to avoid value semantics.
-        public JsonEncodedText? EscapedName;
-
         public static TAttribute? GetAttribute<TAttribute>(PropertyInfo propertyInfo) where TAttribute : Attribute
         {
             return (TAttribute?)propertyInfo.GetCustomAttribute(typeof(TAttribute), inherit: false);
@@ -130,10 +124,10 @@ namespace System.Text.Json
         public abstract bool GetMemberAndWriteJson(object obj, ref WriteStack state, Utf8JsonWriter writer);
         public abstract bool GetMemberAndWriteJsonExtensionData(object obj, ref WriteStack state, Utf8JsonWriter writer);
 
-        public virtual void GetPolicies()
+        public virtual void GetPolicies(PropertyInfo? propertyInfo)
         {
             DetermineSerializationCapabilities();
-            DeterminePropertyName();
+            DeterminePropertyName(propertyInfo);
             IgnoreNullValues = Options.IgnoreNullValues;
         }
 
@@ -157,7 +151,6 @@ namespace System.Text.Json
             DeclaredPropertyType = declaredPropertyType;
             RuntimePropertyType = runtimePropertyType;
             ClassType = runtimeClassType;
-            PropertyInfo = propertyInfo;
             ConverterBase = converter;
             Options = options;
         }
@@ -166,15 +159,21 @@ namespace System.Text.Json
 
         public bool IsPropertyPolicy { get; protected set; }
 
+        // <PropertyNames>
+
         // The name from a Json value. This is cached for performance on first deserialize.
         public byte[]? JsonPropertyName { get; set; }
+
+        // The escaped name passed to the writer.
+        // Use a field here (not a property) to avoid value semantics.
+        public JsonEncodedText? EscapedName;
 
         // The name of the property with any casing policy or the name specified from JsonPropertyNameAttribute.
         public byte[]? Name { get; private set; }
         public string? NameAsString { get; private set; }
+        public string? ClrNameAsString { get; private set; }
 
-        // Key for fast property name lookup.
-        public ulong PropertyNameKey { get; set; }
+        // </PropertyNames>
 
         // Options can be referenced here since all JsonPropertyInfos originate from a JsonClassInfo that is cached on JsonSerializerOptions.
         protected JsonSerializerOptions Options { get; set; } = null!; // initialized in Init method
@@ -253,8 +252,6 @@ namespace System.Text.Json
         }
 
         public Type ParentClassType { get; private set; } = null!;
-
-        public PropertyInfo? PropertyInfo { get; private set; }
 
         public JsonClassInfo RuntimeClassInfo
         {

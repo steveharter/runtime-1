@@ -130,14 +130,14 @@ namespace System.Text.Json
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidOperationException_SerializerPropertyNameConflict(Type type, JsonPropertyInfo jsonPropertyInfo)
         {
-            throw new InvalidOperationException(SR.Format(SR.SerializerPropertyNameConflict, type, jsonPropertyInfo.PropertyInfo?.Name));
+            throw new InvalidOperationException(SR.Format(SR.SerializerPropertyNameConflict, type, jsonPropertyInfo.ClrNameAsString));
         }
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidOperationException_SerializerPropertyNameNull(Type parentType, JsonPropertyInfo jsonPropertyInfo)
         {
-            throw new InvalidOperationException(SR.Format(SR.SerializerPropertyNameNull, parentType, jsonPropertyInfo.PropertyInfo?.Name));
+            throw new InvalidOperationException(SR.Format(SR.SerializerPropertyNameNull, parentType, jsonPropertyInfo.ClrNameAsString));
         }
 
         [DoesNotReturn]
@@ -158,15 +158,15 @@ namespace System.Text.Json
         public static void ThrowInvalidOperationException_MultiplePropertiesBindToConstructorParameters(
             Type parentType,
             ParameterInfo parameterInfo,
-            PropertyInfo firstMatch,
-            PropertyInfo secondMatch,
+            string firstName,
+            string secondName,
             ConstructorInfo constructorInfo)
         {
             throw new InvalidOperationException(
                 SR.Format(
                     SR.MultipleMembersBindWithConstructorParameter,
-                    firstMatch.Name,
-                    secondMatch.Name,
+                    firstName,
+                    secondName,
                     parentType,
                     parameterInfo.Name,
                     constructorInfo));
@@ -182,11 +182,11 @@ namespace System.Text.Json
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static NotSupportedException ThrowInvalidOperationException_ExtensionDataCannotBindToCtorParam(
-            PropertyInfo propertyInfo,
+            string name,
             Type classType,
             ConstructorInfo constructorInfo)
         {
-            throw new InvalidOperationException(SR.Format(SR.ExtensionDataCannotBindToCtorParam, propertyInfo, classType, constructorInfo));
+            throw new InvalidOperationException(SR.Format(SR.ExtensionDataCannotBindToCtorParam, name, classType, constructorInfo));
         }
 
         [DoesNotReturn]
@@ -326,9 +326,9 @@ namespace System.Text.Json
 
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowInvalidOperationException_SerializationDataExtensionPropertyInvalid(Type type, JsonPropertyInfo jsonPropertyInfo)
+        public static void ThrowInvalidOperationException_SerializationDataExtensionPropertyInvalid(Type type, string propertyName)
         {
-            throw new InvalidOperationException(SR.Format(SR.SerializationDataExtensionPropertyInvalid, type, jsonPropertyInfo.PropertyInfo?.Name));
+            throw new InvalidOperationException(SR.Format(SR.SerializationDataExtensionPropertyInvalid, type, propertyName));
         }
 
         [DoesNotReturn]

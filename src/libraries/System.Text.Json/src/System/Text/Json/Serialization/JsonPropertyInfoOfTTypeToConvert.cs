@@ -57,7 +57,7 @@ namespace System.Text.Json
                 HasSetter = true;
             }
 
-            GetPolicies();
+            GetPolicies(propertyInfo);
         }
 
         public override JsonConverter ConverterBase

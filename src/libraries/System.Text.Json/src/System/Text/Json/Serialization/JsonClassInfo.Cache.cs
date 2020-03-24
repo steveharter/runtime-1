@@ -95,8 +95,8 @@ namespace System.Text.Json
             return CreateProperty(
                 declaredPropertyType: propertyType,
                 runtimePropertyType: runtimeType,
-                propertyInfo,
                 parentClassType,
+                propertyInfo,
                 converter,
                 options);
         }
@@ -104,8 +104,8 @@ namespace System.Text.Json
         internal static JsonPropertyInfo CreateProperty(
             Type declaredPropertyType,
             Type? runtimePropertyType,
-            PropertyInfo? propertyInfo,
             Type parentClassType,
+            PropertyInfo? propertyInfo,
             JsonConverter converter,
             JsonSerializerOptions options)
         {
@@ -137,8 +137,8 @@ namespace System.Text.Json
             return CreateProperty(
                 declaredPropertyType: declaredPropertyType,
                 runtimePropertyType: runtimePropertyType,
-                propertyInfo: null, // Not a real property so this is null.
                 parentClassType: typeof(object), // a dummy value (not used)
+                propertyInfo: null, // not a real property
                 converter : converter,
                 options);
         }
@@ -220,9 +220,8 @@ namespace System.Text.Json
 
             // Three code paths to get here:
             // 1) info == s_missingProperty. Property not found.
-            // 2) key == info.PropertyNameKey. Exact match found.
-            // 3) key != info.PropertyNameKey. Match found due to case insensitivity.
-            Debug.Assert(info == JsonPropertyInfo.s_missingProperty || key == info.PropertyNameKey || Options.PropertyNameCaseInsensitive);
+            // 2) Exact match found.
+            // 3) Match found due to case insensitivity.
 
             // Check if we should add this to the cache.
             // Only cache up to a threshold length and then just use the dictionary when an item is not found in the cache.
@@ -342,7 +341,6 @@ namespace System.Text.Json
             // Two code paths to get here:
             // 1) key == info.PropertyNameKey. Exact match found.
             // 2) key != info.PropertyNameKey. Match found due to case insensitivity.
-            // TODO: recheck these conditions
             Debug.Assert(key == info.ParameterNameKey ||
                 propertyNameAsString.Equals(info.NameAsString, StringComparison.OrdinalIgnoreCase));
 
