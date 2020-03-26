@@ -11,14 +11,21 @@ namespace System.Text.Json
     /// <summary>
     /// Represents a strongly-typed property to prevent boxing and to create a direct delegate to the getter\setter.
     /// </summary>
-    internal sealed class JsonPropertyInfo<TTypeToConvert> : JsonPropertyInfo
+    public class JsonPropertyInfo<TTypeToConvert> : JsonPropertyInfo
     {
-        public Func<object, TTypeToConvert>? Get { get; private set; }
-        public Action<object, TTypeToConvert>? Set { get; private set; }
+        /// <summary>
+        /// </summary>
+        public Func<object, TTypeToConvert>? Get { get; set; }
 
-        public JsonConverter<TTypeToConvert> Converter { get; internal set; } = null!;
+        /// <summary>
+        /// </summary>
+        public Action<object, TTypeToConvert>? Set { get; set; }
 
-        public override void Initialize(
+        /// <summary>
+        /// </summary>
+        public JsonConverter<TTypeToConvert> Converter { get; set; } = null!;
+
+        internal override void Initialize(
             Type parentClassType,
             Type declaredPropertyType,
             Type? runtimePropertyType,
@@ -60,7 +67,7 @@ namespace System.Text.Json
             GetPolicies(propertyInfo);
         }
 
-        public override JsonConverter ConverterBase
+        internal override JsonConverter ConverterBase
         {
             get
             {
@@ -73,7 +80,7 @@ namespace System.Text.Json
             }
         }
 
-        public override object? GetValueAsObject(object obj)
+        internal sealed override object? GetValueAsObject(object obj)
         {
             if (IsPropertyPolicy)
             {
@@ -84,7 +91,7 @@ namespace System.Text.Json
             return Get!(obj);
         }
 
-        public override bool GetMemberAndWriteJson(object obj, ref WriteStack state, Utf8JsonWriter writer)
+        internal sealed override bool GetMemberAndWriteJson(object obj, ref WriteStack state, Utf8JsonWriter writer)
         {
             Debug.Assert(EscapedName.HasValue);
 
@@ -113,7 +120,7 @@ namespace System.Text.Json
             return success;
         }
 
-        public override bool GetMemberAndWriteJsonExtensionData(object obj, ref WriteStack state, Utf8JsonWriter writer)
+        internal sealed override bool GetMemberAndWriteJsonExtensionData(object obj, ref WriteStack state, Utf8JsonWriter writer)
         {
             bool success;
             TTypeToConvert value = Get!(obj);
@@ -131,7 +138,7 @@ namespace System.Text.Json
             return success;
         }
 
-        public override bool ReadJsonAndSetMember(object obj, ref ReadStack state, ref Utf8JsonReader reader)
+        internal sealed override bool ReadJsonAndSetMember(object obj, ref ReadStack state, ref Utf8JsonReader reader)
         {
             bool success;
             bool isNullToken = reader.TokenType == JsonTokenType.Null;
@@ -175,7 +182,7 @@ namespace System.Text.Json
             return success;
         }
 
-        public override bool ReadJsonAsObject(ref ReadStack state, ref Utf8JsonReader reader, out object? value)
+        internal sealed override bool ReadJsonAsObject(ref ReadStack state, ref Utf8JsonReader reader, out object? value)
         {
             bool success;
             bool isNullToken = reader.TokenType == JsonTokenType.Null;
@@ -202,7 +209,7 @@ namespace System.Text.Json
             return success;
         }
 
-        public override void SetValueAsObject(object obj, object? value)
+        internal sealed override void SetValueAsObject(object obj, object? value)
         {
             Debug.Assert(HasSetter);
             TTypeToConvert typedValue = (TTypeToConvert)value!;

@@ -13,7 +13,7 @@ using System.Text.Json.Serialization;
 namespace System.Text.Json
 {
     [DebuggerDisplay("ClassType.{ClassType}, {Type.Name}")]
-    internal sealed partial class JsonClassInfo
+    public partial class JsonClassInfo
     {
         // The length of the property name embedded in the key (in bytes).
         // The key is a ulong (8 bytes) containing the first 7 bytes of the property name
@@ -28,18 +28,18 @@ namespace System.Text.Json
 
         // The number of parameters the deserialization constructor has. If this is not equal to ParameterCache.Count, this means
         // that not all parameters are bound to object properties, and an exception will be thrown if deserialization is attempted.
-        public int ParameterCount { get; private set; }
+        internal int ParameterCount { get; private set; }
 
         // All of the serializable parameters on a POCO constructor keyed on parameter name.
         // Only paramaters which bind to properties are cached.
-        public volatile Dictionary<string, JsonParameterInfo>? ParameterCache;
+        internal volatile Dictionary<string, JsonParameterInfo>? ParameterCache;
 
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
-        public volatile Dictionary<string, JsonPropertyInfo>? PropertyCache;
+        internal volatile Dictionary<string, JsonPropertyInfo>? PropertyCache;
 
         // All of the serializable properties on a POCO including the optional extension property.
         // Used for performance during serialization instead of 'PropertyCache' above.
-        public volatile JsonPropertyInfo[]? PropertyCacheArray;
+        internal volatile JsonPropertyInfo[]? PropertyCacheArray;
 
         // Fast cache of constructor parameters by first JSON ordering; may not contain all parameters. Accessed before ParameterCache.
         // Use an array (instead of List<T>) for highest performance.
@@ -65,7 +65,7 @@ namespace System.Text.Json
             return new Dictionary<string, JsonPropertyInfo>(capacity, comparer);
         }
 
-        public Dictionary<string, JsonParameterInfo> CreateParameterCache(int capacity, JsonSerializerOptions options)
+        internal Dictionary<string, JsonParameterInfo> CreateParameterCache(int capacity, JsonSerializerOptions options)
         {
             if (options.PropertyNameCaseInsensitive)
             {
@@ -77,7 +77,7 @@ namespace System.Text.Json
             }
         }
 
-        public static JsonPropertyInfo AddProperty(Type propertyType, PropertyInfo propertyInfo, Type parentClassType, JsonSerializerOptions options)
+        internal static JsonPropertyInfo AddProperty(Type propertyType, PropertyInfo propertyInfo, Type parentClassType, JsonSerializerOptions options)
         {
             bool hasIgnoreAttribute = (JsonPropertyInfo.GetAttribute<JsonIgnoreAttribute>(propertyInfo) != null);
             if (hasIgnoreAttribute)
@@ -145,7 +145,7 @@ namespace System.Text.Json
 
         // AggressiveInlining used although a large method it is only called from one location and is on a hot path.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public JsonPropertyInfo GetProperty(ReadOnlySpan<byte> propertyName, ref ReadStackFrame frame)
+        internal JsonPropertyInfo GetProperty(ReadOnlySpan<byte> propertyName, ref ReadStackFrame frame)
         {
             JsonPropertyInfo? info = null;
 
@@ -258,7 +258,7 @@ namespace System.Text.Json
 
         // AggressiveInlining used although a large method it is only called from one location and is on a hot path.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetParameter(
+        internal bool TryGetParameter(
             ReadOnlySpan<byte> propertyName,
             ref ReadStackFrame frame,
             out JsonParameterInfo? jsonParameterInfo)
@@ -339,8 +339,8 @@ namespace System.Text.Json
             Debug.Assert(info != null);
 
             // Two code paths to get here:
-            // 1) key == info.PropertyNameKey. Exact match found.
-            // 2) key != info.PropertyNameKey. Match found due to case insensitivity.
+            // 1) key == info.ParameterNameKey. Exact match found.
+            // 2) key != info.ParameterNameKey. Match found due to case insensitivity.
             Debug.Assert(key == info.ParameterNameKey ||
                 propertyNameAsString.Equals(info.NameAsString, StringComparison.OrdinalIgnoreCase));
 
@@ -417,7 +417,7 @@ namespace System.Text.Json
         /// </summary>
         // AggressiveInlining used since this method is only called from two locations and is on a hot path.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong GetKey(ReadOnlySpan<byte> propertyName)
+        internal static ulong GetKey(ReadOnlySpan<byte> propertyName)
         {
             const int BitsInByte = 8;
             ulong key;
@@ -503,7 +503,7 @@ namespace System.Text.Json
             return key;
         }
 
-        public void UpdateSortedPropertyCache(ref ReadStackFrame frame)
+        internal void UpdateSortedPropertyCache(ref ReadStackFrame frame)
         {
             Debug.Assert(frame.PropertyRefCache != null);
 
@@ -539,7 +539,7 @@ namespace System.Text.Json
             frame.PropertyRefCache = null;
         }
 
-        public void UpdateSortedParameterCache(ref ReadStackFrame frame)
+        internal void UpdateSortedParameterCache(ref ReadStackFrame frame)
         {
             Debug.Assert(frame.CtorArgumentState!.ParameterRefCache != null);
 

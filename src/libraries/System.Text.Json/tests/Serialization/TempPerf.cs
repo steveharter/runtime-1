@@ -4,28 +4,126 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Converters;
 using Xunit;
 
 namespace Temp
 {
-    public class Perf
+    public static class Serializer
     {
-        public class WeatherForecast
+        public static JsonSerializerOptions Options { get; }
+
+        public static DateTimeConverter DateTimeConverter { get; }
+        public static Int32Converter Int32Converter { get; }
+        public static StringConverter StringConverter { get; }
+
+        static Serializer()
         {
-            public DateTime Date { get; set; }
+            var sw = new Stopwatch();
+            sw.Start();
 
-            public int TemperatureC { get; set; }
+            Options = new JsonSerializerOptions();
+            DateTimeConverter = (DateTimeConverter)Options.GetConverter(typeof(DateTime));
+            Int32Converter = (Int32Converter)Options.GetConverter(typeof(int));
+            StringConverter = (StringConverter)Options.GetConverter(typeof(string));
 
-            public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+            sw.Stop();
+            Console.WriteLine($"Initialize1: {sw.ElapsedMilliseconds}");
+        }
+    }
 
-            public string Summary { get; set; }
+    public class WeatherForecast
+    {
+        static WeatherForecast()
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+
+            ClassInfo classInfo = new ClassInfo(Serializer.Options);
+            classInfo.Initialize();
+            Serializer.Options.Classes.TryAdd(typeof(WeatherForecast), classInfo);
+
+            sw.Stop();
+            Console.WriteLine($"Initialize2: {sw.ElapsedMilliseconds}");
         }
 
+        public DateTime Date { get; set; }
+        public int TemperatureC { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        public string Summary { get; set; }
+
+        private class ClassInfo : JsonClassInfo
+        {
+            public ClassInfo(JsonSerializerOptions options) : base(typeof(WeatherForecast), options)
+            {
+                CreateObject = () => { return new WeatherForecast(); };
+            }
+
+            protected override IList<JsonPropertyInfo> GetProperties()
+            {
+                var properties = new List<JsonPropertyInfo>(4);
+
+                properties.Add(new JsonPropertyInfo<DateTime>
+                {
+                    Options = Options,
+                    Converter = Serializer.DateTimeConverter,
+                    NameAsString = nameof(WeatherForecast.Date),
+                    HasGetter = true,
+                    HasSetter = true,
+                    ShouldSerialize = true,
+                    ShouldDeserialize = true,
+                    Get = (obj) => { return ((WeatherForecast)obj).Date; },
+                    Set = (obj, value) => { ((WeatherForecast)obj).Date = value; }
+                });
+
+                properties.Add(new JsonPropertyInfo<int>
+                {
+                    Options = Options,
+                    Converter = Serializer.Int32Converter,
+                    NameAsString = nameof(WeatherForecast.TemperatureC),
+                    HasGetter = true,
+                    HasSetter = true,
+                    Get = (obj) => { return ((WeatherForecast)obj).TemperatureC; },
+                    Set = (obj, value) => { ((WeatherForecast)obj).TemperatureC = value; }
+                });
+
+                properties.Add(new JsonPropertyInfo<int>
+                {
+                    Options = Options,
+                    Converter = Serializer.Int32Converter,
+                    HasGetter = true,
+                    NameAsString = nameof(WeatherForecast.TemperatureF),
+                    Get = (obj) => { return ((WeatherForecast)obj).TemperatureF; },
+                });
+
+                properties.Add(new JsonPropertyInfo<string>
+                {
+                    Options = Options,
+                    Converter = Serializer.StringConverter,
+                    NameAsString = nameof(WeatherForecast.Summary),
+                    HasGetter = true,
+                    HasSetter = true,
+                    Get = (obj) => { return ((WeatherForecast)obj).Summary; },
+                    Set = (obj, value) => { ((WeatherForecast)obj).Summary = value; }
+                });
+
+                return properties;
+
+                //new JsonPropertyInfo<int>(
+                //    Get : (obj) => { return obj.MyIntProp; },
+                //    Set : (obj, value) => { obj.MyIntProp = value; })
+            }
+        }
+    }
+
+    public class Perf
+    {
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -53,12 +151,12 @@ namespace Temp
 
             //JsonSerializer.SerializeToUtf8Bytes(result);
 
-            //Manual(result); // 8
-            Auto(result); //50
-            //Custom(result); // 22 --> 21
+            //Writer(result); // 8
+            Auto(result); //48->8+19+15=42  (6 slower than Custom)
+            //CustomConverter(result); // 22 --> 9
         }
 
-        static void Manual(IEnumerable<WeatherForecast> result)
+        static void Writer(IEnumerable<WeatherForecast> result)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -93,14 +191,15 @@ namespace Temp
             var ms = new MemoryStream();
             foreach (var w in result)
             {
-                JsonSerializer.SerializeToUtf8Bytes(result);
+                JsonSerializer.SerializeToUtf8Bytes(result, Serializer.Options);
+                //string s = JsonSerializer.Serialize(result, Serializer.Options);
             }
 
             sw.Stop();
             Console.WriteLine(sw.ElapsedMilliseconds);
         }
 
-        static void Custom(IEnumerable<WeatherForecast> result)
+        static void CustomConverter(IEnumerable<WeatherForecast> result)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -161,72 +260,6 @@ namespace Temp
                 }
 
                 writer.WriteEndArray();
-            }
-        }
-
-        public class POCO : IJsonSerializable
-        {
-            JsonClassInfo IJsonSerializable.GetJsonClassInfo()
-            {
-                return new MyJsonClassInfo(this);
-            }
-
-            private class MyJsonClassInfo : JsonClassInfo
-            {
-                private POCO _obj;
-
-                public MyJsonClassInfo(POCO obj)
-                {
-                    _obj = obj;
-                }
-
-                public override JsonPropertyInfo[] GetProperties()
-                {
-                    return new JsonPropertyInfo[]
-                    {
-                    new JsonPropertyInfo<int>(
-                        getter : () => { return _obj.MyIntProp; },
-                        setter : (value) => { _obj.MyIntProp = value; })
-                    };
-                }
-            }
-
-            public int MyIntProp { get; set; }
-        }
-
-        public interface IJsonSerializable
-        {
-            public JsonClassInfo GetJsonClassInfo();
-        }
-
-        public abstract class JsonClassInfo
-        {
-            public abstract JsonPropertyInfo[] GetProperties();
-        }
-
-        public abstract class JsonPropertyInfo
-        {
-        }
-
-        public class JsonPropertyInfo<T> : JsonPropertyInfo
-        {
-            private Action<T> _setter;
-            private Func<T> _getter;
-
-            public JsonPropertyInfo(Func<T> getter, Action<T> setter)
-            {
-                _getter = getter;
-                _setter = setter;
-            }
-
-            public virtual void Set(T value)
-            {
-                _setter(value);
-            }
-
-            public virtual T Get()
-            {
-                return _getter();
             }
         }
     }

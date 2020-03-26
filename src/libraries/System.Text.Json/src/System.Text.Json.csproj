@@ -118,6 +118,7 @@
     <Compile Include="System\Text\Json\Serialization\JsonCamelCaseNamingPolicy.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonClassInfo.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonClassInfo.Cache.cs" />
+    <Compile Include="System\Text\Json\Serialization\JsonClassInfoDefault.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonCollectionConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonConstructorAttribute.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonConverter.cs" />

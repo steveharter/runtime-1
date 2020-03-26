@@ -9,76 +9,54 @@ using System.Text.Json.Serialization;
 
 namespace System.Text.Json
 {
+    /// <summary>
+    /// todo
+    /// </summary>
     [DebuggerDisplay("ClassType.{ClassType}, {Type.Name}")]
-    internal sealed partial class JsonClassInfo
+    public abstract partial class JsonClassInfo
     {
-        public delegate object? ConstructorDelegate();
-
-        public delegate T ParameterizedConstructorDelegate<T>(object[] arguments);
-
-        public delegate T ParameterizedConstructorDelegate<T, TArg0, TArg1, TArg2, TArg3>(TArg0 arg0, TArg1 arg1, TArg2 arg2, TArg3 arg3);
-
-        public ConstructorDelegate? CreateObject { get; private set; }
-
-        public ClassType ClassType { get; private set; }
-
-        public JsonPropertyInfo? DataExtensionProperty { get; private set; }
-
         // If enumerable, the JsonClassInfo for the element type.
         private JsonClassInfo? _elementClassInfo;
+        private bool _hasTypeBeenCreated;
 
         /// <summary>
-        /// Return the JsonClassInfo for the element type, or null if the type is not an enumerable or dictionary.
+        /// todo
         /// </summary>
-        /// <remarks>
-        /// This should not be called during warm-up (initial creation of JsonClassInfos) to avoid recursive behavior
-        /// which could result in a StackOverflowException.
-        /// </remarks>
-        public JsonClassInfo? ElementClassInfo
-        {
-            get
-            {
-                if (_elementClassInfo == null && ElementType != null)
-                {
-                    Debug.Assert(ClassType == ClassType.Enumerable ||
-                        ClassType == ClassType.Dictionary);
+        /// <returns></returns>
+        public delegate object? ConstructorDelegate();
 
-                    _elementClassInfo = Options.GetOrAddClass(ElementType);
-                }
+        internal delegate T ParameterizedConstructorDelegate<T>(object[] arguments);
 
-                return _elementClassInfo;
-            }
-        }
-
-        public Type? ElementType { get; set; }
-
-        public JsonSerializerOptions Options { get; private set; }
-
-        public Type Type { get; private set; }
+        internal delegate T ParameterizedConstructorDelegate<T, TArg0, TArg1, TArg2, TArg3>(TArg0 arg0, TArg1 arg1, TArg2 arg2, TArg3 arg3);
 
         /// <summary>
-        /// The JsonPropertyInfo for this JsonClassInfo. It is used to obtain the converter for the ClassInfo.
+        /// todo
         /// </summary>
-        /// <remarks>
-        /// The returned JsonPropertyInfo does not represent a real property; instead it represents either:
-        /// a collection element type,
-        /// a generic type parameter,
-        /// a property type (if pushed to a new stack frame),
-        /// or the root type passed into the root serialization APIs.
-        /// For example, for a property returning <see cref="Collections.Generic.List{T}"/> where T is a string,
-        /// a JsonClassInfo will be created with .Type=typeof(string) and .PropertyInfoForClassInfo=JsonPropertyInfo{string}.
-        /// Without this property, a "Converter" property would need to be added to JsonClassInfo and there would be several more
-        /// `if` statements to obtain the converter from either the actual JsonPropertyInfo (for a real property) or from the
-        /// ClassInfo (for the cases mentioned above). In addition, methods that have a JsonPropertyInfo argument would also likely
-        /// need to add an argument for JsonClassInfo.
-        /// </remarks>
-        public JsonPropertyInfo PropertyInfoForClassInfo { get; private set; }
+        public ConstructorDelegate? CreateObject { get; set; }
 
-        public JsonClassInfo(Type type, JsonSerializerOptions options)
+        internal ClassType ClassType { get; private set; }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        public JsonPropertyInfo? DataExtensionProperty { get; set; }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        internal protected JsonClassInfo(Type type, JsonSerializerOptions options)
         {
+            _hasTypeBeenCreated = true;
+
             Type = type;
             Options = options;
+        }
 
+        /// <summary>
+        /// todo
+        /// </summary>
+        public void Initialize()
+        {
             JsonConverter converter = GetConverter(
                 Type,
                 parentClassType: null, // A ClassInfo never has a "parent" class.
@@ -94,48 +72,30 @@ namespace System.Text.Json
             {
                 case ClassType.Object:
                     {
-                        PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(type, runtimeType, converter!, options);
+                        PropertyInfoForClassInfo = CreatePropertyInfoForClassInfo(Type, runtimeType, converter!, Options);
 
-                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(type);
-
-                        PropertyInfo[] properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-                        Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
-                        foreach (PropertyInfo propertyInfo in properties)
+                        if (CreateObject == null)
                         {
-                            // Ignore indexers
-                            if (propertyInfo.GetIndexParameters().Length > 0)
+                            CreateObject = Options.MemberAccessorStrategy.CreateConstructor(Type);
+                        }
+
+                        IList<JsonPropertyInfo> properties = GetProperties();
+
+                        Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Count);
+                        foreach (JsonPropertyInfo jsonPropertyInfo in properties)
+                        {
+                            if (jsonPropertyInfo != DataExtensionProperty)
                             {
-                                continue;
-                            }
-
-                            // For now we only support public getters\setters
-                            if (propertyInfo.GetMethod?.IsPublic == true ||
-                                propertyInfo.SetMethod?.IsPublic == true)
-                            {
-                                JsonPropertyInfo jsonPropertyInfo = AddProperty(propertyInfo.PropertyType, propertyInfo, type, options);
-                                Debug.Assert(jsonPropertyInfo != null);
-                                Debug.Assert(jsonPropertyInfo.NameAsString != null);
-                                Debug.Assert(jsonPropertyInfo.ClrNameAsString != null);
-
-                                if (IsExtensionDataProperty(propertyInfo))
-                                {
-                                    if (DataExtensionProperty != null)
-                                    {
-                                        ThrowHelper.ThrowInvalidOperationException_SerializationDuplicateTypeAttribute(type, typeof(JsonExtensionDataAttribute));
-                                    }
-
-                                    DataExtensionProperty = jsonPropertyInfo;
-                                }
-                                else if (!JsonHelpers.TryAdd(cache, jsonPropertyInfo.NameAsString, jsonPropertyInfo))
+                                if (!JsonHelpers.TryAdd(cache, jsonPropertyInfo.NameAsString!, jsonPropertyInfo))
                                 {
                                     // The JsonPropertyNameAttribute resulted in a collision.
 
-                                    JsonPropertyInfo other = cache[jsonPropertyInfo.NameAsString];
+                                    JsonPropertyInfo other = cache[jsonPropertyInfo.NameAsString!];
 
                                     if (other.ShouldDeserialize == false && other.ShouldSerialize == false)
                                     {
                                         // Overwrite the one just added since it has [JsonIgnore].
-                                        cache[jsonPropertyInfo.NameAsString] = jsonPropertyInfo;
+                                        cache[jsonPropertyInfo.NameAsString!] = jsonPropertyInfo;
                                     }
                                     else if (jsonPropertyInfo.ShouldDeserialize == true || jsonPropertyInfo.ShouldSerialize == true)
                                     {
@@ -166,7 +126,7 @@ namespace System.Text.Json
 
                         if (converter.ConstructorIsParameterized)
                         {
-                            converter.CreateConstructorDelegate(options);
+                            converter.CreateConstructorDelegate(Options);
                             InitializeConstructorParameters(converter.ConstructorInfo);
                         }
                     }
@@ -175,11 +135,68 @@ namespace System.Text.Json
                 case ClassType.Dictionary:
                     {
                         ElementType = converter.ElementType;
-                        CreateObject = options.MemberAccessorStrategy.CreateConstructor(runtimeType);
+                        //CreateObject = Options.MemberAccessorStrategy.CreateConstructor(runtimeType);
                     }
                     break;
             }
         }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        /// <returns></returns>
+        protected abstract IList<JsonPropertyInfo> GetProperties();
+
+        /// <summary>
+        /// Return the JsonClassInfo for the element type, or null if the type is not an enumerable or dictionary.
+        /// </summary>
+        /// <remarks>
+        /// This should not be called during warm-up (initial creation of JsonClassInfos) to avoid recursive behavior
+        /// which could result in a StackOverflowException.
+        /// </remarks>
+        internal JsonClassInfo? ElementClassInfo
+        {
+            get
+            {
+                if (_elementClassInfo == null && ElementType != null)
+                {
+                    Debug.Assert(ClassType == ClassType.Enumerable || ClassType == ClassType.Dictionary);
+                    _elementClassInfo = Options.GetOrAddClass(ElementType);
+                }
+
+                return _elementClassInfo;
+            }
+        }
+
+        internal Type? ElementType { get; set; }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        public JsonSerializerOptions Options { get; set; } = null!;
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        public Type Type { get; private set; }
+
+        /// <summary>
+        /// The JsonPropertyInfo for this JsonClassInfo. It is used to obtain the converter for the ClassInfo.
+        /// </summary>
+        /// <remarks>
+        /// The returned JsonPropertyInfo does not represent a real property; instead it represents either:
+        /// a collection element type,
+        /// a generic type parameter,
+        /// a property type (if pushed to a new stack frame),
+        /// or the root type passed into the root serialization APIs.
+        /// For example, for a property returning <see cref="Collections.Generic.List{T}"/> where T is a string,
+        /// a JsonClassInfo will be created with .Type=typeof(string) and .PropertyInfoForClassInfo=JsonPropertyInfo{string}.
+        /// Without this property, a "Converter" property would need to be added to JsonClassInfo and there would be several more
+        /// `if` statements to obtain the converter from either the actual JsonPropertyInfo (for a real property) or from the
+        /// ClassInfo (for the cases mentioned above). In addition, methods that have a JsonPropertyInfo argument would also likely
+        /// need to add an argument for JsonClassInfo.
+        /// </remarks>
+        internal JsonPropertyInfo PropertyInfoForClassInfo { get; private set; } = null!;
 
         private void InitializeConstructorParameters(ConstructorInfo constructorInfo)
         {
@@ -242,7 +259,7 @@ namespace System.Text.Json
             PropertyCache = propertyCache;
         }
 
-        public bool IsExtensionDataProperty(PropertyInfo propertyInfo)
+        internal bool IsExtensionDataProperty(PropertyInfo propertyInfo)
         {
             Attribute? attribute = propertyInfo.GetCustomAttribute(typeof(JsonExtensionDataAttribute));
             if (attribute == null)
@@ -298,7 +315,7 @@ namespace System.Text.Json
         // - runtime type,
         // - element type (if the type is a collection),
         // - the converter (either native or custom), if one exists.
-        public static JsonConverter GetConverter(
+        internal static JsonConverter GetConverter(
             Type type,
             Type? parentClassType,
             PropertyInfo? propertyInfo,
@@ -350,6 +367,15 @@ namespace System.Text.Json
             }
 
             return converter;
+        }
+
+        internal void VerifyMutable()
+        {
+            if (_hasTypeBeenCreated)
+            {
+                // todo: need specific exception
+                ThrowHelper.ThrowInvalidOperationException_SerializerOptionsImmutable();
+            }
         }
     }
 }

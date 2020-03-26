@@ -4,13 +4,20 @@
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class StringConverter : JsonConverter<string?>
+    /// <summary>
+    /// todo
+    /// </summary>
+    public sealed class StringConverter : JsonConverter<string?>
     {
+        /// <summary>
+        /// </summary>
         public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             return reader.GetString();
         }
 
+        /// <summary>
+        /// </summary>
         public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
         {
             writer.WriteStringValue(value);

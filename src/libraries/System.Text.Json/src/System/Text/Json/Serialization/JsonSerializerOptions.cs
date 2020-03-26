@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
@@ -66,6 +67,11 @@ namespace System.Text.Json
                 _allowTrailingCommas = value;
             }
         }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        public IDictionary<Type, JsonClassInfo> Classes => _classes;
 
         /// <summary>
         /// The default buffer size in bytes used when creating temporary buffers.
@@ -337,7 +343,9 @@ namespace System.Text.Json
             // https://github.com/dotnet/runtime/issues/32357
             if (!_classes.TryGetValue(type, out JsonClassInfo? result))
             {
-                result = _classes.GetOrAdd(type, new JsonClassInfo(type, this));
+                JsonClassInfo classInfo = new JsonClassInfoDefault(type, this);
+                classInfo.Initialize();
+                result = _classes.GetOrAdd(type, classInfo);
             }
 
             return result;

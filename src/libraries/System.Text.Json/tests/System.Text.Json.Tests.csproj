@@ -155,4 +155,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\System.Text.Json.csproj" />
+  </ItemGroup>
 </Project>
