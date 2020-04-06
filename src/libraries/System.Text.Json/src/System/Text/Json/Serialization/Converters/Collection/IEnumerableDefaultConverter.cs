@@ -10,24 +10,19 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Default base class implementation of <cref>JsonIEnumerableConverter{TCollection, TElement}</cref>.
     /// </summary>
-    internal abstract class IEnumerableDefaultConverter<TCollection, TElement>
-        : JsonCollectionConverter<TCollection, TElement>
+    internal abstract class IEnumerableDefaultConverter<TCollection, TElement, TConverterGenericParameter>
+        : JsonCollectionConverter<TCollection, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        internal IEnumerableDefaultConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected abstract void Add(TElement value, ref ReadStack state);
         protected abstract void CreateCollection(ref ReadStack state, JsonSerializerOptions options);
         protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
 
-        protected static JsonConverter<TElement> GetElementConverter(ref ReadStack state)
+        protected static JsonConverter<TConverterGenericParameter> GetElementConverter(ref ReadStack state)
         {
-            JsonConverter<TElement> converter = (JsonConverter<TElement>)state.Current.JsonClassInfo.ElementClassInfo!.PropertyInfoForClassInfo.ConverterBase;
-            Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
-
-            return converter;
-        }
-
-        protected static JsonConverter<TElement> GetElementConverter(ref WriteStack state)
-        {
-            JsonConverter<TElement> converter = (JsonConverter<TElement>)state.Current.DeclaredJsonPropertyInfo!.ConverterBase;
+            JsonConverter<TConverterGenericParameter> converter = (JsonConverter<TConverterGenericParameter>)state.Current.JsonClassInfo.ElementClassInfo!.PropertyInfoForClassInfo.ConverterBase;
             Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
 
             return converter;
@@ -38,7 +33,7 @@ namespace System.Text.Json.Serialization.Converters
             Type typeToConvert,
             JsonSerializerOptions options,
             ref ReadStack state,
-            [MaybeNullWhen(false)] out TCollection value)
+            [MaybeNullWhen(false)] out object value)
         {
             bool shouldReadPreservedReferences = options.ReferenceHandling.ShouldReadPreservedReferences();
 
@@ -53,7 +48,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 CreateCollection(ref state, options);
 
-                JsonConverter<TElement> elementConverter = GetElementConverter(ref state);
+                JsonConverter<TConverterGenericParameter> elementConverter = GetElementConverter(ref state);
                 if (elementConverter.CanUseDirectReadOrWrite)
                 {
                     // Fast path that avoids validation and extra indirection.
@@ -66,8 +61,8 @@ namespace System.Text.Json.Serialization.Converters
                         }
 
                         // Obtain the CLR value from the JSON and apply to the object.
-                        TElement element = elementConverter.Read(ref reader, elementConverter.TypeToConvert, options);
-                        Add(element, ref state);
+                        TConverterGenericParameter element = elementConverter.Read(ref reader, elementConverter.TypeToConvert, options);
+                        Add((TElement)element!, ref state);
                     }
                 }
                 else
@@ -82,8 +77,8 @@ namespace System.Text.Json.Serialization.Converters
                         }
 
                         // Get the value from the converter and add it.
-                        elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TElement element);
-                        Add(element, ref state);
+                        elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TConverterGenericParameter element);
+                        Add((TElement)element!, ref state);
                     }
                 }
             }
@@ -149,7 +144,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 if (state.Current.ObjectState < StackFrameObjectState.ReadElements)
                 {
-                    JsonConverter<TElement> elementConverter = GetElementConverter(ref state);
+                    JsonConverter<TConverterGenericParameter> elementConverter = GetElementConverter(ref state);
 
                     // Process all elements.
                     while (true)
@@ -178,13 +173,13 @@ namespace System.Text.Json.Serialization.Converters
                         if (state.Current.PropertyState < StackFramePropertyState.TryRead)
                         {
                             // Get the value from the converter and add it.
-                            if (!elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TElement element))
+                            if (!elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TConverterGenericParameter element))
                             {
                                 value = default;
                                 return false;
                             }
 
-                            Add(element, ref state);
+                            Add((TElement)element!, ref state);
 
                             // No need to set PropertyState to TryRead since we're done with this element now.
                             state.Current.EndElement();
@@ -236,7 +231,7 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal sealed override bool OnTryWrite(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        internal sealed override bool OnTryWrite(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
         {
             bool success;
 
@@ -291,6 +286,6 @@ namespace System.Text.Json.Serialization.Converters
             return success;
         }
 
-        protected abstract bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state);
+        protected abstract bool OnWriteResume(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state);
     }
 }

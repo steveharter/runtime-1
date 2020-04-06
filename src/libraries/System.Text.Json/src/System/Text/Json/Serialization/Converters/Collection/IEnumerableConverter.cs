@@ -11,11 +11,11 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Converter for <cref>System.Collections.IEnumerable</cref>.
     /// </summary>
-    /// <typeparam name="TCollection"></typeparam>
-    internal sealed class IEnumerableConverter<TCollection>
-        : IEnumerableDefaultConverter<TCollection, object?>
-        where TCollection : IEnumerable
+    internal sealed class IEnumerableConverter
+        : IEnumerableDefaultConverter<IEnumerable, object, object?>
     {
+        public IEnumerableConverter(Type typeToConvert) : base(typeToConvert, typeof(object)) { }
+
         protected override void Add(object? value, ref ReadStack state)
         {
             Debug.Assert(state.Current.ReturnValue is List<object?>);
@@ -37,10 +37,12 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override bool OnWriteResume(
             Utf8JsonWriter writer,
-            TCollection value,
+            object objValue,
             JsonSerializerOptions options,
             ref WriteStack state)
         {
+            var value = (IEnumerable)objValue;
+
             IEnumerator enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -55,7 +57,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<object?> converter = GetElementConverter(ref state);
+            JsonConverter<object?> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

@@ -7,14 +7,16 @@ using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class StackOfTConverter<TCollection, TElement>
-        : IEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : Stack<TElement>
+    internal sealed class StackOfTConverter<TElement, TConverterGenericParameter>
+        : IEnumerableDefaultConverter<Stack<TElement>, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        public StackOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
-            Debug.Assert(state.Current.ReturnValue is TCollection);
-            ((TCollection)state.Current.ReturnValue!).Push(value);
+            Debug.Assert(state.Current.ReturnValue is Stack<TElement>);
+            ((Stack<TElement>)state.Current.ReturnValue!).Push(value);
         }
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
@@ -27,8 +29,10 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (Stack<TElement>)objValue;
+
             IEnumerator<TElement> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -44,7 +48,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TElement> converter = GetElementConverter(ref state);
+            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

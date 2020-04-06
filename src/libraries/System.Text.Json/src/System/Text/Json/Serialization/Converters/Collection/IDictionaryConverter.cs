@@ -12,10 +12,11 @@ namespace System.Text.Json.Serialization.Converters
     /// Converter for <cref>System.Collections.IDictionary</cref> that (de)serializes as a JSON object with properties
     /// representing the dictionary element key and value.
     /// </summary>
-    internal sealed class IDictionaryConverter<TCollection>
-        : DictionaryDefaultConverter<TCollection, object?>
-        where TCollection : IDictionary
+    internal sealed class IDictionaryConverter
+        : DictionaryDefaultConverter<IDictionary, object?, object?>
     {
+        public IDictionaryConverter(Type dictionaryType) : base(dictionaryType, typeof(object)) { }
+
         protected override void Add(object? value, JsonSerializerOptions options, ref ReadStack state)
         {
             Debug.Assert(state.Current.ReturnValue is IDictionary);
@@ -44,7 +45,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowNotSupportedException_DeserializeNoDeserializationConstructor(TypeToConvert);
                 }
 
-                TCollection returnValue = (TCollection)classInfo.CreateObject()!;
+                IDictionary returnValue = (IDictionary)classInfo.CreateObject()!;
 
                 if (returnValue.IsReadOnly)
                 {
@@ -55,8 +56,10 @@ namespace System.Text.Json.Serialization.Converters
             }
         }
 
-        protected internal override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected internal override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (IDictionary)objValue;
+
             IDictionaryEnumerator enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -72,7 +75,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IDictionaryEnumerator)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<object?> converter = GetValueConverter(ref state);
+            JsonConverter<object?> converter = GetValueConverter(options);
             do
             {
                 if (enumerator.Key is string key)

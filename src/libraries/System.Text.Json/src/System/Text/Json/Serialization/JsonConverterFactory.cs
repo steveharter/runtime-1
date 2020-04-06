@@ -38,6 +38,12 @@ namespace System.Text.Json.Serialization
         /// </returns>
         public abstract JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options);
 
+
+        internal virtual JsonConverter? CreateConverter(JsonClassInfo typeToConvert, JsonSerializerOptions options)
+        {
+            return CreateConverter(typeToConvert, options);
+        }
+
         internal override JsonPropertyInfo CreateJsonPropertyInfo()
         {
             // We should never get here.

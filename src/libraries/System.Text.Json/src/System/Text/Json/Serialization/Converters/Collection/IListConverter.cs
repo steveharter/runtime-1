@@ -9,10 +9,11 @@ using System.Diagnostics;
 namespace System.Text.Json.Serialization.Converters
 {
     /// Converter for <cref>System.Collections.IList</cref>.
-    internal sealed class IListConverter<TCollection>
-        : IEnumerableDefaultConverter<TCollection, object?>
-        where TCollection : IList
+    internal sealed class IListConverter
+        : IEnumerableDefaultConverter<IList, object?, object?>
     {
+        public IListConverter(Type typeToConvert) : base(typeToConvert, typeof(object)) { }
+
         protected override void Add(object? value, ref ReadStack state)
         {
             Debug.Assert(state.Current.ReturnValue is IList);
@@ -39,7 +40,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowNotSupportedException_DeserializeNoDeserializationConstructor(TypeToConvert);
                 }
 
-                TCollection returnValue = (TCollection)classInfo.CreateObject()!;
+                IList returnValue = (IList)classInfo.CreateObject()!;
 
                 if (returnValue.IsReadOnly)
                 {
@@ -50,8 +51,10 @@ namespace System.Text.Json.Serialization.Converters
             }
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (IList)objValue;
+
             IEnumerator enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -66,7 +69,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<object?> converter = GetElementConverter(ref state);
+            JsonConverter<object?> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

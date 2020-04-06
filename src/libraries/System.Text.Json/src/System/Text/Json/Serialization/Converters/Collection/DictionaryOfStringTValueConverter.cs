@@ -11,16 +11,18 @@ namespace System.Text.Json.Serialization.Converters
     /// Converter for Dictionary{string, TValue} that (de)serializes as a JSON object with properties
     /// representing the dictionary element key and value.
     /// </summary>
-    internal sealed class DictionaryOfStringTValueConverter<TCollection, TValue>
-        : DictionaryDefaultConverter<TCollection, TValue>
-        where TCollection : Dictionary<string, TValue>
+    internal sealed class DictionaryOfStringTValueConverter<TDictionaryValue, TDictionaryValueGenericParameter>
+        : DictionaryDefaultConverter<Dictionary<string, TDictionaryValue>, TDictionaryValue, TDictionaryValueGenericParameter>
+        where TDictionaryValue : TDictionaryValueGenericParameter
     {
-        protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
+        public DictionaryOfStringTValueConverter(Type dictionaryType, Type dictionaryValueType) : base(dictionaryType, dictionaryValueType) { }
+
+        protected override void Add(TDictionaryValue value, JsonSerializerOptions options, ref ReadStack state)
         {
-            Debug.Assert(state.Current.ReturnValue is TCollection);
+            Debug.Assert(state.Current.ReturnValue is Dictionary<string, TDictionaryValue>);
 
             string key = state.Current.JsonPropertyNameAsString!;
-            ((TCollection)state.Current.ReturnValue!)[key] = value;
+            ((Dictionary<string, TDictionaryValue>)state.Current.ReturnValue!)[key] = value;
         }
 
         protected override void CreateCollection(ref ReadStack state)
@@ -35,11 +37,13 @@ namespace System.Text.Json.Serialization.Converters
 
         protected internal override bool OnWriteResume(
             Utf8JsonWriter writer,
-            TCollection value,
+            object objValue,
             JsonSerializerOptions options,
             ref WriteStack state)
         {
-            Dictionary<string, TValue>.Enumerator enumerator;
+            var value = (Dictionary<string, TDictionaryValue>)objValue;
+
+            Dictionary<string, TDictionaryValue>.Enumerator enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
                 enumerator = value.GetEnumerator();
@@ -50,11 +54,11 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                Debug.Assert(state.Current.CollectionEnumerator is Dictionary<string, TValue>.Enumerator);
-                enumerator = (Dictionary<string, TValue>.Enumerator)state.Current.CollectionEnumerator;
+                Debug.Assert(state.Current.CollectionEnumerator is Dictionary<string, TDictionaryValue>.Enumerator);
+                enumerator = (Dictionary<string, TDictionaryValue>.Enumerator)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TValue> converter = GetValueConverter(ref state);
+            JsonConverter<TDictionaryValueGenericParameter> converter = GetValueConverter(options);
             if (!state.SupportContinuation && converter.CanUseDirectReadOrWrite)
             {
                 // Fast path that avoids validation and extra indirection.
@@ -63,7 +67,7 @@ namespace System.Text.Json.Serialization.Converters
                     string key = GetKeyName(enumerator.Current.Key, ref state, options);
                     writer.WritePropertyName(key);
                     // TODO: https://github.com/dotnet/runtime/issues/32523
-                    converter.Write(writer, enumerator.Current.Value!, options);
+                    converter.Write(writer, (TDictionaryValueGenericParameter)enumerator.Current.Value!, options);
                 } while (enumerator.MoveNext());
             }
             else
@@ -76,7 +80,7 @@ namespace System.Text.Json.Serialization.Converters
                         return false;
                     }
 
-                    TValue element = enumerator.Current.Value;
+                    TDictionaryValue element = enumerator.Current.Value;
                     if (state.Current.PropertyState < StackFramePropertyState.Name)
                     {
                         state.Current.PropertyState = StackFramePropertyState.Name;
@@ -84,7 +88,7 @@ namespace System.Text.Json.Serialization.Converters
                         writer.WritePropertyName(key);
                     }
 
-                    if (!converter.TryWrite(writer, element, options, ref state))
+                    if (!converter.TryWrite(writer, (TDictionaryValueGenericParameter)element!, options, ref state))
                     {
                         state.Current.CollectionEnumerator = enumerator;
                         return false;

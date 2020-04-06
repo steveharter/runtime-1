@@ -26,20 +26,12 @@ namespace System.Text.Json
         // The limit to how many property names from the JSON are cached in _propertyRefsSorted before using PropertyCache.
         private const int PropertyNameCountCacheThreshold = 64;
 
-        // The number of parameters the deserialization constructor has. If this is not equal to ParameterCache.Count, this means
-        // that not all parameters are bound to object properties, and an exception will be thrown if deserialization is attempted.
-        public int ParameterCount { get; private set; }
-
-        // All of the serializable parameters on a POCO constructor keyed on parameter name.
-        // Only paramaters which bind to properties are cached.
-        public volatile Dictionary<string, JsonParameterInfo>? ParameterCache;
-
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
-        public volatile Dictionary<string, JsonPropertyInfo>? PropertyCache;
+        private volatile Dictionary<string, JsonPropertyInfo>? _propertyCache;
 
         // All of the serializable properties on a POCO including the optional extension property.
         // Used for performance during serialization instead of 'PropertyCache' above.
-        public volatile JsonPropertyInfo[]? PropertyCacheArray;
+        private volatile JsonPropertyInfo[]? _propertyCacheArray;
 
         // Fast cache of constructor parameters by first JSON ordering; may not contain all parameters. Accessed before ParameterCache.
         // Use an array (instead of List<T>) for highest performance.
@@ -48,6 +40,14 @@ namespace System.Text.Json
         // Fast cache of properties by first JSON ordering; may not contain all properties. Accessed before PropertyCache.
         // Use an array (instead of List<T>) for highest performance.
         private volatile PropertyRef[]? _propertyRefsSorted;
+
+        // The number of parameters the deserialization constructor has. If this is not equal to ParameterCache.Count, this means
+        // that not all parameters are bound to object properties, and an exception will be thrown if deserialization is attempted.
+        public int ParameterCount { get; private set; }
+
+        // All of the serializable parameters on a POCO constructor keyed on parameter name.
+        // Only paramaters which bind to properties are cached.
+        public volatile Dictionary<string, JsonParameterInfo>? ParameterCache;
 
         private Dictionary<string, JsonPropertyInfo> CreatePropertyCache(int capacity)
         {
@@ -539,6 +539,37 @@ namespace System.Text.Json
             }
 
             frame.PropertyRefCache = null;
+        }
+
+        // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
+        public Dictionary<string, JsonPropertyInfo> PropertyCache
+        {
+            get
+            {
+                if (_propertyCache == null)
+                {
+                    InitializePropertyCache();
+                    Debug.Assert(_propertyCache != null);
+                }
+
+                return _propertyCache;
+            }
+        }
+
+        // All of the serializable properties on a POCO including the optional extension property.
+        // Used for performance during serialization instead of 'PropertyCache' above.
+        public JsonPropertyInfo[] PropertyCacheArray
+        {
+            get
+            {
+                if (_propertyCacheArray == null)
+                {
+                    InitializePropertyCache();
+                    Debug.Assert(_propertyCacheArray != null);
+                }
+
+                return _propertyCacheArray;
+            }
         }
 
         public void UpdateSortedParameterCache(ref ReadStackFrame frame)

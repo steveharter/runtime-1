@@ -8,14 +8,16 @@ using System.Diagnostics;
 namespace System.Text.Json.Serialization.Converters
 {
     /// Converter for <cref>System.Collections.Generic.List{TElement}</cref>.
-    internal sealed class ListOfTConverter<TCollection, TElement>
-        : IEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection: List<TElement>
+    internal sealed class ListOfTConverter<TElement, TConverterGenericParameter>
+        : IEnumerableDefaultConverter<List<TElement>, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        public ListOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
-            Debug.Assert(state.Current.ReturnValue is TCollection);
-            ((TCollection)state.Current.ReturnValue!).Add(value);
+            Debug.Assert(state.Current.ReturnValue is List<TElement>);
+            ((List<TElement>)state.Current.ReturnValue!).Add(value);
         }
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
@@ -28,28 +30,28 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
-            List<TElement> list = value;
+            var value = (List<TElement>)objValue;
 
             // Using an index is 2x faster than using an enumerator.
             int index = state.Current.EnumeratorIndex;
-            JsonConverter<TElement> elementConverter = GetElementConverter(ref state);
+            JsonConverter<TConverterGenericParameter> elementConverter = GetElementConverter(options);
 
             if (elementConverter.CanUseDirectReadOrWrite)
             {
                 // Fast path that avoids validation and extra indirection.
-                for (; index < list.Count; index++)
+                for (; index < value.Count; index++)
                 {
                     // TODO: https://github.com/dotnet/runtime/issues/32523
-                    elementConverter.Write(writer, list[index]!, options);
+                    elementConverter.Write(writer, value[index]!, options);
                 }
             }
             else
             {
-                for (; index < list.Count; index++)
+                for (; index < value.Count; index++)
                 {
-                    TElement element = list[index];
+                    TElement element = value[index];
                     if (!elementConverter.TryWrite(writer, element, options, ref state))
                     {
                         state.Current.EnumeratorIndex = index;

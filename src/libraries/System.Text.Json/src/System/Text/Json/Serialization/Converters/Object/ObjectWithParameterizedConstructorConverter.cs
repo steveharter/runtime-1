@@ -17,9 +17,11 @@ namespace System.Text.Json.Serialization.Converters
     /// Implementation of <cref>JsonObjectConverter{T}</cref> that supports the deserialization
     /// of JSON objects using parameterized constructors.
     /// </summary>
-    internal abstract partial class ObjectWithParameterizedConstructorConverter<T> : ObjectDefaultConverter<T> where T : notnull
+    internal abstract partial class ObjectWithParameterizedConstructorConverter : ObjectDefaultConverter<object>
     {
-        internal sealed override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, [MaybeNullWhen(false)] out T value)
+        public ObjectWithParameterizedConstructorConverter(Type typeToConvert) : base(typeToConvert) { }
+
+        internal sealed override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, out object value)
         {
             bool shouldReadPreservedReferences = options.ReferenceHandling.ShouldReadPreservedReferences();
             object obj;
@@ -82,7 +84,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 if (!ReadConstructorArgumentsWithContinuation(ref state, ref reader, options))
                 {
-                    value = default;
+                    value = default!;
                     return false;
                 }
 
@@ -135,7 +137,7 @@ namespace System.Text.Json.Serialization.Converters
                 state.Current.JsonClassInfo.UpdateSortedParameterCache(ref state.Current);
             }
 
-            value = (T)obj;
+            value = obj;
 
             return true;
         }

@@ -2,15 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ImmutableEnumerableOfTConverter<TCollection, TElement>
-        : IEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : IEnumerable<TElement>
+    internal sealed class ImmutableEnumerableOfTConverter<TElement, TConverterGenericParameter>
+        : IEnumerableDefaultConverter<IEnumerable<TElement>, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        public ImmutableEnumerableOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
             Debug.Assert(state.Current.ReturnValue is List<TElement>);
@@ -26,11 +29,13 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void ConvertCollection(ref ReadStack state, JsonSerializerOptions options)
         {
-            state.Current.ReturnValue = GetCreatorDelegate(options)((List<TElement>)state.Current.ReturnValue!);
+            state.Current.ReturnValue = GetCreatorDelegate(ElementType, TypeToConvert, options)((IEnumerable)state.Current.ReturnValue!);
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (IEnumerable<TElement>)objValue;
+
             IEnumerator<TElement> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -46,7 +51,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TElement> converter = GetElementConverter(ref state);
+            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))
@@ -66,13 +71,13 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        private Func<IEnumerable<TElement>, TCollection>? _creatorDelegate;
+        private Func<IEnumerable, IEnumerable>? _creatorDelegate;
 
-        private Func<IEnumerable<TElement>, TCollection> GetCreatorDelegate(JsonSerializerOptions options)
+        private Func<IEnumerable, IEnumerable> GetCreatorDelegate(Type elementType, Type collectionType, JsonSerializerOptions options)
         {
             if (_creatorDelegate == null)
             {
-                _creatorDelegate = options.MemberAccessorStrategy.CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>();
+                _creatorDelegate = options.MemberAccessorStrategy.CreateImmutableEnumerableCreateRangeDelegate(elementType, collectionType);
             }
 
             return _creatorDelegate;

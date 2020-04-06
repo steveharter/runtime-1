@@ -10,13 +10,21 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Default base class implementation of <cref>JsonDictionaryConverter{TCollection}</cref> .
     /// </summary>
-    internal abstract class DictionaryDefaultConverter<TCollection, TValue>
+    internal abstract class DictionaryDefaultConverter<TCollection, TDictionaryValue, TDictionaryValueGenericParameter>
         : JsonDictionaryConverter<TCollection>
+        where TDictionaryValue : TDictionaryValueGenericParameter
     {
+        private Type _dictionaryValueType;
+
+        internal DictionaryDefaultConverter(Type dictionaryType, Type dictionaryValueType) : base(dictionaryType)
+        {
+            _dictionaryValueType = dictionaryValueType;
+        }
+
         /// <summary>
         /// When overridden, adds the value to the collection.
         /// </summary>
-        protected abstract void Add(TValue value, JsonSerializerOptions options, ref ReadStack state);
+        protected abstract void Add(TDictionaryValue value, JsonSerializerOptions options, ref ReadStack state);
 
         /// <summary>
         /// When overridden, converts the temporary collection held in state.Current.ReturnValue to the final collection.
@@ -29,15 +37,7 @@ namespace System.Text.Json.Serialization.Converters
         /// </summary>
         protected virtual void CreateCollection(ref ReadStack state) { }
 
-        internal override Type ElementType => typeof(TValue);
-
-        protected static JsonConverter<TValue> GetElementConverter(ref ReadStack state)
-        {
-            JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.JsonClassInfo.ElementClassInfo!.PropertyInfoForClassInfo.ConverterBase;
-            Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
-
-            return converter;
-        }
+        internal override Type ElementType => _dictionaryValueType;
 
         protected string GetKeyName(string key, ref WriteStack state, JsonSerializerOptions options)
         {
@@ -54,20 +54,12 @@ namespace System.Text.Json.Serialization.Converters
             return key;
         }
 
-        protected static JsonConverter<TValue> GetValueConverter(ref WriteStack state)
-        {
-            JsonConverter<TValue> converter = (JsonConverter<TValue>)state.Current.DeclaredJsonPropertyInfo!.ConverterBase;
-            Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
-
-            return converter;
-        }
-
         internal sealed override bool OnTryRead(
             ref Utf8JsonReader reader,
             Type typeToConvert,
             JsonSerializerOptions options,
             ref ReadStack state,
-            [MaybeNullWhen(false)] out TCollection value)
+            [MaybeNullWhen(false)] out object value)
         {
             bool shouldReadPreservedReferences = options.ReferenceHandling.ShouldReadPreservedReferences();
 
@@ -82,7 +74,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 CreateCollection(ref state);
 
-                JsonConverter<TValue> elementConverter = GetElementConverter(ref state);
+                JsonConverter<TDictionaryValueGenericParameter> elementConverter = GetValueConverter(options);
                 if (elementConverter.CanUseDirectReadOrWrite)
                 {
                     // Process all elements.
@@ -105,8 +97,8 @@ namespace System.Text.Json.Serialization.Converters
 
                         // Read the value and add.
                         reader.ReadWithVerify();
-                        TValue element = elementConverter.Read(ref reader, typeof(TValue), options);
-                        Add(element, options, ref state);
+                        TDictionaryValueGenericParameter element = elementConverter.Read(ref reader, typeof(TDictionaryValue), options);
+                        Add((TDictionaryValue)element!, options, ref state);
                     }
                 }
                 else
@@ -132,8 +124,8 @@ namespace System.Text.Json.Serialization.Converters
                         reader.ReadWithVerify();
 
                         // Get the value from the converter and add it.
-                        elementConverter.TryRead(ref reader, typeof(TValue), options, ref state, out TValue element);
-                        Add(element, options, ref state);
+                        elementConverter.TryRead(ref reader, typeof(TDictionaryValue), options, ref state, out TDictionaryValueGenericParameter element);
+                        Add((TDictionaryValue)element!, options, ref state);
                     }
                 }
             }
@@ -189,7 +181,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 // Process all elements.
-                JsonConverter<TValue> elementConverter = GetElementConverter(ref state);
+                JsonConverter<TDictionaryValueGenericParameter> elementConverter = GetValueConverter(options);
                 while (true)
                 {
                     if (state.Current.PropertyState == StackFramePropertyState.None)
@@ -246,14 +238,20 @@ namespace System.Text.Json.Serialization.Converters
                     if (state.Current.PropertyState < StackFramePropertyState.TryRead)
                     {
                         // Get the value from the converter and add it.
-                        bool success = elementConverter.TryRead(ref reader, typeof(TValue), options, ref state, out TValue element);
+                        bool success = elementConverter.TryRead(
+                            ref reader,
+                            typeof(TDictionaryValueGenericParameter),
+                            options,
+                            ref state,
+                            out TDictionaryValueGenericParameter element);
+
                         if (!success)
                         {
                             value = default;
                             return false;
                         }
 
-                        Add(element, options, ref state);
+                        Add((TDictionaryValue)element!, options, ref state);
                         state.Current.EndElement();
                     }
                 }
@@ -266,7 +264,7 @@ namespace System.Text.Json.Serialization.Converters
 
         internal sealed override bool OnTryWrite(
             Utf8JsonWriter writer,
-            TCollection dictionary,
+            object dictionary,
             JsonSerializerOptions options,
             ref WriteStack state)
         {
@@ -303,6 +301,12 @@ namespace System.Text.Json.Serialization.Converters
             }
 
             return success;
+        }
+
+        internal JsonConverter<TDictionaryValueGenericParameter> GetValueConverter(JsonSerializerOptions options)
+        {
+            // todo: cache returned converter (require options instance not to change)
+            return (JsonConverter<TDictionaryValueGenericParameter>)options.GetConverter(_dictionaryValueType);
         }
     }
 }

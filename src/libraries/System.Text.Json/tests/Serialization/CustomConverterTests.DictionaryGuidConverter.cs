@@ -53,7 +53,7 @@ namespace System.Text.Json.Serialization.Tests
                 public DictionaryGuidConverterInner(JsonSerializerOptions options)
                 {
                     // For performance, use the existing converter if available.
-                    _valueConverter = (JsonConverter<TValue>)options.GetConverter(typeof(TValue));
+                    _valueConverter = options.GetConverter(typeof(TValue)) as JsonConverter<TValue>;
                 }
 
                 public override Dictionary<Guid, TValue> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

@@ -11,16 +11,18 @@ namespace System.Text.Json.Serialization.Converters
     /// Converter for <cref>System.Collections.Generic.IDictionary{string, TValue}</cref> that
     /// (de)serializes as a JSON object with properties representing the dictionary element key and value.
     /// </summary>
-    internal sealed class IDictionaryOfStringTValueConverter<TCollection, TValue>
-        : DictionaryDefaultConverter<TCollection, TValue>
-        where TCollection : IDictionary<string, TValue>
+    internal sealed class IDictionaryOfStringTValueConverter<TDictionaryValue, TDictionaryValueGenericParameter>
+        : DictionaryDefaultConverter<IDictionary<string, TDictionaryValue>, TDictionaryValue, TDictionaryValueGenericParameter>
+        where TDictionaryValue : TDictionaryValueGenericParameter
     {
-        protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
+        public IDictionaryOfStringTValueConverter(Type typeToConvert, Type dictionaryValueType) : base(typeToConvert, dictionaryValueType) { }
+
+        protected override void Add(TDictionaryValue value, JsonSerializerOptions options, ref ReadStack state)
         {
-            Debug.Assert(state.Current.ReturnValue is TCollection);
+            Debug.Assert(state.Current.ReturnValue is IDictionary<string, TDictionaryValue>);
 
             string key = state.Current.JsonPropertyNameAsString!;
-            ((TCollection)state.Current.ReturnValue!)[key] = value;
+            ((IDictionary<string, TDictionaryValue>)state.Current.ReturnValue!)[key] = value;
         }
 
         protected override void CreateCollection(ref ReadStack state)
@@ -34,7 +36,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowNotSupportedException_DeserializeNoDeserializationConstructor(TypeToConvert);
                 }
 
-                state.Current.ReturnValue = new Dictionary<string, TValue>();
+                state.Current.ReturnValue = new Dictionary<string, TDictionaryValue>();
             }
             else
             {
@@ -43,7 +45,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowNotSupportedException_DeserializeNoDeserializationConstructor(TypeToConvert);
                 }
 
-                TCollection returnValue = (TCollection)classInfo.CreateObject()!;
+                IDictionary<string, TDictionaryValue> returnValue = (IDictionary<string, TDictionaryValue>)classInfo.CreateObject()!;
 
                 if (returnValue.IsReadOnly)
                 {
@@ -56,11 +58,13 @@ namespace System.Text.Json.Serialization.Converters
 
         protected internal override bool OnWriteResume(
             Utf8JsonWriter writer,
-            TCollection value,
+            object objValue,
             JsonSerializerOptions options,
             ref WriteStack state)
         {
-            IEnumerator<KeyValuePair<string, TValue>> enumerator;
+            var value = (IDictionary<string, TDictionaryValue>)objValue;
+
+            IEnumerator<KeyValuePair<string, TDictionaryValue>> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
                 enumerator = value.GetEnumerator();
@@ -71,11 +75,11 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                Debug.Assert(state.Current.CollectionEnumerator is IEnumerator<KeyValuePair<string, TValue>>);
-                enumerator = (IEnumerator<KeyValuePair<string, TValue>>)state.Current.CollectionEnumerator;
+                Debug.Assert(state.Current.CollectionEnumerator is IEnumerator<KeyValuePair<string, TDictionaryValue>>);
+                enumerator = (IEnumerator<KeyValuePair<string, TDictionaryValue>>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TValue> converter = GetValueConverter(ref state);
+            JsonConverter<TDictionaryValueGenericParameter> converter = GetValueConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))
@@ -87,8 +91,8 @@ namespace System.Text.Json.Serialization.Converters
                 string key = GetKeyName(enumerator.Current.Key, ref state, options);
                 writer.WritePropertyName(key);
 
-                TValue element = enumerator.Current.Value;
-                if (!converter.TryWrite(writer, element, options, ref state))
+                TDictionaryValue element = enumerator.Current.Value;
+                if (!converter.TryWrite(writer, (TDictionaryValueGenericParameter)element!, options, ref state))
                 {
                     state.Current.CollectionEnumerator = enumerator;
                     return false;
@@ -106,7 +110,7 @@ namespace System.Text.Json.Serialization.Converters
             {
                 if (TypeToConvert.IsAbstract || TypeToConvert.IsInterface)
                 {
-                    return typeof(Dictionary<string, TValue>);
+                    return typeof(Dictionary<string, TDictionaryValue>);
                 }
 
                 return TypeToConvert;

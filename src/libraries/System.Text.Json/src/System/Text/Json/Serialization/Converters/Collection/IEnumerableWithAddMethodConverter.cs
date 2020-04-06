@@ -7,15 +7,16 @@ using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class IEnumerableWithAddMethodConverter<TCollection>
-        : IEnumerableDefaultConverter<TCollection, object?>
-        where TCollection : IEnumerable
+    internal sealed class IEnumerableWithAddMethodConverter
+        : IEnumerableDefaultConverter<IEnumerable, object?, object?>
     {
+        public IEnumerableWithAddMethodConverter(Type typeToConvert) : base(typeToConvert, typeof(object)) { }
+
         protected override void Add(object? value, ref ReadStack state)
         {
-            Debug.Assert(state.Current.ReturnValue is TCollection);
+            Debug.Assert(state.Current.ReturnValue is IEnumerable);
             Debug.Assert(state.Current.AddMethodDelegate != null);
-            ((Action<TCollection, object?>)state.Current.AddMethodDelegate)((TCollection)state.Current.ReturnValue!, value);
+            ((Action<IEnumerable, object?>)state.Current.AddMethodDelegate)((IEnumerable)state.Current.ReturnValue!, value);
         }
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
@@ -31,8 +32,10 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.AddMethodDelegate = GetAddMethodDelegate(options);
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (IEnumerable)objValue;
+
             IEnumerator enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -47,7 +50,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<object?> converter = GetElementConverter(ref state);
+            JsonConverter<object?> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))
@@ -66,14 +69,14 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        private Action<TCollection, object?>? _addMethodDelegate;
+        private Action<IEnumerable, object?>? _addMethodDelegate;
 
-        internal Action<TCollection, object?> GetAddMethodDelegate(JsonSerializerOptions options)
+        internal Action<IEnumerable, object?> GetAddMethodDelegate(JsonSerializerOptions options)
         {
             if (_addMethodDelegate == null)
             {
                 // We verified this exists when we created the converter in the enumerable converter factory.
-                _addMethodDelegate = options.MemberAccessorStrategy.CreateAddMethodDelegate<TCollection>();
+                _addMethodDelegate = options.MemberAccessorStrategy.CreateAddMethodDelegate<IEnumerable>();
             }
 
             return _addMethodDelegate;

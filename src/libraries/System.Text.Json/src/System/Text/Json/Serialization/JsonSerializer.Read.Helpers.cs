@@ -28,7 +28,14 @@ namespace System.Text.Json
 
             // The non-generic API was called or we have a polymorphic case where TValue is not equal to the T in JsonConverter<T>.
             object? value = jsonConverter.ReadCoreAsObject(ref reader, options, ref state);
-            Debug.Assert(value == null || value is TValue);
+            if (value == null)
+            {
+                if (jsonConverter.IsValueType)
+                {
+                    return (TValue)default!;
+                }
+            }
+
             return (TValue)value!;
         }
     }

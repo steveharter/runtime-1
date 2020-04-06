@@ -10,14 +10,16 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Converter for <cref>System.Collections.Generic.IList{TElement}</cref>.
     /// </summary>
-    internal sealed class IListOfTConverter<TCollection, TElement>
-        : IEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : IList<TElement>
+    internal sealed class IListOfTConverter<TElement, TConverterGenericParameter>
+        : IEnumerableDefaultConverter<IList<TElement>, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        public IListOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
-            Debug.Assert(state.Current.ReturnValue is TCollection);
-            ((TCollection)state.Current.ReturnValue!).Add(value);
+            Debug.Assert(state.Current.ReturnValue is IList<TElement>);
+            ((IList<TElement>)state.Current.ReturnValue!).Add(value);
         }
 
         protected override void CreateCollection(ref ReadStack state, JsonSerializerOptions options)
@@ -40,7 +42,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowNotSupportedException_DeserializeNoDeserializationConstructor(TypeToConvert);
                 }
 
-                TCollection returnValue = (TCollection)classInfo.CreateObject()!;
+                IList<TElement> returnValue = (IList<TElement>)classInfo.CreateObject()!;
 
                 if (returnValue.IsReadOnly)
                 {
@@ -51,8 +53,10 @@ namespace System.Text.Json.Serialization.Converters
             }
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (IList<TElement>)objValue;
+
             IEnumerator<TElement> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -68,7 +72,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TElement> converter = GetElementConverter(ref state);
+            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))
