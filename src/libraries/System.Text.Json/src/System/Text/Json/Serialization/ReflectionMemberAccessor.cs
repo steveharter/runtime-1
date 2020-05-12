@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -124,18 +125,18 @@ namespace System.Text.Json.Serialization
             };
         }
 
-        public override Func<IEnumerable<TElement>, TCollection> CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>()
+        public override Func<IEnumerable, IEnumerable> CreateImmutableEnumerableCreateRangeDelegate(Type elementType, Type collectionType)
         {
-            MethodInfo createRange = typeof(TCollection).GetImmutableEnumerableCreateRangeMethod(typeof(TElement));
-            return (Func<IEnumerable<TElement>, TCollection>)createRange.CreateDelegate(
-                typeof(Func<IEnumerable<TElement>, TCollection>));
+            MethodInfo createRange = collectionType.GetImmutableEnumerableCreateRangeMethod(elementType);
+            return (Func<IEnumerable, IEnumerable>)createRange.CreateDelegate(
+                typeof(Func<IEnumerable, IEnumerable>));
         }
 
-        public override Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection> CreateImmutableDictionaryCreateRangeDelegate<TElement, TCollection>()
+        public override Func<IEnumerable, IEnumerable> CreateImmutableDictionaryCreateRangeDelegate(Type elementType, Type collectionType)
         {
-            MethodInfo createRange = typeof(TCollection).GetImmutableDictionaryCreateRangeMethod(typeof(TElement));
-            return (Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection>)createRange.CreateDelegate(
-                typeof(Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection>));
+            MethodInfo createRange = collectionType.GetImmutableEnumerableCreateRangeMethod(elementType);
+            return (Func<IEnumerable, IEnumerable>) createRange.CreateDelegate(
+                typeof(Func<IEnumerable, IEnumerable>));
         }
 
         public override Func<object, TProperty> CreatePropertyGetter<TProperty>(PropertyInfo propertyInfo)

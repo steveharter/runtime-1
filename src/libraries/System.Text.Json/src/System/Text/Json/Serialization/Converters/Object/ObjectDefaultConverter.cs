@@ -12,7 +12,9 @@ namespace System.Text.Json.Serialization.Converters
     /// </summary>
     internal class ObjectDefaultConverter<T> : JsonObjectConverter<T> where T : notnull
     {
-        internal override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, [MaybeNullWhen(false)] out T value)
+        public ObjectDefaultConverter(Type typeToConvert) : base(typeToConvert) { }
+
+        internal override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, [MaybeNullWhen(false)] out object value)
         {
             bool shouldReadPreservedReferences = options.ReferenceHandling.ShouldReadPreservedReferences();
             object obj;
@@ -230,18 +232,15 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal sealed override bool OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, ref WriteStack state)
+        internal sealed override bool OnTryWrite(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
         {
-            // Minimize boxing for structs by only boxing once here
-            object objectValue = value!;
-
             if (!state.SupportContinuation)
             {
                 writer.WriteStartObject();
 
                 if (options.ReferenceHandling.ShouldWritePreservedReferences())
                 {
-                    if (JsonSerializer.WriteReferenceForObject(this, objectValue, ref state, writer) == MetadataPropertyName.Ref)
+                    if (JsonSerializer.WriteReferenceForObject(this, value, ref state, writer) == MetadataPropertyName.Ref)
                     {
                         return true;
                     }
@@ -249,12 +248,9 @@ namespace System.Text.Json.Serialization.Converters
 
                 JsonPropertyInfo? dataExtensionProperty = state.Current.JsonClassInfo.DataExtensionProperty;
 
-                int propertyCount = 0;
                 JsonPropertyInfo[]? propertyCacheArray = state.Current.JsonClassInfo.PropertyCacheArray;
-                if (propertyCacheArray != null)
-                {
-                    propertyCount = propertyCacheArray.Length;
-                }
+                Debug.Assert(propertyCacheArray != null);
+                int propertyCount = propertyCacheArray.Length;
 
                 for (int i = 0; i < propertyCount; i++)
                 {
@@ -267,14 +263,14 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         if (jsonPropertyInfo == dataExtensionProperty)
                         {
-                            if (!jsonPropertyInfo.GetMemberAndWriteJsonExtensionData(objectValue, ref state, writer))
+                            if (!jsonPropertyInfo.GetMemberAndWriteJsonExtensionData(value, ref state, writer))
                             {
                                 return false;
                             }
                         }
                         else
                         {
-                            if (!jsonPropertyInfo.GetMemberAndWriteJson(objectValue, ref state, writer))
+                            if (!jsonPropertyInfo.GetMemberAndWriteJson(value, ref state, writer))
                             {
                                 Debug.Assert(jsonPropertyInfo.ConverterBase.ClassType != ClassType.Value);
                                 return false;
@@ -296,7 +292,7 @@ namespace System.Text.Json.Serialization.Converters
 
                     if (options.ReferenceHandling.ShouldWritePreservedReferences())
                     {
-                        if (JsonSerializer.WriteReferenceForObject(this, objectValue, ref state, writer) == MetadataPropertyName.Ref)
+                        if (JsonSerializer.WriteReferenceForObject(this, value, ref state, writer) == MetadataPropertyName.Ref)
                         {
                             return true;
                         }
@@ -323,14 +319,14 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         if (jsonPropertyInfo == dataExtensionProperty)
                         {
-                            if (!jsonPropertyInfo.GetMemberAndWriteJsonExtensionData(objectValue!, ref state, writer))
+                            if (!jsonPropertyInfo.GetMemberAndWriteJsonExtensionData(value!, ref state, writer))
                             {
                                 return false;
                             }
                         }
                         else
                         {
-                            if (!jsonPropertyInfo.GetMemberAndWriteJson(objectValue!, ref state, writer))
+                            if (!jsonPropertyInfo.GetMemberAndWriteJson(value!, ref state, writer))
                             {
                                 Debug.Assert(jsonPropertyInfo.ConverterBase.ClassType != ClassType.Value);
                                 return false;

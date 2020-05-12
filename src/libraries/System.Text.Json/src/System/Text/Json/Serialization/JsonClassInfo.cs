@@ -12,6 +12,9 @@ namespace System.Text.Json
     [DebuggerDisplay("ClassType.{ClassType}, {Type.Name}")]
     internal sealed partial class JsonClassInfo
     {
+        // If enumerable, the JsonClassInfo for the element type.
+        private JsonClassInfo? _elementClassInfo;
+
         public delegate object? ConstructorDelegate();
 
         public delegate T ParameterizedConstructorDelegate<T>(object[] arguments);
@@ -25,9 +28,6 @@ namespace System.Text.Json
         public ClassType ClassType { get; private set; }
 
         public JsonPropertyInfo? DataExtensionProperty { get; private set; }
-
-        // If enumerable, the JsonClassInfo for the element type.
-        private JsonClassInfo? _elementClassInfo;
 
         /// <summary>
         /// Return the JsonClassInfo for the element type, or null if the type is not an enumerable or dictionary.
@@ -228,7 +228,7 @@ namespace System.Text.Json
                 PropertyInfo? firstMatch = null;
                 bool isBound = false;
 
-                foreach (JsonPropertyInfo jsonPropertyInfo in PropertyCacheArray!)
+                foreach (JsonPropertyInfo jsonPropertyInfo in propertyCacheArray)
                 {
                     // This is not null because it is an actual
                     // property on a type, not a "policy property".
@@ -277,8 +277,76 @@ namespace System.Text.Json
 
             ParameterCache = parameterCache;
             ParameterCount = parameters.Length;
+        }
 
-            PropertyCache = propertyCache;
+        public void InitializePropertyCache()
+        {
+            Debug.Assert(ClassType == ClassType.Object);
+
+            PropertyInfo[] properties = Type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            Dictionary<string, JsonPropertyInfo> cache = CreatePropertyCache(properties.Length);
+            foreach (PropertyInfo propertyInfo in properties)
+            {
+                // Ignore indexers
+                if (propertyInfo.GetIndexParameters().Length > 0)
+                {
+                    continue;
+                }
+
+                // For now we only support public getters\setters
+                if (propertyInfo.GetMethod?.IsPublic == true ||
+                    propertyInfo.SetMethod?.IsPublic == true)
+                {
+                    JsonPropertyInfo jsonPropertyInfo = AddProperty(propertyInfo.PropertyType, propertyInfo, Type, Options);
+                    Debug.Assert(jsonPropertyInfo != null && jsonPropertyInfo.NameAsString != null);
+
+                    // If the JsonPropertyNameAttribute or naming policy results in collisions, throw an exception.
+                    if (!JsonHelpers.TryAdd(cache, jsonPropertyInfo.NameAsString, jsonPropertyInfo))
+                    {
+                        JsonPropertyInfo other = cache[jsonPropertyInfo.NameAsString];
+
+                        if (other.ShouldDeserialize == false && other.ShouldSerialize == false)
+                        {
+                            // Overwrite the one just added since it has [JsonIgnore].
+                            cache[jsonPropertyInfo.NameAsString] = jsonPropertyInfo;
+                        }
+                        else if (jsonPropertyInfo.ShouldDeserialize == true || jsonPropertyInfo.ShouldSerialize == true)
+                        {
+                            ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameConflict(Type, jsonPropertyInfo);
+                        }
+                        // else ignore jsonPropertyInfo since it has [JsonIgnore].
+                    }
+                }
+            }
+
+            JsonPropertyInfo[] cacheArray;
+            if (DetermineExtensionDataProperty(cache))
+            {
+                // Remove from cache since it is handled independently.
+                cache.Remove(DataExtensionProperty!.NameAsString!);
+
+                cacheArray = new JsonPropertyInfo[cache.Count + 1];
+
+                // Set the last element to the extension property.
+                cacheArray[cache.Count] = DataExtensionProperty;
+            }
+            else
+            {
+                cacheArray = new JsonPropertyInfo[cache.Count];
+            }
+
+            // Make a copy before calling InitializeConstructorParameters since it modifies cache.
+            cache.Values.CopyTo(cacheArray, 0);
+
+            JsonConverter converter = PropertyInfoForClassInfo.ConverterBase;
+            if (converter.ConstructorIsParameterized)
+            {
+                InitializeConstructorParameters(converter.ConstructorInfo!, cache, cacheArray);
+            }
+
+            // Set fields when finished to avoid concurrency issues.
+            _propertyCache = cache;
+            _propertyCacheArray = cacheArray;
         }
 
         public bool DetermineExtensionDataProperty(Dictionary<string, JsonPropertyInfo> cache)

@@ -22,9 +22,9 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1")]
+        [PreserveDependency(".ctor(System.Type)", "System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.LargeObjectWithParameterizedConstructorConverter`1")]
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.SmallObjectWithParameterizedConstructorConverter`5")]
+        [PreserveDependency(".ctor(System.Type)", "System.Text.Json.Serialization.Converters.SmallObjectWithParameterizedConstructorConverter`5")]
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
             JsonConverter converter;
@@ -35,44 +35,48 @@ namespace System.Text.Json.Serialization.Converters
 
             if (constructor == null || typeToConvert.IsAbstract || parameters!.Length == 0)
             {
-                converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
+                if (!typeToConvert.IsValueType)
+                {
+                    return new ObjectDefaultConverter<object>(typeToConvert);
+                }
+                else
+                {
+                    converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
+                }
             }
             else
             {
                 int parameterCount = parameters.Length;
 
-                if (parameterCount <= JsonConstants.UnboxedParameterCountThreshold)
+                if (parameterCount > JsonConstants.UnboxedParameterCountThreshold)
                 {
-                    Type placeHolderType = typeof(object);
-                    Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
+                    return new LargeObjectWithParameterizedConstructorConverter(typeToConvert);
+                }
 
-                    typeArguments[0] = typeToConvert;
-                    for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
+                Type placeHolderType = typeof(object);
+                Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
+                typeArguments[0] = typeToConvert;
+                for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
+                {
+                    if (i < parameterCount)
                     {
-                        if (i < parameterCount)
-                        {
-                            typeArguments[i + 1] = parameters[i].ParameterType;
-                        }
-                        else
-                        {
-                            // Use placeholder arguments if there are less args than the threshold.
-                            typeArguments[i + 1] = placeHolderType;
-                        }
+                        typeArguments[i + 1] = parameters[i].ParameterType;
                     }
+                    else
+                    {
+                        // Use placeholder arguments if there are less args than the threshold.
+                        typeArguments[i + 1] = placeHolderType;
+                    }
+                }
 
-                    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
-                }
-                else
-                {
-                    converterType = typeof(LargeObjectWithParameterizedConstructorConverter<>).MakeGenericType(typeToConvert);
-                }
+                converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
             }
 
             converter = (JsonConverter)Activator.CreateInstance(
                     converterType,
                     BindingFlags.Instance | BindingFlags.Public,
                     binder: null,
-                    args: null,
+                    args: new object[] { typeToConvert },
                     culture: null)!;
 
             converter.ConstructorInfo = constructor!;

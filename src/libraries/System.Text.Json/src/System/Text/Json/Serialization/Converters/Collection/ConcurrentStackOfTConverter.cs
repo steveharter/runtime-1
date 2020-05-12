@@ -7,10 +7,12 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ConcurrentStackOfTConverter<TCollection, TElement>
-        : IEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : ConcurrentStack<TElement>
+    internal sealed class ConcurrentStackOfTConverter<TElement, TConverterGenericParameter>
+        : IEnumerableDefaultConverter<ConcurrentStack<TElement>, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        public ConcurrentStackOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
             ((TCollection)state.Current.ReturnValue!).Push(value);
@@ -26,8 +28,10 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.ReturnValue = state.Current.JsonClassInfo.CreateObject();
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (ConcurrentStack<TElement>)objValue;
+
             IEnumerator<TElement> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -42,7 +46,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TElement> converter = GetElementConverter(ref state);
+            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

@@ -10,8 +10,10 @@ namespace System.Text.Json.Serialization.Converters
     /// Implementation of <cref>JsonObjectConverter{T}</cref> that supports the deserialization
     /// of JSON objects using parameterized constructors.
     /// </summary>
-    internal sealed class LargeObjectWithParameterizedConstructorConverter<T> : ObjectWithParameterizedConstructorConverter<T> where T : notnull
+    internal sealed class LargeObjectWithParameterizedConstructorConverter : ObjectWithParameterizedConstructorConverter
     {
+        public LargeObjectWithParameterizedConstructorConverter(Type typeToConvert) : base(typeToConvert) { }
+
         protected override bool ReadAndCacheConstructorArgument(ref ReadStack state, ref Utf8JsonReader reader, JsonParameterInfo jsonParameterInfo)
         {
             bool success = jsonParameterInfo.ReadJson(ref state, ref reader, out object? arg);
@@ -28,7 +30,7 @@ namespace System.Text.Json.Serialization.Converters
         {
             object[] arguments = (object[])frame.CtorArgumentState!.Arguments;
 
-            var createObject = (JsonClassInfo.ParameterizedConstructorDelegate<T>?)frame.JsonClassInfo.CreateObjectWithArgs;
+            var createObject = (JsonClassInfo.ParameterizedConstructorDelegate<object?>?)frame.JsonClassInfo.CreateObjectWithArgs;
 
             if (createObject == null)
             {
@@ -36,10 +38,10 @@ namespace System.Text.Json.Serialization.Converters
                 ThrowHelper.ThrowNotSupportedException_ConstructorMaxOf64Parameters(ConstructorInfo!, TypeToConvert);
             }
 
-            object obj = createObject(arguments);
+            object obj = createObject(arguments)!;
 
             ArrayPool<object>.Shared.Return(arguments, clearArray: true);
-            return obj;
+            return obj!;
         }
 
         protected override void InitializeConstructorArgumentCaches(ref ReadStack state, JsonSerializerOptions options)
@@ -48,7 +50,7 @@ namespace System.Text.Json.Serialization.Converters
 
             if (classInfo.CreateObjectWithArgs == null)
             {
-                classInfo.CreateObjectWithArgs = options.MemberAccessorStrategy.CreateParameterizedConstructor<T>(ConstructorInfo!);
+                classInfo.CreateObjectWithArgs = options.MemberAccessorStrategy.CreateParameterizedConstructor<object>(ConstructorInfo!);
             }
 
             object[] arguments = ArrayPool<object>.Shared.Rent(classInfo.ParameterCount);

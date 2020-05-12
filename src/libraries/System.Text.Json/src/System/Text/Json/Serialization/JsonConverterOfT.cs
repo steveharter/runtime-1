@@ -13,15 +13,35 @@ namespace System.Text.Json.Serialization
     /// <typeparam name="T">The <see cref="Type"/> to convert.</typeparam>
     public abstract partial class JsonConverter<T> : JsonConverter
     {
+        private Type _typeToConvert;
+        private Type? _genericTypeToConvert;
+
         /// <summary>
-        /// When overidden, constructs a new <see cref="JsonConverter{T}"/> instance.
+        /// todo
         /// </summary>
         protected internal JsonConverter()
         {
+            _typeToConvert = typeof(T);
+            _genericTypeToConvert = _typeToConvert;
+            Initialize();
+        }
+
+        internal JsonConverter(Type typeToConvert)
+        {
+            _typeToConvert = typeToConvert;
+            _genericTypeToConvert = typeof(T);
+            Initialize();
+        }
+
+        /// <summary>
+        /// When overidden, constructs a new <see cref="JsonConverter{T}"/> instance.
+        /// </summary>
+        private void Initialize()
+        {
             // Today only typeof(object) can have polymorphic writes.
             // In the future, this will be check for !IsSealed (and excluding value types).
-            CanBePolymorphic = TypeToConvert == typeof(object);
-            IsValueType = TypeToConvert.IsValueType;
+            CanBePolymorphic = _typeToConvert == typeof(object);
+            IsValueType = _typeToConvert.IsValueType;
             HandleNull = IsValueType;
             CanBeNull = !IsValueType || Nullable.GetUnderlyingType(TypeToConvert) != null;
             IsInternalConverter = GetType().Assembly == typeof(JsonConverter).Assembly;
@@ -38,7 +58,7 @@ namespace System.Text.Json.Serialization
         /// <returns>True if the type can be converted, False otherwise.</returns>
         public override bool CanConvert(Type typeToConvert)
         {
-            return typeToConvert == typeof(T);
+            return typeToConvert == _typeToConvert;
         }
 
         internal override ClassType ClassType => ClassType.Value;
@@ -82,7 +102,7 @@ namespace System.Text.Json.Serialization
         }
 
         // Provide a default implementation for value converters.
-        internal virtual bool OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, ref WriteStack state)
+        internal virtual bool OnTryWrite(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
         {
             Write(writer, value, options);
             return true;
@@ -204,7 +224,7 @@ namespace System.Text.Json.Serialization
                     state.Current.OriginalDepth = reader.CurrentDepth;
                 }
 
-                success = OnTryRead(ref reader, typeToConvert, options, ref state, out value);
+                success = OnTryRead(ref reader, typeToConvert, options, ref state, out object? objValue);
                 if (success)
                 {
                     if (state.IsContinuation)
@@ -222,6 +242,8 @@ namespace System.Text.Json.Serialization
 
                     // No need to clear state.Current.* since a stack pop will occur.
                 }
+
+                value = (T)objValue!;
             }
 
             state.Pop(success);
@@ -304,7 +326,7 @@ namespace System.Text.Json.Serialization
                 state.Current.OriginalDepth = writer.CurrentDepth;
             }
 
-            bool success = OnTryWrite(writer, value, options, ref state);
+            bool success = OnTryWrite(writer, value!, options, ref state);
             if (success)
             {
                 VerifyWrite(state.Current.OriginalDepth, writer);
@@ -316,7 +338,7 @@ namespace System.Text.Json.Serialization
             return success;
         }
 
-        internal bool TryWriteDataExtensionProperty(Utf8JsonWriter writer, T value, JsonSerializerOptions options, ref WriteStack state)
+        internal bool TryWriteDataExtensionProperty(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
         {
             Debug.Assert(value != null);
 
@@ -325,7 +347,7 @@ namespace System.Text.Json.Serialization
                 return TryWrite(writer, value, options, ref state);
             }
 
-            Debug.Assert(this is JsonDictionaryConverter<T>);
+            Debug.Assert(this is JsonDictionaryConverter<object>);
 
             state.Current.PolymorphicJsonPropertyInfo = state.Current.DeclaredJsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PropertyInfoForClassInfo;
 
@@ -334,7 +356,7 @@ namespace System.Text.Json.Serialization
                 ThrowHelper.ThrowJsonException_SerializerCycleDetected(options.EffectiveMaxDepth);
             }
 
-            JsonDictionaryConverter<T> dictionaryConverter = (JsonDictionaryConverter<T>)this;
+            JsonDictionaryConverter<T> dictionaryConverter = (JsonDictionaryConverter<object>)this;
 
             bool isContinuation = state.IsContinuation;
             bool success;
@@ -361,7 +383,7 @@ namespace System.Text.Json.Serialization
             return success;
         }
 
-        internal sealed override Type TypeToConvert => typeof(T);
+        internal sealed override Type TypeToConvert => _typeToConvert;
 
         internal void VerifyRead(JsonTokenType tokenType, int depth, long bytesConsumed, bool isValueConverter, ref Utf8JsonReader reader)
         {

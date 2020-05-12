@@ -41,6 +41,17 @@ namespace System.Text.Json.Serialization
         internal abstract Type? ElementType { get; }
 
         /// <summary>
+        /// The {T} value in JsonConverter{T}. For reference types this is typically typeof(object).
+        /// </summary>
+        internal virtual Type GenericTypeToConvert
+        {
+            get
+            {
+                return TypeToConvert;
+            }
+        }
+
+        /// <summary>
         /// Cached value of TypeToConvert.IsValueType, which is an expensive call.
         /// </summary>
         internal bool IsValueType { get; set; }

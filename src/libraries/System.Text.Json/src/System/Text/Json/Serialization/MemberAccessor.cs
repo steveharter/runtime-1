@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -18,9 +19,9 @@ namespace System.Text.Json
 
         public abstract Action<TCollection, object?> CreateAddMethodDelegate<TCollection>();
 
-        public abstract Func<IEnumerable<TElement>, TCollection> CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>();
+        public abstract Func<IEnumerable, IEnumerable> CreateImmutableEnumerableCreateRangeDelegate(Type elementType, Type collectionType);
 
-        public abstract Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection> CreateImmutableDictionaryCreateRangeDelegate<TElement, TCollection>();
+        public abstract Func<IEnumerable, IEnumerable> CreateImmutableDictionaryCreateRangeDelegate(Type elementType, Type collectionType);
 
         public abstract Func<object, TProperty> CreatePropertyGetter<TProperty>(PropertyInfo propertyInfo);
 

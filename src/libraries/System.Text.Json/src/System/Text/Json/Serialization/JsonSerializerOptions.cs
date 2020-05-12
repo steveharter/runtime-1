@@ -359,11 +359,11 @@ namespace System.Text.Json
             {
                 if (_memberAccessorStrategy == null)
                 {
-#if NETFRAMEWORK || NETCOREAPP
-                    _memberAccessorStrategy = new ReflectionEmitMemberAccessor();
-#else
+//#if NETFRAMEWORK || NETCOREAPP
+//                    _memberAccessorStrategy = new ReflectionEmitMemberAccessor();
+//#else
                     _memberAccessorStrategy = new ReflectionMemberAccessor();
-#endif
+//#endif
                 }
 
                 return _memberAccessorStrategy;

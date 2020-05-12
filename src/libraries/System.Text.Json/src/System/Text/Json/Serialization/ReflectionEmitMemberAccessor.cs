@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 #if NETFRAMEWORK || NETCOREAPP
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -181,15 +182,14 @@ namespace System.Text.Json.Serialization
             return (Action<TCollection, object?>)dynamicMethod.CreateDelegate(typeof(Action<TCollection, object?>));
         }
 
-        public override Func<IEnumerable<TElement>, TCollection> CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>()
+        public override Func<IEnumerable, IEnumerable> CreateImmutableEnumerableCreateRangeDelegate(Type elementType, Type collectionType)
         {
-            Type collectionType = typeof(TCollection);
-            MethodInfo realMethod = collectionType.GetImmutableEnumerableCreateRangeMethod(typeof(TElement));
+            MethodInfo realMethod = collectionType.GetImmutableEnumerableCreateRangeMethod(elementType);
 
             var dynamicMethod = new DynamicMethod(
                 realMethod.Name,
                 collectionType,
-                new[] { typeof(IEnumerable<TElement>) },
+                new[] { typeof(IEnumerable) },
                 typeof(ReflectionEmitMemberAccessor).Module,
                 skipVisibility: true);
 
@@ -199,18 +199,17 @@ namespace System.Text.Json.Serialization
             generator.Emit(OpCodes.Call, realMethod);
             generator.Emit(OpCodes.Ret);
 
-            return (Func<IEnumerable<TElement>, TCollection>)dynamicMethod.CreateDelegate(typeof(Func<IEnumerable<TElement>, TCollection>));
+            return (Func<IEnumerable, IEnumerable>)dynamicMethod.CreateDelegate(typeof(Func<IEnumerable, IEnumerable>));
         }
 
-        public override Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection> CreateImmutableDictionaryCreateRangeDelegate<TElement, TCollection>()
+        public override Func<IEnumerable, IEnumerable> CreateImmutableDictionaryCreateRangeDelegate(Type elementType, Type collectionType)
         {
-            Type collectionType = typeof(TCollection);
-            MethodInfo realMethod = collectionType.GetImmutableDictionaryCreateRangeMethod(typeof(TElement));
+            MethodInfo realMethod = collectionType.GetImmutableDictionaryCreateRangeMethod(elementType);
 
             var dynamicMethod = new DynamicMethod(
                 realMethod.Name,
                 collectionType,
-                new[] { typeof(IEnumerable<KeyValuePair<string, TElement>>) },
+                new[] { typeof(IEnumerable) },
                 typeof(ReflectionEmitMemberAccessor).Module,
                 skipVisibility: true);
 
@@ -220,7 +219,7 @@ namespace System.Text.Json.Serialization
             generator.Emit(OpCodes.Call, realMethod);
             generator.Emit(OpCodes.Ret);
 
-            return (Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection>)dynamicMethod.CreateDelegate(typeof(Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection>));
+            return (Func<IEnumerable, IEnumerable>)dynamicMethod.CreateDelegate(typeof(Func<IEnumerable, IEnumerable>));
         }
 
         public override Func<object?, TProperty> CreatePropertyGetter<TProperty>(PropertyInfo propertyInfo) =>

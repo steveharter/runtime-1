@@ -62,7 +62,7 @@ namespace System.Text.Json.Serialization.Tests
                 public DictionaryEnumConverterInner(JsonSerializerOptions options)
                 {
                     // For performance, use the existing converter if available.
-                    _valueConverter = (JsonConverter<TValue>)options.GetConverter(typeof(TValue));
+                    _valueConverter = options.GetConverter(typeof(TValue)) as JsonConverter<TValue>;
 
                     // Cache the key and value types.
                     _keyType = typeof(TKey);

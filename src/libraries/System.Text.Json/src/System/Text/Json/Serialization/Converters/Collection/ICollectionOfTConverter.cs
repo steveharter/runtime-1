@@ -9,10 +9,12 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Converter for <cref>System.Collections.Generic.ICollection{TElement}</cref>.
     /// </summary>
-    internal sealed class ICollectionOfTConverter<TCollection, TElement>
-        : IEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : ICollection<TElement>
+    internal sealed class ICollectionOfTConverter<TElement, TConverterGenericParameter>
+        : IEnumerableDefaultConverter<ICollection<TElement>, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        public ICollectionOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
             ((ICollection<TElement>)state.Current.ReturnValue!).Add(value);
@@ -38,7 +40,7 @@ namespace System.Text.Json.Serialization.Converters
                     ThrowHelper.ThrowNotSupportedException_DeserializeNoConstructor(TypeToConvert, ref reader, ref state);
                 }
 
-                TCollection returnValue = (TCollection)classInfo.CreateObject()!;
+                ICollection<TElement> returnValue = (ICollection<TElement>)classInfo.CreateObject()!;
 
                 if (returnValue.IsReadOnly)
                 {
@@ -51,10 +53,12 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override bool OnWriteResume(
             Utf8JsonWriter writer,
-            TCollection value,
+            object objValue,
             JsonSerializerOptions options,
             ref WriteStack state)
         {
+            var value = (ICollection<TElement>)objValue;
+
             IEnumerator<TElement> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -69,7 +73,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TElement> converter = GetElementConverter(ref state);
+            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

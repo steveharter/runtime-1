@@ -10,14 +10,16 @@ namespace System.Text.Json.Serialization.Converters
     /// Converter for Dictionary{string, TValue} that (de)serializes as a JSON object with properties
     /// representing the dictionary element key and value.
     /// </summary>
-    internal sealed class DictionaryOfStringTValueConverter<TCollection, TValue>
-        : DictionaryDefaultConverter<TCollection, TValue>
-        where TCollection : Dictionary<string, TValue>
+    internal sealed class DictionaryOfStringTValueConverter<TDictionaryValue, TDictionaryValueGenericParameter>
+        : DictionaryDefaultConverter<Dictionary<string, TDictionaryValue>, TDictionaryValue, TDictionaryValueGenericParameter>
+        where TDictionaryValue : TDictionaryValueGenericParameter
     {
-        protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
+        public DictionaryOfStringTValueConverter(Type dictionaryType, Type dictionaryValueType) : base(dictionaryType, dictionaryValueType) { }
+
+        protected override void Add(TDictionaryValue value, JsonSerializerOptions options, ref ReadStack state)
         {
             string key = state.Current.JsonPropertyNameAsString!;
-            ((TCollection)state.Current.ReturnValue!)[key] = value;
+            ((Dictionary<string, TDictionaryValue>)state.Current.ReturnValue!)[key] = value;
         }
 
         protected override void CreateCollection(ref Utf8JsonReader reader, ref ReadStack state)
@@ -32,11 +34,13 @@ namespace System.Text.Json.Serialization.Converters
 
         protected internal override bool OnWriteResume(
             Utf8JsonWriter writer,
-            TCollection value,
+            object objValue,
             JsonSerializerOptions options,
             ref WriteStack state)
         {
-            Dictionary<string, TValue>.Enumerator enumerator;
+            var value = (Dictionary<string, TDictionaryValue>)objValue;
+
+            Dictionary<string, TDictionaryValue>.Enumerator enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
                 enumerator = value.GetEnumerator();
@@ -50,7 +54,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (Dictionary<string, TValue>.Enumerator)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TValue> converter = GetValueConverter(ref state);
+            JsonConverter<TDictionaryValueGenericParameter> converter = GetValueConverter(options);
             if (!state.SupportContinuation && converter.CanUseDirectReadOrWrite)
             {
                 // Fast path that avoids validation and extra indirection.

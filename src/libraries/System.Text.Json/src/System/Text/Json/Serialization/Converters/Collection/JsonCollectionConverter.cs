@@ -7,9 +7,21 @@ namespace System.Text.Json.Serialization
     /// <summary>
     /// Base class for all collections. Collections are assumed to implement <cref>System.Collections.IEnumerable</cref>.
     /// </summary>
-    internal abstract class JsonCollectionConverter<TCollection, TElement> : JsonResumableConverter<TCollection>
+    internal abstract class JsonCollectionConverter<TCollection, TElement, TElementGenericParameter> : JsonResumableConverter<TCollection>
     {
+        private Type _elementType;
+
+        public JsonCollectionConverter(Type typeToConvert, Type elementType) : base(typeToConvert)
+        {
+            _elementType = elementType;
+        }
+
         internal sealed override ClassType ClassType => ClassType.Enumerable;
+        internal JsonConverter<TElementGenericParameter> GetElementConverter(JsonSerializerOptions options)
+        {
+            return (JsonConverter<TElementGenericParameter>)options.GetConverter(_elementType);
+        }
+
         internal override Type ElementType => typeof(TElement);
     }
 }

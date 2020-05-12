@@ -2,14 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ImmutableEnumerableOfTConverter<TCollection, TElement>
-        : IEnumerableDefaultConverter<TCollection, TElement>
-        where TCollection : IEnumerable<TElement>
+    internal sealed class ImmutableEnumerableOfTConverter<TElement, TConverterGenericParameter>
+        : IEnumerableDefaultConverter<IEnumerable<TElement>, TElement, TConverterGenericParameter>
+        where TElement : TConverterGenericParameter
     {
+        public ImmutableEnumerableOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
+
         protected override void Add(TElement value, ref ReadStack state)
         {
             ((List<TElement>)state.Current.ReturnValue!).Add(value);
@@ -36,8 +39,10 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.ReturnValue = creator((List<TElement>)state.Current.ReturnValue!);
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
         {
+            var value = (IEnumerable<TElement>)objValue;
+
             IEnumerator<TElement> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -52,7 +57,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TElement> converter = GetElementConverter(ref state);
+            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

@@ -11,10 +11,10 @@ namespace System.Text.Json.Serialization
     /// This is used when the Stream-based serialization APIs are used.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal abstract class JsonResumableConverter<T> : JsonConverter<T>
+    internal abstract class JsonResumableConverter<T> : JsonConverter<object>
     {
         [return: MaybeNull]
-        public sealed override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public sealed override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             // Bridge from resumable to value converters.
             if (options == null)
@@ -24,11 +24,11 @@ namespace System.Text.Json.Serialization
 
             ReadStack state = default;
             state.Initialize(typeToConvert, options, supportContinuation: false);
-            TryRead(ref reader, typeToConvert, options, ref state, out T value);
+            TryRead(ref reader, typeToConvert, options, ref state, out object value);
             return value;
         }
 
-        public sealed override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+        public sealed override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
         {
             // Bridge from resumable to value converters.
             if (options == null)

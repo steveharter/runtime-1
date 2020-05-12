@@ -26,9 +26,22 @@ namespace System.Text.Json
 
             JsonPropertyInfo jsonPropertyInfo = state.Current.JsonPropertyInfo!;
 
-            JsonConverter<TValue> converter = (JsonConverter<TValue>)jsonPropertyInfo.ConverterBase;
-            bool success = converter.TryRead(ref reader, jsonPropertyInfo.RuntimePropertyType!, options, ref state, out TValue value);
-            Debug.Assert(success);
+            TValue value;
+            JsonConverter baseConverter = jsonPropertyInfo.ConverterBase;
+            if (baseConverter.GenericTypeToConvert == typeof(object))
+            {
+                JsonConverter<object?> converter = (JsonConverter<object?>)baseConverter;
+                bool success = converter.TryRead(ref reader, jsonPropertyInfo.RuntimePropertyType!, options, ref state, out object? objValue);
+                Debug.Assert(success);
+                Debug.Assert(objValue == null || objValue is TValue);
+                value = (TValue)objValue!;
+            }
+            else
+            {
+                JsonConverter<TValue> converter = (JsonConverter<TValue>)baseConverter;
+                bool success = converter.TryRead(ref reader, jsonPropertyInfo.RuntimePropertyType!, options, ref state, out value);
+                Debug.Assert(success);
+            }
 
             // Clear the current property state since we are done processing it.
             state.Current.EndProperty();

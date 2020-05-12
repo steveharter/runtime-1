@@ -2,14 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ImmutableDictionaryOfStringTValueConverter<TCollection, TValue>
-        : DictionaryDefaultConverter<TCollection, TValue>
-        where TCollection : IReadOnlyDictionary<string, TValue>
+    internal sealed class ImmutableDictionaryOfStringTValueConverter<TValue, TConverterGenericParameter>
+        : DictionaryDefaultConverter<IReadOnlyDictionary<string, TValue>, TValue, TConverterGenericParameter>
+        where TValue : TConverterGenericParameter
     {
+        public ImmutableDictionaryOfStringTValueConverter(Type typeToConvert, Type dictionaryValueType) : base(typeToConvert, dictionaryValueType) { }
+
         protected override void Add(TValue value, JsonSerializerOptions options, ref ReadStack state)
         {
             string key = state.Current.JsonPropertyNameAsString!;
@@ -37,8 +40,14 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.ReturnValue = creator((Dictionary<string, TValue>)state.Current.ReturnValue!);
         }
 
-        protected internal override bool OnWriteResume(Utf8JsonWriter writer, TCollection value, JsonSerializerOptions options, ref WriteStack state)
+        protected internal override bool OnWriteResume(
+            Utf8JsonWriter writer,
+            object objValue,
+            JsonSerializerOptions options,
+            ref WriteStack state)
         {
+            var value = (IReadOnlyDictionary<string, TValue>)objValue;
+
             IEnumerator<KeyValuePair<string, TValue>> enumerator;
             if (state.Current.CollectionEnumerator == null)
             {
@@ -53,7 +62,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<KeyValuePair<string, TValue>>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TValue> converter = GetValueConverter(ref state);
+            JsonConverter<TConverterGenericParameter> converter = GetValueConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))
@@ -70,7 +79,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 TValue element = enumerator.Current.Value;
-                if (!converter.TryWrite(writer, element, options, ref state))
+                if (!converter.TryWrite(writer, (TConverterGenericParameter)element!, options, ref state))
                 {
                     state.Current.CollectionEnumerator = enumerator;
                     return false;
