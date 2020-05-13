@@ -34,7 +34,7 @@ namespace System.Text.Json.Serialization.Converters
             state.Current.ReturnValue = list.ToArray();
         }
 
-        protected override bool OnWriteResume(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
+        protected override bool OnWriteResume(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
         {
             TElement[] array = (TElement[])(IEnumerable)value;
 

@@ -33,7 +33,7 @@ namespace System.Text.Json.Serialization.Converters
             Type typeToConvert,
             JsonSerializerOptions options,
             ref ReadStack state,
-            [MaybeNullWhen(false)] out object value)
+            [MaybeNullWhen(false)] out TCollection value)
         {
             bool shouldReadPreservedReferences = options.ReferenceHandling.ShouldReadPreservedReferences();
 
@@ -61,8 +61,8 @@ namespace System.Text.Json.Serialization.Converters
                         }
 
                         // Obtain the CLR value from the JSON and apply to the object.
-                        TElement element = elementConverter.Read(ref reader, elementConverter.TypeToConvert, options);
-                        Add(element!, ref state);
+                        TConverterGenericParameter element = elementConverter.Read(ref reader, elementConverter.TypeToConvert, options);
+                        Add((TElement)element!, ref state);
                     }
                 }
                 else
@@ -77,8 +77,8 @@ namespace System.Text.Json.Serialization.Converters
                         }
 
                         // Get the value from the converter and add it.
-                        elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TElement element);
-                        Add(element!, ref state);
+                        elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TConverterGenericParameter element);
+                        Add((TElement)element!, ref state);
                     }
                 }
             }
@@ -179,7 +179,7 @@ namespace System.Text.Json.Serialization.Converters
                                 return false;
                             }
 
-                            Add(element!, ref state);
+                            Add((TElement)element!, ref state);
 
                             // No need to set PropertyState to TryRead since we're done with this element now.
                             state.Current.EndElement();
@@ -231,7 +231,11 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal sealed override bool OnTryWrite(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
+        internal sealed override bool OnTryWrite(
+            Utf8JsonWriter writer,
+            TCollection value,
+            JsonSerializerOptions options,
+            ref WriteStack state)
         {
             bool success;
 

@@ -15,7 +15,7 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void Add(TElement value, ref ReadStack state)
         {
-            ((TCollection)state.Current.ReturnValue!).Add(value);
+            ((List<TElement>)state.Current.ReturnValue!).Add(value);
         }
 
         protected override void CreateCollection(ref Utf8JsonReader reader, ref ReadStack state, JsonSerializerOptions options)
@@ -41,7 +41,7 @@ namespace System.Text.Json.Serialization.Converters
                 // Fast path that avoids validation and extra indirection.
                 for (; index < value.Count; index++)
                 {
-                    elementConverter.Write(writer, list[index], options);
+                    elementConverter.Write(writer, value[index], options);
                 }
             }
             else

@@ -24,7 +24,7 @@ namespace System.Text.Json.Serialization.Converters
             ref Utf8JsonReader reader,
             Type typeToConvert, JsonSerializerOptions options,
             ref ReadStack state,
-            out object value)
+            out KeyValuePair<TKey, TValue> value)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
             {
@@ -103,10 +103,8 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal override bool OnTryWrite(Utf8JsonWriter writer, object objValue, JsonSerializerOptions options, ref WriteStack state)
+        internal override bool OnTryWrite(Utf8JsonWriter writer, KeyValuePair<TKey, TValue> value, JsonSerializerOptions options, ref WriteStack state)
         {
-            var value = (KeyValuePair<TKey, TValue>)objValue;
-
             writer.WriteStartObject();
 
             writer.WritePropertyName(_keyName);

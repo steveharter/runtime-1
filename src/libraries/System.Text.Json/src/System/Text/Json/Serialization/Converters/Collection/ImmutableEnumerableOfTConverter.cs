@@ -29,10 +29,10 @@ namespace System.Text.Json.Serialization.Converters
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
 
-            Func<IEnumerable<TElement>, TCollection>? creator = (Func<IEnumerable<TElement>, TCollection>?)classInfo.CreateObjectWithArgs;
+            Func<IEnumerable<TElement>, IEnumerable<TElement>>? creator = (Func<IEnumerable<TElement>, IEnumerable<TElement>>?)classInfo.CreateObjectWithArgs;
             if (creator == null)
             {
-                creator = options.MemberAccessorStrategy.CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>();
+                creator = options.MemberAccessorStrategy.CreateImmutableEnumerableCreateRangeDelegate<TElement, IEnumerable<TElement>>();
                 classInfo.CreateObjectWithArgs = creator;
             }
 

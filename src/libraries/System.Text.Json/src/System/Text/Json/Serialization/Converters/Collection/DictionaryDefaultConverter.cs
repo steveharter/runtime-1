@@ -59,7 +59,7 @@ namespace System.Text.Json.Serialization.Converters
             Type typeToConvert,
             JsonSerializerOptions options,
             ref ReadStack state,
-            [MaybeNullWhen(false)] out object value)
+            [MaybeNullWhen(false)] out TCollection value)
         {
             bool shouldReadPreservedReferences = options.ReferenceHandling.ShouldReadPreservedReferences();
 
@@ -95,8 +95,8 @@ namespace System.Text.Json.Serialization.Converters
 
                         // Read the value and add.
                         reader.ReadWithVerify();
-                        TValue element = elementConverter.Read(ref reader, typeof(TValue), options);
-                        Add(element!, options, ref state);
+                        TDictionaryValueGenericParameter element = elementConverter.Read(ref reader, typeof(TDictionaryValue), options);
+                        Add((TDictionaryValue)element!, options, ref state);
                     }
                 }
                 else
@@ -120,8 +120,8 @@ namespace System.Text.Json.Serialization.Converters
                         reader.ReadWithVerify();
 
                         // Get the value from the converter and add it.
-                        elementConverter.TryRead(ref reader, typeof(TValue), options, ref state, out TValue element);
-                        Add(element!, options, ref state);
+                        elementConverter.TryRead(ref reader, typeof(TDictionaryValue), options, ref state, out TDictionaryValueGenericParameter element);
+                        Add((TDictionaryValue)element!, options, ref state);
                     }
                 }
             }
@@ -245,7 +245,7 @@ namespace System.Text.Json.Serialization.Converters
                             return false;
                         }
 
-                        Add(element!, options, ref state);
+                        Add((TDictionaryValue)element!, options, ref state);
                         state.Current.EndElement();
                     }
                 }
@@ -258,7 +258,7 @@ namespace System.Text.Json.Serialization.Converters
 
         internal sealed override bool OnTryWrite(
             Utf8JsonWriter writer,
-            object dictionary,
+            TCollection dictionary,
             JsonSerializerOptions options,
             ref WriteStack state)
         {
@@ -300,7 +300,9 @@ namespace System.Text.Json.Serialization.Converters
         internal JsonConverter<TDictionaryValueGenericParameter> GetValueConverter(JsonSerializerOptions options)
         {
             // todo: cache returned converter (require options instance not to change)
-            return (JsonConverter<TDictionaryValueGenericParameter>)options.GetConverter(_dictionaryValueType);
+            JsonConverter converter = options.GetConverter(_dictionaryValueType);
+            Debug.Assert(converter is JsonConverter<TDictionaryValueGenericParameter>);
+            return (JsonConverter<TDictionaryValueGenericParameter>)converter;
         }
     }
 }

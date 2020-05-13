@@ -125,18 +125,18 @@ namespace System.Text.Json.Serialization
             };
         }
 
-        public override Func<IEnumerable, IEnumerable> CreateImmutableEnumerableCreateRangeDelegate(Type elementType, Type collectionType)
+        public override Func<IEnumerable<TElement>, TCollection> CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>()
         {
-            MethodInfo createRange = collectionType.GetImmutableEnumerableCreateRangeMethod(elementType);
-            return (Func<IEnumerable, IEnumerable>)createRange.CreateDelegate(
-                typeof(Func<IEnumerable, IEnumerable>));
+            MethodInfo createRange = typeof(TCollection).GetImmutableEnumerableCreateRangeMethod(typeof(TElement));
+            return (Func<IEnumerable<TElement>, TCollection>)createRange.CreateDelegate(
+                typeof(Func<IEnumerable<TElement>, TCollection>));
         }
 
-        public override Func<IEnumerable, IEnumerable> CreateImmutableDictionaryCreateRangeDelegate(Type elementType, Type collectionType)
+        public override Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection> CreateImmutableDictionaryCreateRangeDelegate<TElement, TCollection>()
         {
-            MethodInfo createRange = collectionType.GetImmutableEnumerableCreateRangeMethod(elementType);
-            return (Func<IEnumerable, IEnumerable>) createRange.CreateDelegate(
-                typeof(Func<IEnumerable, IEnumerable>));
+            MethodInfo createRange = typeof(TCollection).GetImmutableDictionaryCreateRangeMethod(typeof(TElement));
+            return (Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection>)createRange.CreateDelegate(
+                typeof(Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection>));
         }
 
         public override Func<object, TProperty> CreatePropertyGetter<TProperty>(PropertyInfo propertyInfo)

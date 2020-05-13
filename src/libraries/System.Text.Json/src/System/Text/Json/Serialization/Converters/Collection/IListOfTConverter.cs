@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -17,7 +18,8 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void Add(TElement value, ref ReadStack state)
         {
-            ((TCollection)state.Current.ReturnValue!).Add(value);
+            Debug.Assert(state.Current.ReturnValue is IList<TElement>);
+            ((IList<TElement>)state.Current.ReturnValue!).Add(value);
         }
 
         protected override void CreateCollection(ref Utf8JsonReader reader, ref ReadStack state, JsonSerializerOptions options)

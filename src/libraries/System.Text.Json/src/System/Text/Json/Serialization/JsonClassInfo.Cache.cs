@@ -26,11 +26,11 @@ namespace System.Text.Json
         private const int PropertyNameCountCacheThreshold = 64;
 
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
-        private volatile Dictionary<string, JsonPropertyInfo>? _propertyCache;
+        public volatile Dictionary<string, JsonPropertyInfo>? PropertyCache;
 
         // All of the serializable properties on a POCO including the optional extension property.
         // Used for performance during serialization instead of 'PropertyCache' above.
-        private volatile JsonPropertyInfo[]? _propertyCacheArray;
+        public volatile JsonPropertyInfo[]? PropertyCacheArray;
 
         // Fast cache of constructor parameters by first JSON ordering; may not contain all parameters. Accessed before ParameterCache.
         // Use an array (instead of List<T>) for highest performance.
@@ -578,37 +578,6 @@ namespace System.Text.Json
             }
 
             frame.PropertyRefCache = null;
-        }
-
-        // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
-        public Dictionary<string, JsonPropertyInfo> PropertyCache
-        {
-            get
-            {
-                if (_propertyCache == null)
-                {
-                    InitializePropertyCache();
-                    Debug.Assert(_propertyCache != null);
-                }
-
-                return _propertyCache;
-            }
-        }
-
-        // All of the serializable properties on a POCO including the optional extension property.
-        // Used for performance during serialization instead of 'PropertyCache' above.
-        public JsonPropertyInfo[] PropertyCacheArray
-        {
-            get
-            {
-                if (_propertyCacheArray == null)
-                {
-                    InitializePropertyCache();
-                    Debug.Assert(_propertyCacheArray != null);
-                }
-
-                return _propertyCacheArray;
-            }
         }
 
         public void UpdateSortedParameterCache(ref ReadStackFrame frame)

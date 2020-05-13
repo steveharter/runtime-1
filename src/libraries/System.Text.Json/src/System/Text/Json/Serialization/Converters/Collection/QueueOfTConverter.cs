@@ -14,7 +14,7 @@ namespace System.Text.Json.Serialization.Converters
 
         protected override void Add(TElement value, ref ReadStack state)
         {
-            ((TCollection)state.Current.ReturnValue!).Enqueue(value);
+            ((Queue<TElement>)state.Current.ReturnValue!).Enqueue(value);
         }
 
         protected override void CreateCollection(ref Utf8JsonReader reader, ref ReadStack state, JsonSerializerOptions options)

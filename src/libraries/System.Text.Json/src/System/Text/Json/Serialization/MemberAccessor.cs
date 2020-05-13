@@ -19,9 +19,9 @@ namespace System.Text.Json
 
         public abstract Action<TCollection, object?> CreateAddMethodDelegate<TCollection>();
 
-        public abstract Func<IEnumerable, IEnumerable> CreateImmutableEnumerableCreateRangeDelegate(Type elementType, Type collectionType);
+        public abstract Func<IEnumerable<TElement>, TCollection> CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>();
 
-        public abstract Func<IEnumerable, IEnumerable> CreateImmutableDictionaryCreateRangeDelegate(Type elementType, Type collectionType);
+        public abstract Func<IEnumerable<KeyValuePair<string, TElement>>, TCollection> CreateImmutableDictionaryCreateRangeDelegate<TElement, TCollection>();
 
         public abstract Func<object, TProperty> CreatePropertyGetter<TProperty>(PropertyInfo propertyInfo);
 

@@ -14,7 +14,12 @@ namespace System.Text.Json.Serialization.Converters
     {
         public ObjectDefaultConverter(Type typeToConvert) : base(typeToConvert) { }
 
-        internal override bool OnTryRead(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options, ref ReadStack state, [MaybeNullWhen(false)] out object value)
+        internal override bool OnTryRead(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options,
+            ref ReadStack state,
+            [MaybeNullWhen(false)] out T value)
         {
             bool shouldReadPreservedReferences = options.ReferenceHandling.ShouldReadPreservedReferences();
             object obj;
@@ -232,7 +237,11 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        internal sealed override bool OnTryWrite(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
+        internal sealed override bool OnTryWrite(
+            Utf8JsonWriter writer,
+            T value,
+            JsonSerializerOptions options,
+            ref WriteStack state)
         {
             if (!state.SupportContinuation)
             {

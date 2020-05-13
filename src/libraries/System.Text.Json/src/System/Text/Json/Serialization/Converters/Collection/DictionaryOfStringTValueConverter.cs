@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -51,7 +52,8 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                enumerator = (Dictionary<string, TValue>.Enumerator)state.Current.CollectionEnumerator;
+                Debug.Assert(state.Current.CollectionEnumerator is Dictionary<string, TDictionaryValue>.Enumerator);
+                enumerator = (Dictionary<string, TDictionaryValue>.Enumerator)state.Current.CollectionEnumerator;
             }
 
             JsonConverter<TDictionaryValueGenericParameter> converter = GetValueConverter(options);
@@ -82,8 +84,8 @@ namespace System.Text.Json.Serialization.Converters
                         writer.WritePropertyName(key);
                     }
 
-                    TValue element = enumerator.Current.Value;
-                    if (!converter.TryWrite(writer, element, options, ref state))
+                    TDictionaryValue element = enumerator.Current.Value;
+                    if (!converter.TryWrite(writer, (TDictionaryValueGenericParameter)element!, options, ref state))
                     {
                         state.Current.CollectionEnumerator = enumerator;
                         return false;

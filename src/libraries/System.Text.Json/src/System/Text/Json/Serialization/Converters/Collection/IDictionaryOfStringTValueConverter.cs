@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
@@ -74,7 +75,8 @@ namespace System.Text.Json.Serialization.Converters
             }
             else
             {
-                enumerator = (IEnumerator<KeyValuePair<string, TValue>>)state.Current.CollectionEnumerator;
+                Debug.Assert(state.Current.CollectionEnumerator is IEnumerator<KeyValuePair<string, TDictionaryValue>>);
+                enumerator = (IEnumerator<KeyValuePair<string, TDictionaryValue>>)state.Current.CollectionEnumerator;
             }
 
             JsonConverter<TDictionaryValueGenericParameter> converter = GetValueConverter(options);
