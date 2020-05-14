@@ -23,6 +23,7 @@ namespace System.Text.Json.Serialization.Converters
         protected static JsonConverter<TConverterGenericParameter> GetElementConverter(ref ReadStack state)
         {
             JsonConverter<TConverterGenericParameter> converter = (JsonConverter<TConverterGenericParameter>)state.Current.JsonClassInfo.ElementClassInfo!.PropertyInfoForClassInfo.ConverterBase;
+            //JsonConverter<TConverterGenericParameter> converter = (JsonConverter<TConverterGenericParameter>)state.Current.JsonPropertyInfo!.ConverterBase;
             Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
 
             return converter;
