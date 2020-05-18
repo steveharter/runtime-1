@@ -7,8 +7,9 @@ using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class IEnumerableWithAddMethodConverter
-        : IEnumerableDefaultConverter<IEnumerable, object?, object?>
+    internal sealed class IEnumerableWithAddMethodConverter<TCollection>
+        : IEnumerableDefaultConverter<TCollection, object?, object?>
+        where TCollection: IEnumerable
     {
         public IEnumerableWithAddMethodConverter(Type typeToConvert) : base(typeToConvert, typeof(object)) { }
 
@@ -16,7 +17,7 @@ namespace System.Text.Json.Serialization.Converters
         {
             Debug.Assert(state.Current.ReturnValue is IEnumerable);
             Debug.Assert(state.Current.AddMethodDelegate != null);
-            ((Action<IEnumerable, object?>)state.Current.AddMethodDelegate)((IEnumerable)state.Current.ReturnValue!, value);
+            ((Action<TCollection, object?>)state.Current.AddMethodDelegate)((TCollection)state.Current.ReturnValue!, value);
         }
 
         protected override void CreateCollection(ref Utf8JsonReader reader, ref ReadStack state, JsonSerializerOptions options)
@@ -69,14 +70,14 @@ namespace System.Text.Json.Serialization.Converters
             return true;
         }
 
-        private Action<IEnumerable, object?>? _addMethodDelegate;
+        private Action<TCollection, object?>? _addMethodDelegate;
 
-        internal Action<IEnumerable, object?> GetAddMethodDelegate(JsonSerializerOptions options)
+        internal Action<TCollection, object?> GetAddMethodDelegate(JsonSerializerOptions options)
         {
             if (_addMethodDelegate == null)
             {
                 // We verified this exists when we created the converter in the enumerable converter factory.
-                _addMethodDelegate = options.MemberAccessorStrategy.CreateAddMethodDelegate<IEnumerable>();
+                _addMethodDelegate = options.MemberAccessorStrategy.CreateAddMethodDelegate<TCollection>();
             }
 
             return _addMethodDelegate;

@@ -28,6 +28,7 @@ namespace System.Text.Json.Serialization.Converters
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.DictionaryOfStringTValueConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ICollectionOfTConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IDictionaryOfStringTValueConverter`2")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IEnumerableWithAddMethodConverter`1")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IEnumerableOfTConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IListOfTConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ImmutableDictionaryOfStringTValueConverter`3")]
@@ -186,7 +187,8 @@ namespace System.Text.Json.Serialization.Converters
             }
             else if (typeToConvert.IsNonGenericStackOrQueue())
             {
-                return new IEnumerableWithAddMethodConverter(typeToConvert);
+                converterType = typeof(IEnumerableWithAddMethodConverter<>);
+                collectionType = typeToConvert;
             }
             else
             {
@@ -198,25 +200,44 @@ namespace System.Text.Json.Serialization.Converters
 
             Debug.Assert(elementType != typeToConvert);
 
-            JsonClassInfo jsonClassInfo = options.GetOrAddClass(elementType);
-            Type genericElementTypeToConvert = jsonClassInfo.PropertyInfoForClassInfo.ConverterBase.GenericTypeToConvert;
-
-            Type typeToCreate;
+            JsonConverter converter;
             if (collectionType == null)
             {
-                typeToCreate = converterType.MakeGenericType(elementType, genericElementTypeToConvert);
+                JsonClassInfo jsonClassInfo = options.GetOrAddClass(elementType);
+                Type genericElementTypeToConvert = jsonClassInfo.PropertyInfoForClassInfo.ConverterBase.GenericTypeToConvert;
+
+                Type typeToCreate = converterType.MakeGenericType(elementType, genericElementTypeToConvert!);
+                converter = (JsonConverter)Activator.CreateInstance(
+                    typeToCreate,
+                    BindingFlags.Instance | BindingFlags.Public,
+                    binder: null,
+                    args: new object[] { typeToConvert, elementType },
+                    culture: null)!;
+
+            }
+            else if (elementType != null)
+            {
+                JsonClassInfo jsonClassInfo = options.GetOrAddClass(elementType);
+                Type genericElementTypeToConvert = jsonClassInfo.PropertyInfoForClassInfo.ConverterBase.GenericTypeToConvert;
+
+                Type typeToCreate = converterType.MakeGenericType(collectionType, elementType, genericElementTypeToConvert!);
+                converter = (JsonConverter)Activator.CreateInstance(
+                    typeToCreate,
+                    BindingFlags.Instance | BindingFlags.Public,
+                    binder: null,
+                    args: new object[] { typeToConvert, elementType },
+                    culture: null)!;
             }
             else
             {
-                typeToCreate = converterType.MakeGenericType(collectionType, elementType, genericElementTypeToConvert);
+                Type typeToCreate = converterType.MakeGenericType(collectionType);
+                converter = (JsonConverter)Activator.CreateInstance(
+                    typeToCreate,
+                    BindingFlags.Instance | BindingFlags.Public,
+                    binder: null,
+                    args: new object[] { typeToConvert! },
+                    culture: null)!;
             }
-
-            JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeToCreate,
-                BindingFlags.Instance | BindingFlags.Public,
-                binder: null,
-                args: new object[] { typeToConvert, elementType },
-                culture: null)!;
 
             return converter;
         }
