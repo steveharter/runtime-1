@@ -7,9 +7,10 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ImmutableDictionaryOfStringTValueConverter<TValue, TConverterGenericParameter>
-        : DictionaryDefaultConverter<IReadOnlyDictionary<string, TValue>, TValue, TConverterGenericParameter>
-        where TValue : TConverterGenericParameter
+    internal sealed class ImmutableDictionaryOfStringTValueConverter<TCollection, TValue, TElementToConvert>
+        : DictionaryDefaultConverter<IReadOnlyDictionary<string, TValue>, TValue, TElementToConvert>
+        where TValue : TElementToConvert
+        where TCollection : IReadOnlyDictionary<string, TValue>
     {
         public ImmutableDictionaryOfStringTValueConverter(Type typeToConvert, Type dictionaryValueType) : base(typeToConvert, dictionaryValueType) { }
 
@@ -30,10 +31,10 @@ namespace System.Text.Json.Serialization.Converters
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
 
-            Func<IEnumerable<KeyValuePair<string, TValue>>, Dictionary<string, TValue>>? creator = (Func<IEnumerable<KeyValuePair<string, TValue>>, Dictionary<string, TValue>>?)classInfo.CreateObjectWithArgs;
+            Func<IEnumerable<KeyValuePair<string, TValue>>, TCollection>? creator = (Func<IEnumerable<KeyValuePair<string, TValue>>, TCollection>?)classInfo.CreateObjectWithArgs;
             if (creator == null)
             {
-                creator = options.MemberAccessorStrategy.CreateImmutableDictionaryCreateRangeDelegate<TValue, Dictionary<string, TValue>>();
+                creator = options.MemberAccessorStrategy.CreateImmutableDictionaryCreateRangeDelegate<TValue, TCollection> ();
                 classInfo.CreateObjectWithArgs = creator;
             }
 
@@ -62,7 +63,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<KeyValuePair<string, TValue>>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TConverterGenericParameter> converter = GetValueConverter(options);
+            JsonConverter<TElementToConvert> converter = GetValueConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))
@@ -79,7 +80,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 TValue element = enumerator.Current.Value;
-                if (!converter.TryWrite(writer, (TConverterGenericParameter)element!, options, ref state))
+                if (!converter.TryWrite(writer, (TElementToConvert)element!, options, ref state))
                 {
                     state.Current.CollectionEnumerator = enumerator;
                     return false;

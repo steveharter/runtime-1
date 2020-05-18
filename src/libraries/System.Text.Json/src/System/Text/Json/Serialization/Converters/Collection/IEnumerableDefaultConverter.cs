@@ -10,9 +10,9 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Default base class implementation of <cref>JsonIEnumerableConverter{TCollection, TElement}</cref>.
     /// </summary>
-    internal abstract class IEnumerableDefaultConverter<TCollection, TElement, TConverterGenericParameter>
-        : JsonCollectionConverter<TCollection, TElement, TConverterGenericParameter>
-        where TElement : TConverterGenericParameter
+    internal abstract class IEnumerableDefaultConverter<TCollection, TElement, TElementToConvert>
+        : JsonCollectionConverter<TCollection, TElement, TElementToConvert>
+        where TElement : TElementToConvert
     {
         internal IEnumerableDefaultConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -20,10 +20,10 @@ namespace System.Text.Json.Serialization.Converters
         protected abstract void CreateCollection(ref Utf8JsonReader reader, ref ReadStack state, JsonSerializerOptions options);
         protected virtual void ConvertCollection(ref ReadStack state, JsonSerializerOptions options) { }
 
-        protected static JsonConverter<TConverterGenericParameter> GetElementConverter(ref ReadStack state)
+        protected static JsonConverter<TElementToConvert> GetElementConverter(ref ReadStack state)
         {
-            JsonConverter<TConverterGenericParameter> converter = (JsonConverter<TConverterGenericParameter>)state.Current.JsonClassInfo.ElementClassInfo!.PropertyInfoForClassInfo.ConverterBase;
-            //JsonConverter<TConverterGenericParameter> converter = (JsonConverter<TConverterGenericParameter>)state.Current.JsonPropertyInfo!.ConverterBase;
+            JsonConverter<TElementToConvert> converter = (JsonConverter<TElementToConvert>)state.Current.JsonClassInfo.ElementClassInfo!.PropertyInfoForClassInfo.ConverterBase;
+            //JsonConverter<TElementToConvert> converter = (JsonConverter<TElementToConvert>)state.Current.JsonPropertyInfo!.ConverterBase;
             Debug.Assert(converter != null); // It should not be possible to have a null converter at this point.
 
             return converter;
@@ -49,7 +49,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 CreateCollection(ref reader, ref state, options);
 
-                JsonConverter<TConverterGenericParameter> elementConverter = GetElementConverter(ref state);
+                JsonConverter<TElementToConvert> elementConverter = GetElementConverter(ref state);
                 if (elementConverter.CanUseDirectReadOrWrite)
                 {
                     // Fast path that avoids validation and extra indirection.
@@ -62,7 +62,7 @@ namespace System.Text.Json.Serialization.Converters
                         }
 
                         // Obtain the CLR value from the JSON and apply to the object.
-                        TConverterGenericParameter element = elementConverter.Read(ref reader, elementConverter.TypeToConvert, options);
+                        TElementToConvert element = elementConverter.Read(ref reader, elementConverter.TypeToConvert, options);
                         Add((TElement)element!, ref state);
                     }
                 }
@@ -78,7 +78,7 @@ namespace System.Text.Json.Serialization.Converters
                         }
 
                         // Get the value from the converter and add it.
-                        elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TConverterGenericParameter element);
+                        elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TElementToConvert element);
                         Add((TElement)element!, ref state);
                     }
                 }
@@ -145,7 +145,7 @@ namespace System.Text.Json.Serialization.Converters
 
                 if (state.Current.ObjectState < StackFrameObjectState.ReadElements)
                 {
-                    JsonConverter<TConverterGenericParameter> elementConverter = GetElementConverter(ref state);
+                    JsonConverter<TElementToConvert> elementConverter = GetElementConverter(ref state);
 
                     // Process all elements.
                     while (true)
@@ -174,7 +174,7 @@ namespace System.Text.Json.Serialization.Converters
                         if (state.Current.PropertyState < StackFramePropertyState.TryRead)
                         {
                             // Get the value from the converter and add it.
-                            if (!elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TConverterGenericParameter element))
+                            if (!elementConverter.TryRead(ref reader, typeof(TElement), options, ref state, out TElementToConvert element))
                             {
                                 value = default;
                                 return false;

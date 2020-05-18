@@ -8,9 +8,9 @@ using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ConcurrentStackOfTConverter<TElement, TConverterGenericParameter>
-        : IEnumerableDefaultConverter<ConcurrentStack<TElement>, TElement, TConverterGenericParameter>
-        where TElement : TConverterGenericParameter
+    internal sealed class ConcurrentStackOfTConverter<TElement, TElementToConvert>
+        : IEnumerableDefaultConverter<ConcurrentStack<TElement>, TElement, TElementToConvert>
+        where TElement : TElementToConvert
     {
         public ConcurrentStackOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -48,7 +48,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
+            JsonConverter<TElementToConvert> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

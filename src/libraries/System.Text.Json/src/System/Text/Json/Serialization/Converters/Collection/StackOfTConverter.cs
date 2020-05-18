@@ -7,9 +7,9 @@ using System.Diagnostics;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class StackOfTConverter<TElement, TConverterGenericParameter>
-        : IEnumerableDefaultConverter<Stack<TElement>, TElement, TConverterGenericParameter>
-        where TElement : TConverterGenericParameter
+    internal sealed class StackOfTConverter<TElement, TElementToConvert>
+        : IEnumerableDefaultConverter<Stack<TElement>, TElement, TElementToConvert>
+        where TElement : TElementToConvert
     {
         public StackOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -47,7 +47,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
+            JsonConverter<TElementToConvert> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

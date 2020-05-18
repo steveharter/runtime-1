@@ -6,9 +6,9 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ISetOfTConverter<TElement, TConverterGenericParameter>
-        : IEnumerableDefaultConverter<ISet<TElement>, TElement, TConverterGenericParameter>
-        where TElement : TConverterGenericParameter
+    internal sealed class ISetOfTConverter<TElement, TElementToConvert>
+        : IEnumerableDefaultConverter<ISet<TElement>, TElement, TElementToConvert>
+        where TElement : TElementToConvert
     {
         public ISetOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -66,7 +66,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
+            JsonConverter<TElementToConvert> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

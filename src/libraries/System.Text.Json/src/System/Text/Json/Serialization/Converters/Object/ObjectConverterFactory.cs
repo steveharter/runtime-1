@@ -35,14 +35,14 @@ namespace System.Text.Json.Serialization.Converters
 
             if (constructor == null || typeToConvert.IsAbstract || parameters!.Length == 0)
             {
-                if (!typeToConvert.IsValueType)
+                //if (!typeToConvert.IsValueType)
                 {
                     return new ObjectDefaultConverter<object>(typeToConvert);
                 }
-                else
-                {
-                    converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
-                }
+                //else
+                //{
+                    //converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
+                //}
             }
             else
             {

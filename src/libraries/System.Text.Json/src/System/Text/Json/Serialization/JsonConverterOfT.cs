@@ -14,7 +14,7 @@ namespace System.Text.Json.Serialization
     public abstract partial class JsonConverter<T> : JsonConverter
     {
         private Type _typeToConvert;
-        private Type? _genericTypeToConvert;
+        private Type _genericTypeToConvert;
 
         /// <summary>
         /// todo
@@ -94,6 +94,14 @@ namespace System.Text.Json.Serialization
         /// Can <see langword="null"/> be assigned to <see cref="TypeToConvert"/>?
         /// </summary>
         internal bool CanBeNull { get; }
+
+        internal override sealed Type GenericTypeToConvert
+        {
+            get
+            {
+                return _genericTypeToConvert;
+            }
+        }
 
         /// <summary>
         /// Is the converter built-in.

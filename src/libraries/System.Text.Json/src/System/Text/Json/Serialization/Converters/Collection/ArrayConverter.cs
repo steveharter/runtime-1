@@ -10,9 +10,9 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Converter for <cref>System.Array</cref>.
     /// </summary>
-    internal sealed class ArrayConverter<TElement, TConverterGenericParameter>
-        : IEnumerableDefaultConverter<Array, TElement, TConverterGenericParameter>
-        where TElement: TConverterGenericParameter
+    internal sealed class ArrayConverter<TElement, TElementToConvert>
+        : IEnumerableDefaultConverter<Array, TElement, TElementToConvert>
+        where TElement: TElementToConvert
     {
         public ArrayConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -40,7 +40,7 @@ namespace System.Text.Json.Serialization.Converters
 
             int index = state.Current.EnumeratorIndex;
 
-            JsonConverter<TConverterGenericParameter> elementConverter = GetElementConverter(options);
+            JsonConverter<TElementToConvert> elementConverter = GetElementConverter(options);
             if (elementConverter.CanUseDirectReadOrWrite)
             {
                 // Fast path that avoids validation and extra indirection.

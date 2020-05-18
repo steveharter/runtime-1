@@ -6,9 +6,9 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class IReadOnlyDictionaryOfStringTValueConverter<TValue, TConverterGenericParameter>
-        : DictionaryDefaultConverter<IReadOnlyDictionary<string, TValue>, TValue, TConverterGenericParameter>
-        where TValue : TConverterGenericParameter
+    internal sealed class IReadOnlyDictionaryOfStringTValueConverter<TValue, TElementToConvert>
+        : DictionaryDefaultConverter<IReadOnlyDictionary<string, TValue>, TValue, TElementToConvert>
+        where TValue : TElementToConvert
     {
         public IReadOnlyDictionaryOfStringTValueConverter(Type typeToConvert, Type dictionaryValueType) : base(typeToConvert, dictionaryValueType) { }
 
@@ -50,7 +50,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (Dictionary<string, TValue>.Enumerator)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TConverterGenericParameter> converter = GetValueConverter(options);
+            JsonConverter<TElementToConvert> converter = GetValueConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))
@@ -67,7 +67,7 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 TValue element = enumerator.Current.Value;
-                if (!converter.TryWrite(writer, (TConverterGenericParameter)element!, options, ref state))
+                if (!converter.TryWrite(writer, (TElementToConvert)element!, options, ref state))
                 {
                     state.Current.CollectionEnumerator = enumerator;
                     return false;

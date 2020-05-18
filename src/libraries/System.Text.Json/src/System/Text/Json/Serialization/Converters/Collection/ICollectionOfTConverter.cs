@@ -9,9 +9,9 @@ namespace System.Text.Json.Serialization.Converters
     /// <summary>
     /// Converter for <cref>System.Collections.Generic.ICollection{TElement}</cref>.
     /// </summary>
-    internal sealed class ICollectionOfTConverter<TElement, TConverterGenericParameter>
-        : IEnumerableDefaultConverter<ICollection<TElement>, TElement, TConverterGenericParameter>
-        where TElement : TConverterGenericParameter
+    internal sealed class ICollectionOfTConverter<TElement, TElementToConvert>
+        : IEnumerableDefaultConverter<ICollection<TElement>, TElement, TElementToConvert>
+        where TElement : TElementToConvert
     {
         public ICollectionOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -73,7 +73,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
+            JsonConverter<TElementToConvert> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

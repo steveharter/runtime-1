@@ -7,9 +7,9 @@ using System.Collections.Generic;
 
 namespace System.Text.Json.Serialization.Converters
 {
-    internal sealed class ImmutableEnumerableOfTConverter<TElement, TConverterGenericParameter>
-        : IEnumerableDefaultConverter<IEnumerable<TElement>, TElement, TConverterGenericParameter>
-        where TElement : TConverterGenericParameter
+    internal sealed class ImmutableEnumerableOfTConverter<TCollection, TElement, TElementToConvert>
+        : IEnumerableDefaultConverter<TCollection, TElement, TElementToConvert>
+        where TElement : TElementToConvert
     {
         public ImmutableEnumerableOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -29,10 +29,10 @@ namespace System.Text.Json.Serialization.Converters
         {
             JsonClassInfo classInfo = state.Current.JsonClassInfo;
 
-            Func<IEnumerable<TElement>, IEnumerable<TElement>>? creator = (Func<IEnumerable<TElement>, IEnumerable<TElement>>?)classInfo.CreateObjectWithArgs;
+            Func<IEnumerable<TElement>, TCollection>? creator = (Func<IEnumerable<TElement>, TCollection>?)classInfo.CreateObjectWithArgs;
             if (creator == null)
             {
-                creator = options.MemberAccessorStrategy.CreateImmutableEnumerableCreateRangeDelegate<TElement, IEnumerable<TElement>>();
+                creator = options.MemberAccessorStrategy.CreateImmutableEnumerableCreateRangeDelegate<TElement, TCollection>();
                 classInfo.CreateObjectWithArgs = creator;
             }
 
@@ -57,7 +57,7 @@ namespace System.Text.Json.Serialization.Converters
                 enumerator = (IEnumerator<TElement>)state.Current.CollectionEnumerator;
             }
 
-            JsonConverter<TConverterGenericParameter> converter = GetElementConverter(options);
+            JsonConverter<TElementToConvert> converter = GetElementConverter(options);
             do
             {
                 if (ShouldFlush(writer, ref state))

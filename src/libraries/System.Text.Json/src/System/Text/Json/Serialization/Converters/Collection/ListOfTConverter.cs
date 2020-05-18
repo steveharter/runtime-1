@@ -7,9 +7,9 @@ using System.Collections.Generic;
 namespace System.Text.Json.Serialization.Converters
 {
     /// Converter for <cref>System.Collections.Generic.List{TElement}</cref>.
-    internal sealed class ListOfTConverter<TElement, TConverterGenericParameter>
-        : IEnumerableDefaultConverter<List<TElement>, TElement, TConverterGenericParameter>
-        where TElement : TConverterGenericParameter
+    internal sealed class ListOfTConverter<TElement, TElementToConvert>
+        : IEnumerableDefaultConverter<List<TElement>, TElement, TElementToConvert>
+        where TElement : TElementToConvert
     {
         public ListOfTConverter(Type typeToConvert, Type elementType) : base(typeToConvert, elementType) { }
 
@@ -34,7 +34,7 @@ namespace System.Text.Json.Serialization.Converters
 
             // Using an index is 2x faster than using an enumerator.
             int index = state.Current.EnumeratorIndex;
-            JsonConverter<TConverterGenericParameter> elementConverter = GetElementConverter(options);
+            JsonConverter<TElementToConvert> elementConverter = GetElementConverter(options);
 
             if (elementConverter.CanUseDirectReadOrWrite)
             {

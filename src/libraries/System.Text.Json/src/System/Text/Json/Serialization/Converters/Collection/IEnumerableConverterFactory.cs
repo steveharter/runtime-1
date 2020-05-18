@@ -30,8 +30,8 @@ namespace System.Text.Json.Serialization.Converters
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IDictionaryOfStringTValueConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IEnumerableOfTConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IListOfTConverter`2")]
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ImmutableDictionaryOfStringTValueConverter`2")]
-        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ImmutableEnumerableOfTConverter`2")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ImmutableDictionaryOfStringTValueConverter`3")]
+        [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ImmutableEnumerableOfTConverter`3")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.IReadOnlyDictionaryOfStringTValueConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ISetOfTConverter`2")]
         [PreserveDependency(".ctor", "System.Text.Json.Serialization.Converters.ListOfTConverter`2")]
@@ -41,6 +41,7 @@ namespace System.Text.Json.Serialization.Converters
         {
             Type converterType = null!;
             Type[] genericArgs;
+            Type? collectionType = null;
             Type elementType = null!;
             Type? actualTypeToConvert;
 
@@ -82,7 +83,8 @@ namespace System.Text.Json.Serialization.Converters
                 genericArgs = typeToConvert.GetGenericArguments();
                 if (genericArgs[0] == typeof(string))
                 {
-                    converterType = typeof(ImmutableDictionaryOfStringTValueConverter<,>);
+                    collectionType = typeToConvert;
+                    converterType = typeof(ImmutableDictionaryOfStringTValueConverter<,,>);
                     elementType = genericArgs[1];
                 }
                 else
@@ -121,7 +123,8 @@ namespace System.Text.Json.Serialization.Converters
             // Immutable non-dictionaries from System.Collections.Immutable, e.g. ImmutableStack<T>
             else if (typeToConvert.IsImmutableEnumerableType())
             {
-                converterType = typeof(ImmutableEnumerableOfTConverter<,>);
+                collectionType = typeToConvert;
+                converterType = typeof(ImmutableEnumerableOfTConverter<,,>);
                 elementType = typeToConvert.GetGenericArguments()[0];
             }
             // IList<>
@@ -197,7 +200,16 @@ namespace System.Text.Json.Serialization.Converters
 
             JsonClassInfo jsonClassInfo = options.GetOrAddClass(elementType);
             Type genericElementTypeToConvert = jsonClassInfo.PropertyInfoForClassInfo.ConverterBase.GenericTypeToConvert;
-            Type typeToCreate = converterType.MakeGenericType(elementType, genericElementTypeToConvert);
+
+            Type typeToCreate;
+            if (collectionType == null)
+            {
+                typeToCreate = converterType.MakeGenericType(elementType, genericElementTypeToConvert);
+            }
+            else
+            {
+                typeToCreate = converterType.MakeGenericType(collectionType, elementType, genericElementTypeToConvert);
+            }
 
             JsonConverter converter = (JsonConverter)Activator.CreateInstance(
                 typeToCreate,
