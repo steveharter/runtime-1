@@ -265,7 +265,9 @@ namespace System.Reflection
             }
         }
 
+#if !NETFRAMEWORK
         public sealed override bool HasSameMetadataDefinitionAs(MemberInfo other) => HasSameMetadataDefinitionAsCore<RuntimeMethodInfo>(other);
+#endif
 
         public override Type? ReflectedType
         {

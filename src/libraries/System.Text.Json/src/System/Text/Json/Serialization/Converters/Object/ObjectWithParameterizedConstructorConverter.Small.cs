@@ -29,34 +29,80 @@ namespace System.Text.Json.Serialization.Converters
 
             bool success;
 
+            bool isStronglyTyped = jsonParameterInfo.ConverterBase.ClassType == ClassType.Value;
+
             switch (jsonParameterInfo.Position)
             {
                 case 0:
-                    success = ((JsonParameterInfo<TArg0>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg0 arg0);
-                    if (success)
+                    if (isStronglyTyped)
                     {
-                        arguments.Arg0 = arg0!;
+                        success = ((JsonParameterInfo<TArg0>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg0 arg0);
+                        if (success)
+                        {
+                            arguments.Arg0 = arg0!;
+                        }
+                    }
+                    else
+                    {
+                        success = jsonParameterInfo.ReadJson(ref state, ref reader, out object? arg0);
+                        if (success)
+                        {
+                            arguments.Arg0 = (TArg0)arg0!;
+                        }
                     }
                     break;
                 case 1:
-                    success = ((JsonParameterInfo<TArg1>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg1 arg1);
-                    if (success)
+                    if (isStronglyTyped)
                     {
-                        arguments.Arg1 = arg1!;
+                        success = ((JsonParameterInfo<TArg1>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg1 arg1);
+                        if (success)
+                        {
+                            arguments.Arg1 = arg1!;
+                        }
+                    }
+                    else
+                    {
+                        success = jsonParameterInfo.ReadJson(ref state, ref reader, out object? arg1);
+                        if (success)
+                        {
+                            arguments.Arg1 = (TArg1)arg1!;
+                        }
                     }
                     break;
                 case 2:
-                    success = ((JsonParameterInfo<TArg2>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg2 arg2);
-                    if (success)
+                    if (isStronglyTyped)
                     {
-                        arguments.Arg2 = arg2!;
+                        success = ((JsonParameterInfo<TArg2>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg2 arg2);
+                        if (success)
+                        {
+                            arguments.Arg2 = arg2!;
+                        }
+                    }
+                    else
+                    {
+                        success = jsonParameterInfo.ReadJson(ref state, ref reader, out object? arg2);
+                        if (success)
+                        {
+                            arguments.Arg2 = (TArg2)arg2!;
+                        }
                     }
                     break;
                 case 3:
-                    success = ((JsonParameterInfo<TArg3>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg3 arg3);
-                    if (success)
+                    if (isStronglyTyped)
                     {
-                        arguments.Arg3 = arg3!;
+                        success = ((JsonParameterInfo<TArg3>)jsonParameterInfo).ReadJsonTyped(ref state, ref reader, out TArg3 arg3);
+                        if (success)
+                        {
+                            arguments.Arg3 = arg3!;
+                        }
+                    }
+                    else
+                    {
+                        success = jsonParameterInfo.ReadJson(ref state, ref reader, out object? arg3);
+                        if (success)
+                        {
+                            arguments.Arg3 = (TArg3)arg3!;
+                        }
                     }
                     break;
                 default:
@@ -83,21 +129,50 @@ namespace System.Text.Json.Serialization.Converters
             {
                 if (parameterInfo.ShouldDeserialize)
                 {
+                    bool isStronglyTyped = parameterInfo.ConverterBase.ClassType == ClassType.Value;
                     int position = parameterInfo.Position;
 
                     switch (position)
                     {
                         case 0:
-                            arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
+                            if (isStronglyTyped)
+                            {
+                                arguments.Arg0 = ((JsonParameterInfo<TArg0>)parameterInfo).TypedDefaultValue!;
+                            }
+                            else
+                            {
+                                arguments.Arg0 = (TArg0)parameterInfo.DefaultValue!;
+                            }
                             break;
                         case 1:
-                            arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
+                            if (isStronglyTyped)
+                            {
+                                arguments.Arg1 = ((JsonParameterInfo<TArg1>)parameterInfo).TypedDefaultValue!;
+                            }
+                            else
+                            {
+                                arguments.Arg1 = (TArg1)parameterInfo.DefaultValue!;
+                            }
                             break;
                         case 2:
-                            arguments.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
+                            if (isStronglyTyped)
+                            {
+                                arguments.Arg2 = ((JsonParameterInfo<TArg2>)parameterInfo).TypedDefaultValue!;
+                            }
+                            else
+                            {
+                                arguments.Arg2 = (TArg2)parameterInfo.DefaultValue!;
+                            }
                             break;
                         case 3:
-                            arguments.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
+                            if (isStronglyTyped)
+                            {
+                                arguments.Arg3 = ((JsonParameterInfo<TArg3>)parameterInfo).TypedDefaultValue!;
+                            }
+                            else
+                            {
+                                arguments.Arg3 = (TArg3)parameterInfo.DefaultValue!;
+                            }
                             break;
                         default:
                             Debug.Fail("More than 4 params: we should be in override for LargeObjectWithParameterizedConstructorConverter.");

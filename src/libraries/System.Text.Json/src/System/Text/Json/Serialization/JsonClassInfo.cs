@@ -81,7 +81,7 @@ namespace System.Text.Json
             Type = type;
             Options = options;
 
-            JsonConverter converter = GetConverter(
+            JsonUntypedConverter converter = (JsonUntypedConverter)GetConverter(
                 Type,
                 parentClassType: null, // A ClassInfo never has a "parent" class.
                 propertyInfo: null, // A ClassInfo never has a "parent" property.
@@ -335,7 +335,7 @@ namespace System.Text.Json
                 return JsonParameterInfo.CreateIgnoredParameterPlaceholder(parameterInfo, jsonPropertyInfo, options);
             }
 
-            JsonConverter converter = jsonPropertyInfo.ConverterBase;
+            JsonUntypedConverter converter = jsonPropertyInfo.ConverterBase;
 
             JsonParameterInfo jsonParameterInfo = converter.CreateJsonParameterInfo();
             jsonParameterInfo.Initialize(
@@ -364,7 +364,7 @@ namespace System.Text.Json
             Debug.Assert(type != null);
             ValidateType(type, parentClassType, propertyInfo, options);
 
-            JsonConverter converter = options.DetermineConverter(parentClassType, type, propertyInfo)!;
+            JsonUntypedConverter converter = options.DetermineConverter(parentClassType, type, propertyInfo)!;
 
             // The runtimeType is the actual value being assigned to the property.
             // There are three types to consider for the runtimeType:

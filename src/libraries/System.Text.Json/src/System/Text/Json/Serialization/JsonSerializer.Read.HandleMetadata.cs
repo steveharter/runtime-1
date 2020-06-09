@@ -15,7 +15,7 @@ namespace System.Text.Json
         /// Sets state.Current.ReturnValue to the $ref target for MetadataRefProperty cases.
         /// </summary>
         internal static bool ResolveMetadata(
-            JsonConverter converter,
+            JsonUntypedConverter converter,
             ref Utf8JsonReader reader,
             ref ReadStack state)
         {

@@ -17,7 +17,7 @@ namespace System.Text.Json
     public sealed partial class JsonSerializerOptions
     {
         // The global list of built-in simple converters.
-        private static readonly Dictionary<Type, JsonConverter> s_defaultSimpleConverters = GetDefaultSimpleConverters();
+        private static readonly Dictionary<Type, JsonUntypedConverter> s_defaultSimpleConverters = GetDefaultSimpleConverters();
 
         // The global list of built-in converters that override CanConvert().
         private static readonly JsonConverter[] s_defaultFactoryConverters = new JsonConverter[]
@@ -35,10 +35,10 @@ namespace System.Text.Json
         // The cached converters (custom or built-in).
         private readonly ConcurrentDictionary<Type, JsonConverter?> _converters = new ConcurrentDictionary<Type, JsonConverter?>();
 
-        private static Dictionary<Type, JsonConverter> GetDefaultSimpleConverters()
+        private static Dictionary<Type, JsonUntypedConverter> GetDefaultSimpleConverters()
         {
             const int NumberOfSimpleConverters = 23;
-            var converters = new Dictionary<Type, JsonConverter>(NumberOfSimpleConverters);
+            var converters = new Dictionary<Type, JsonUntypedConverter>(NumberOfSimpleConverters);
 
             // Use a dictionary for simple converters.
             // When adding to this, update NumberOfSimpleConverters above.
@@ -70,7 +70,7 @@ namespace System.Text.Json
 
             return converters;
 
-            void Add(JsonConverter converter) =>
+            void Add(JsonUntypedConverter converter) =>
                 converters.Add(converter.TypeToConvert!, converter);
         }
 
@@ -82,7 +82,7 @@ namespace System.Text.Json
         /// </remarks>
         public IList<JsonConverter> Converters { get; }
 
-        internal JsonConverter DetermineConverter(Type? parentClassType, Type runtimePropertyType, PropertyInfo? propertyInfo)
+        internal JsonUntypedConverter DetermineConverter(Type? parentClassType, Type runtimePropertyType, PropertyInfo? propertyInfo)
         {
             JsonConverter converter = null!;
 
@@ -110,11 +110,18 @@ namespace System.Text.Json
             {
                 converter = factory.GetConverterInternal(runtimePropertyType, this);
 
+                if (converter is JsonConverterFactory)
+                {
+                    throw new InvalidOperationException("todo:A JsonConverterFactory instance cannot return another factory from GetConverter().");
+                }
+
                 // A factory cannot return null; GetConverterInternal checked for that.
                 Debug.Assert(converter != null);
             }
 
-            return converter;
+            Debug.Assert(converter is JsonUntypedConverter);
+
+            return (JsonUntypedConverter)converter;
         }
 
         /// <summary>
@@ -165,7 +172,7 @@ namespace System.Text.Json
             // Priority 4: Attempt to get built-in converter.
             if (converter == null)
             {
-                if (s_defaultSimpleConverters.TryGetValue(typeToConvert, out JsonConverter? foundConverter))
+                if (s_defaultSimpleConverters.TryGetValue(typeToConvert, out JsonUntypedConverter? foundConverter))
                 {
                     Debug.Assert(foundConverter != null);
                     converter = foundConverter;
@@ -195,12 +202,16 @@ namespace System.Text.Json
                 Debug.Assert(converter != null);
             }
 
-            Type converterTypeToConvert = converter.TypeToConvert;
+            Debug.Assert(converter is JsonUntypedConverter);
+
+            JsonUntypedConverter untypedConverter = (JsonUntypedConverter)converter;
+
+            Type converterTypeToConvert = untypedConverter.TypeToConvert;
 
             if (!converterTypeToConvert.IsAssignableFrom(typeToConvert) &&
                 !typeToConvert.IsAssignableFrom(converterTypeToConvert))
             {
-                ThrowHelper.ThrowInvalidOperationException_SerializationConverterNotCompatible(converter.GetType(), typeToConvert);
+                ThrowHelper.ThrowInvalidOperationException_SerializationConverterNotCompatible(untypedConverter.GetType(), typeToConvert);
             }
 
             // Only cache the value once (de)serialization has occurred since new converters can be added that may change the result.

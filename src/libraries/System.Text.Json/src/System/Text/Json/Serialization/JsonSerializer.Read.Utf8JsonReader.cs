@@ -27,7 +27,7 @@ namespace System.Text.Json
             JsonPropertyInfo jsonPropertyInfo = state.Current.JsonPropertyInfo!;
 
             TValue value;
-            JsonConverter baseConverter = jsonPropertyInfo.ConverterBase;
+            JsonUntypedConverter baseConverter = jsonPropertyInfo.ConverterBase;
             if (baseConverter.GenericTypeToConvert == typeof(object))
             {
                 JsonConverter<object?> converter = (JsonConverter<object?>)baseConverter;
@@ -356,7 +356,7 @@ namespace System.Text.Json
 
                 var newReader = new Utf8JsonReader(rentedSpan, originalReaderOptions);
 
-                JsonConverter jsonConverter = state.Current.JsonPropertyInfo!.ConverterBase;
+                JsonUntypedConverter jsonConverter = state.Current.JsonPropertyInfo!.ConverterBase;
                 TValue value = ReadCore<TValue>(jsonConverter, ref newReader, options, ref state);
 
                 // The reader should have thrown if we have remaining bytes.

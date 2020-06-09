@@ -109,5 +109,13 @@ namespace System.Text.Json.Serialization
                 return default;
             }
         }
+
+        internal override bool TryReadAsObject(ref Utf8JsonReader reader, JsonSerializerOptions options, ref ReadStack state, out object value)
+        {
+            T typedValue = default;
+            bool success = TryRead(ref reader, TypeToConvert, options, ref state, out typedValue);
+            value = (object)typedValue!;
+            return success;
+        }
     }
 }

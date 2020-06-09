@@ -100,7 +100,7 @@ namespace System.Text.Json
             ReadStack state = default;
             state.Initialize(returnType, options, supportContinuation: true);
 
-            JsonConverter converter = state.Current.JsonPropertyInfo!.ConverterBase;
+            JsonUntypedConverter converter = state.Current.JsonPropertyInfo!.ConverterBase;
 
             var readerState = new JsonReaderState(options.GetReaderOptions());
 
@@ -222,7 +222,7 @@ namespace System.Text.Json
             ReadOnlySpan<byte> buffer,
             JsonSerializerOptions options,
             ref ReadStack state,
-            JsonConverter converterBase)
+            JsonUntypedConverter converterBase)
         {
             var reader = new Utf8JsonReader(buffer, isFinalBlock, readerState);
 

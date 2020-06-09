@@ -19,13 +19,6 @@ namespace System.Text.Json.Serialization
         /// </summary>
         protected JsonConverterFactory() { }
 
-        internal sealed override ClassType ClassType
-        {
-            get
-            {
-                return ClassType.None;
-            }
-        }
 
         /// <summary>
         /// Create a converter for the provided <see cref="Type"/>.
@@ -44,22 +37,6 @@ namespace System.Text.Json.Serialization
             return CreateConverter(typeToConvert, options);
         }
 
-        internal override JsonPropertyInfo CreateJsonPropertyInfo()
-        {
-            Debug.Fail("We should never get here.");
-
-            throw new InvalidOperationException();
-        }
-
-        internal override JsonParameterInfo CreateJsonParameterInfo()
-        {
-            Debug.Fail("We should never get here.");
-
-            throw new InvalidOperationException();
-        }
-
-        internal sealed override Type? ElementType => null;
-
         internal JsonConverter GetConverterInternal(Type typeToConvert, JsonSerializerOptions options)
         {
             Debug.Assert(CanConvert(typeToConvert));
@@ -71,40 +48,6 @@ namespace System.Text.Json.Serialization
             }
 
             return converter!;
-        }
-
-        internal sealed override object ReadCoreAsObject(
-            ref Utf8JsonReader reader,
-            JsonSerializerOptions options,
-            ref ReadStack state)
-        {
-            Debug.Fail("We should never get here.");
-
-            throw new InvalidOperationException();
-        }
-
-        internal sealed override bool TryWriteAsObject(
-            Utf8JsonWriter writer,
-            object? value,
-            JsonSerializerOptions options,
-            ref WriteStack state)
-        {
-            Debug.Fail("We should never get here.");
-
-            throw new InvalidOperationException();
-        }
-
-        internal sealed override Type TypeToConvert => null!;
-
-        internal sealed override bool WriteCoreAsObject(
-            Utf8JsonWriter writer,
-            object? value,
-            JsonSerializerOptions options,
-            ref WriteStack state)
-        {
-            Debug.Fail("We should never get here.");
-
-            throw new InvalidOperationException();
         }
     }
 }

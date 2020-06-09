@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -14,10 +15,10 @@ namespace System.Text.Json
     /// </summary>
     internal class JsonParameterInfo<T> : JsonParameterInfo
     {
-        private JsonConverter<T> _converter = null!;
+        private JsonUntypedConverter _converter = null!;
         private Type _runtimePropertyType = null!;
 
-        public override JsonConverter ConverterBase => _converter;
+        public override JsonUntypedConverter ConverterBase => _converter;
 
         public T TypedDefaultValue { get; private set; } = default!;
 
@@ -35,7 +36,7 @@ namespace System.Text.Json
                 matchingProperty,
                 options);
 
-            _converter = (JsonConverter<T>)matchingProperty.ConverterBase;
+            _converter = matchingProperty.ConverterBase;
             _runtimePropertyType = runtimePropertyType;
 
             if (parameterInfo.HasDefaultValue)
@@ -67,17 +68,7 @@ namespace System.Text.Json
             }
             else
             {
-                // Optimize for internal converters by avoiding the extra call to TryRead.
-                if (_converter.CanUseDirectReadOrWrite)
-                {
-                    value = _converter.Read(ref reader, _runtimePropertyType, Options);
-                    return true;
-                }
-                else
-                {
-                    success = _converter.TryRead(ref reader, _runtimePropertyType, Options, ref state, out T typedValue);
-                    value = typedValue;
-                }
+                success = _converter.TryReadAsObject(ref reader, Options, ref state, out value);
             }
 
             return success;
@@ -104,12 +95,18 @@ namespace System.Text.Json
                 // Optimize for internal converters by avoiding the extra call to TryRead.
                 if (_converter.CanUseDirectReadOrWrite)
                 {
-                    value = _converter.Read(ref reader, _runtimePropertyType, Options);
+                    value = ((JsonConverter<T>)_converter).Read(ref reader, _runtimePropertyType, Options);
                     return true;
+                }
+                else if (_converter.ClassType == ClassType.Value) //todo:NewValue
+                {
+                    success = ((JsonConverter<T>)_converter).TryRead(ref reader, _runtimePropertyType, Options, ref state, out value);
                 }
                 else
                 {
-                    success = _converter.TryRead(ref reader, _runtimePropertyType, Options, ref state, out value);
+                    success = _converter.TryReadAsObject(ref reader, Options, ref state, out object objValue);
+                    Debug.Assert(objValue is T);
+                    value = (T)objValue;
                 }
             }
 

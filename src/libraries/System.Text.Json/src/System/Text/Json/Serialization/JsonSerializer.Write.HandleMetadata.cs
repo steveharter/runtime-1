@@ -15,7 +15,7 @@ namespace System.Text.Json
         internal static readonly JsonEncodedText s_metadataValues = JsonEncodedText.Encode("$values", encoder: null);
 
         internal static MetadataPropertyName WriteReferenceForObject(
-            JsonConverter jsonConverter,
+            JsonUntypedConverter jsonConverter,
             object currentValue,
             ref WriteStack state,
             Utf8JsonWriter writer)
@@ -45,7 +45,7 @@ namespace System.Text.Json
         }
 
         internal static MetadataPropertyName WriteReferenceForCollection(
-            JsonConverter jsonConverter,
+            JsonUntypedConverter jsonConverter,
             object currentValue,
             ref WriteStack state,
             Utf8JsonWriter writer)

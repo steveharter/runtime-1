@@ -18,7 +18,7 @@ namespace System.Text.Json
 
         public ClassType ClassType;
 
-        public abstract JsonConverter ConverterBase { get; set; }
+        public abstract JsonUntypedConverter ConverterBase { get; set; }
 
         public static JsonPropertyInfo GetPropertyPlaceholder()
         {
@@ -168,7 +168,7 @@ namespace System.Text.Json
             Type? runtimePropertyType,
             ClassType runtimeClassType,
             PropertyInfo? propertyInfo,
-            JsonConverter converter,
+            JsonUntypedConverter converter,
             JsonIgnoreCondition? ignoreCondition,
             JsonSerializerOptions options)
         {

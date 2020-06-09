@@ -15,12 +15,12 @@ namespace System.Text.Json
         {
             ReadStack state = default;
             state.Initialize(returnType, options, supportContinuation: false);
-            JsonConverter jsonConverter = state.Current.JsonPropertyInfo!.ConverterBase;
+            JsonUntypedConverter jsonConverter = state.Current.JsonPropertyInfo!.ConverterBase;
             return ReadCore<TValue>(jsonConverter, ref reader, options, ref state);
         }
 
         [return: MaybeNull]
-        private static TValue ReadCore<TValue>(JsonConverter jsonConverter, ref Utf8JsonReader reader, JsonSerializerOptions options, ref ReadStack state)
+        private static TValue ReadCore<TValue>(JsonUntypedConverter jsonConverter, ref Utf8JsonReader reader, JsonSerializerOptions options, ref ReadStack state)
         {
             if (jsonConverter is JsonConverter<TValue> converter)
             {

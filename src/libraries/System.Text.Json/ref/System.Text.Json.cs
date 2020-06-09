@@ -485,11 +485,15 @@ namespace System.Text.Json.Serialization
         protected JsonConverterFactory() { }
         public abstract System.Text.Json.Serialization.JsonConverter CreateConverter(System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options);
     }
-    public abstract partial class JsonConverter<T> : System.Text.Json.Serialization.JsonConverter
+    public abstract partial class JsonUntypedConverter : System.Text.Json.Serialization.JsonConverter
     {
-        protected internal JsonConverter() { }
-        public override bool CanConvert(System.Type typeToConvert) { throw null; }
+        protected internal JsonUntypedConverter(Type typeToConvert, Type genericTypeToConvert) { }
         public virtual bool HandleNull { get { throw null; } }
+    }
+    public abstract partial class JsonConverter<T> : System.Text.Json.Serialization.JsonUntypedConverter
+    {
+        protected internal JsonConverter() : base(null, null) { }
+        public override bool CanConvert(System.Type typeToConvert) { throw null; }
         [return: System.Diagnostics.CodeAnalysis.MaybeNull]
         public abstract T Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options);
         public abstract void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options);

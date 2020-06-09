@@ -21,14 +21,14 @@ namespace System.Text.Json
 
             WriteStack state = default;
             state.Initialize(inputType, options, supportContinuation: false);
-            JsonConverter jsonConverter = state.Current.JsonClassInfo!.PropertyInfoForClassInfo.ConverterBase;
+            JsonUntypedConverter jsonConverter = state.Current.JsonClassInfo!.PropertyInfoForClassInfo.ConverterBase;
 
             bool success = WriteCore(jsonConverter, writer, value, options, ref state);
             Debug.Assert(success);
         }
 
         private static bool WriteCore<TValue>(
-            JsonConverter jsonConverter,
+            JsonUntypedConverter jsonConverter,
             Utf8JsonWriter writer,
             TValue value,
             JsonSerializerOptions options,

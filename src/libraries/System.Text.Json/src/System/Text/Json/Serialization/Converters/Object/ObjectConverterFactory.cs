@@ -27,7 +27,6 @@ namespace System.Text.Json.Serialization.Converters
         [PreserveDependency(".ctor(System.Type)", "System.Text.Json.Serialization.Converters.SmallObjectWithParameterizedConstructorConverter`5")]
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
-            JsonConverter converter;
             Type converterType;
 
             ConstructorInfo? constructor = GetDeserializationConstructor(typeToConvert);
@@ -35,52 +34,49 @@ namespace System.Text.Json.Serialization.Converters
 
             if (constructor == null || typeToConvert.IsAbstract || parameters!.Length == 0)
             {
-                //if (!typeToConvert.IsValueType)
-                {
-                    return new ObjectDefaultConverter<object>(typeToConvert);
-                }
-                //else
-                //{
-                    //converterType = typeof(ObjectDefaultConverter<>).MakeGenericType(typeToConvert);
-                //}
+                return new ObjectDefaultConverter<object>(typeToConvert);
             }
             else
             {
+                JsonConverter converter;
+
                 int parameterCount = parameters.Length;
 
                 if (parameterCount > JsonConstants.UnboxedParameterCountThreshold)
                 {
-                    return new LargeObjectWithParameterizedConstructorConverter(typeToConvert);
+                    converter = new LargeObjectWithParameterizedConstructorConverter(typeToConvert);
                 }
-
-                Type placeHolderType = typeof(object);
-                Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
-                typeArguments[0] = typeToConvert;
-                for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
+                else
                 {
-                    if (i < parameterCount)
+                    Type placeHolderType = typeof(object);
+                    Type[] typeArguments = new Type[JsonConstants.UnboxedParameterCountThreshold + 1];
+                    typeArguments[0] = typeToConvert;
+                    for (int i = 0; i < JsonConstants.UnboxedParameterCountThreshold; i++)
                     {
-                        typeArguments[i + 1] = parameters[i].ParameterType;
+                        if (i < parameterCount)
+                        {
+                            typeArguments[i + 1] = parameters[i].ParameterType;
+                        }
+                        else
+                        {
+                            // Use placeholder arguments if there are less args than the threshold.
+                            typeArguments[i + 1] = placeHolderType;
+                        }
                     }
-                    else
-                    {
-                        // Use placeholder arguments if there are less args than the threshold.
-                        typeArguments[i + 1] = placeHolderType;
-                    }
+
+                    converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
+
+                    converter = (JsonConverter)Activator.CreateInstance(
+                            converterType,
+                            BindingFlags.Instance | BindingFlags.Public,
+                            binder: null,
+                            args: new object[] { typeToConvert },
+                            culture: null)!;
                 }
 
-                converterType = typeof(SmallObjectWithParameterizedConstructorConverter<,,,,>).MakeGenericType(typeArguments);
+                converter.ConstructorInfo = constructor!;
+                return converter;
             }
-
-            converter = (JsonConverter)Activator.CreateInstance(
-                    converterType,
-                    BindingFlags.Instance | BindingFlags.Public,
-                    binder: null,
-                    args: new object[] { typeToConvert },
-                    culture: null)!;
-
-            converter.ConstructorInfo = constructor!;
-            return converter;
         }
 
         private ConstructorInfo? GetDeserializationConstructor(Type type)

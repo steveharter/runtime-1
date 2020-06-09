@@ -94,7 +94,7 @@ namespace System.Text.Json
         /// <summary>
         /// Initializes the state for polymorphic or re-entry cases.
         /// </summary>
-        public JsonConverter InitializeReEntry(Type type, JsonSerializerOptions options, string? propertyName = null)
+        public JsonUntypedConverter InitializeReEntry(Type type, JsonSerializerOptions options, string? propertyName = null)
         {
             JsonClassInfo newClassInfo = options.GetOrAddClass(type);
 

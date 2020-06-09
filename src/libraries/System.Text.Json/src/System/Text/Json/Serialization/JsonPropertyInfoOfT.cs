@@ -11,7 +11,7 @@ namespace System.Text.Json
     /// <summary>
     /// Represents a strongly-typed property to prevent boxing and to create a direct delegate to the getter\setter.
     /// </summary>
-    /// <typeparamref name="T"/> is the <see cref="JsonConverter{T}.TypeToConvert"/> for either the property's converter,
+    /// <typeparamref name="T"/> is the <see cref="JsonUntypedConverter.TypeToConvert"/> for either the property's converter,
     /// or a type's converter, if the current instance is a <see cref="JsonClassInfo.PropertyInfoForClassInfo"/>.
     internal sealed class JsonPropertyInfo<T> : JsonPropertyInfo
     {
@@ -26,7 +26,7 @@ namespace System.Text.Json
             Type? runtimePropertyType,
             ClassType runtimeClassType,
             PropertyInfo? propertyInfo,
-            JsonConverter converter,
+            JsonUntypedConverter converter,
             JsonIgnoreCondition? ignoreCondition,
             JsonSerializerOptions options)
         {
@@ -68,7 +68,7 @@ namespace System.Text.Json
             GetPolicies(ignoreCondition);
         }
 
-        public override JsonConverter ConverterBase
+        public override JsonUntypedConverter ConverterBase
         {
             get
             {

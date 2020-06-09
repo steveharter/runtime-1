@@ -20,7 +20,7 @@ namespace System.Text.Json
                 throw new ArgumentNullException(nameof(options));
             }
 
-            JsonConverter jsonConverter = state.Current.InitializeReEntry(typeof(T), options, propertyName);
+            JsonUntypedConverter jsonConverter = state.Current.InitializeReEntry(typeof(T), options, propertyName);
             bool success = jsonConverter.TryWriteAsObject(writer, value, options, ref state);
             Debug.Assert(success);
         }

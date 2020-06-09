@@ -87,7 +87,7 @@ namespace System.Text.Json
 
             Type propertyType = propertyInfo.PropertyType;
 
-            JsonConverter converter = GetConverter(
+            JsonUntypedConverter converter = (JsonUntypedConverter)GetConverter(
                 propertyType,
                 parentClassType,
                 propertyInfo,
@@ -109,7 +109,7 @@ namespace System.Text.Json
             Type? runtimePropertyType,
             PropertyInfo? propertyInfo,
             Type parentClassType,
-            JsonConverter converter,
+            JsonUntypedConverter converter,
             JsonSerializerOptions options,
             JsonIgnoreCondition? ignoreCondition = null)
         {
@@ -136,7 +136,7 @@ namespace System.Text.Json
         internal static JsonPropertyInfo CreatePropertyInfoForClassInfo(
             Type declaredPropertyType,
             Type runtimePropertyType,
-            JsonConverter converter,
+            JsonUntypedConverter converter,
             JsonSerializerOptions options)
         {
             return CreateProperty(

@@ -11,48 +11,14 @@ namespace System.Text.Json.Serialization
     /// Converts an object or value to or from JSON.
     /// </summary>
     /// <typeparam name="T">The <see cref="Type"/> to convert.</typeparam>
-    public abstract partial class JsonConverter<T> : JsonConverter
+    public abstract partial class JsonConverter<T> : JsonUntypedConverter
     {
-        private Type _typeToConvert;
-        private Type _genericTypeToConvert;
-
         /// <summary>
         /// todo
         /// </summary>
-        protected internal JsonConverter()
-        {
-            _typeToConvert = typeof(T);
-            _genericTypeToConvert = _typeToConvert;
+        protected internal JsonConverter() : base(typeof(T), typeof(T)) { }
 
-            HandleNull = IsValueType;
-            CanBeNull = !IsValueType || Nullable.GetUnderlyingType(TypeToConvert) != null;
-
-            Initialize();
-        }
-
-        internal JsonConverter(Type typeToConvert)
-        {
-            _typeToConvert = typeToConvert;
-            _genericTypeToConvert = typeof(T);
-
-            HandleNull = IsValueType;
-            CanBeNull = !IsValueType || Nullable.GetUnderlyingType(TypeToConvert) != null;
-
-            Initialize();
-        }
-
-        /// <summary>
-        /// When overidden, constructs a new <see cref="JsonConverter{T}"/> instance.
-        /// </summary>
-        private void Initialize()
-        {
-            // Today only typeof(object) can have polymorphic writes.
-            // In the future, this will be check for !IsSealed (and excluding value types).
-            CanBePolymorphic = _typeToConvert == typeof(object);
-            IsValueType = _typeToConvert.IsValueType;
-            IsInternalConverter = GetType().Assembly == typeof(JsonConverter).Assembly;
-            CanUseDirectReadOrWrite = !CanBePolymorphic && IsInternalConverter && ClassType == ClassType.Value;
-        }
+        internal JsonConverter(Type typeToConvert) : base(typeToConvert, typeof(T)) { }
 
         /// <summary>
         /// Determines whether the type can be converted.
@@ -64,7 +30,7 @@ namespace System.Text.Json.Serialization
         /// <returns>True if the type can be converted, False otherwise.</returns>
         public override bool CanConvert(Type typeToConvert)
         {
-            return typeToConvert == _typeToConvert;
+            return typeToConvert == TypeToConvert;
         }
 
         internal override ClassType ClassType => ClassType.Value;
@@ -76,37 +42,21 @@ namespace System.Text.Json.Serialization
 
         internal override sealed JsonParameterInfo CreateJsonParameterInfo()
         {
+            if (IsValueType)
+            {
+                // Handle special case of value types being used as objects or collections.
+                if (ClassType != ClassType.Value)
+                {
+                    Type unbound = typeof(JsonParameterInfo<>);
+                    Type bound = unbound.MakeGenericType(new Type[] { this.RuntimeType });
+                    return (JsonParameterInfo)Activator.CreateInstance(bound)!;
+                }
+            }
+
             return new JsonParameterInfo<T>();
         }
 
         internal override Type? ElementType => null;
-
-        /// <summary>
-        /// Indicates whether <see langword="null"/> should be passed to the converter on serialization,
-        /// and whether <see cref="JsonTokenType.Null"/> should be passed on deserialization.
-        /// </summary>
-        /// <remarks>
-        /// The default value is <see langword="true"/> for converters for value types, and <see langword="false"/> for converters for reference types.
-        /// </remarks>
-        public virtual bool HandleNull { get; }
-
-        /// <summary>
-        /// Can <see langword="null"/> be assigned to <see cref="TypeToConvert"/>?
-        /// </summary>
-        internal bool CanBeNull { get; }
-
-        internal override sealed Type GenericTypeToConvert
-        {
-            get
-            {
-                return _genericTypeToConvert;
-            }
-        }
-
-        /// <summary>
-        /// Is the converter built-in.
-        /// </summary>
-        internal bool IsInternalConverter { get; set; }
 
         // This non-generic API is sealed as it just forwards to the generic version.
         internal sealed override bool TryWriteAsObject(Utf8JsonWriter writer, object? value, JsonSerializerOptions options, ref WriteStack state)
@@ -303,7 +253,7 @@ namespace System.Text.Json.Serialization
                 if (type != TypeToConvert)
                 {
                     // Handle polymorphic case and get the new converter.
-                    JsonConverter jsonConverter = state.Current.InitializeReEntry(type, options);
+                    JsonUntypedConverter jsonConverter = state.Current.InitializeReEntry(type, options);
                     if (jsonConverter != this)
                     {
                         // We found a different converter; forward to that.
@@ -394,8 +344,6 @@ namespace System.Text.Json.Serialization
 
             return success;
         }
-
-        internal sealed override Type TypeToConvert => _typeToConvert;
 
         internal void VerifyRead(JsonTokenType tokenType, int depth, long bytesConsumed, bool isValueConverter, ref Utf8JsonReader reader)
         {
