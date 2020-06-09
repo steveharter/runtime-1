@@ -302,14 +302,16 @@ namespace System.Text.Json.Serialization
             return success;
         }
 
-        internal bool TryWriteDataExtensionProperty(Utf8JsonWriter writer, object value, JsonSerializerOptions options, ref WriteStack state)
+        internal bool TryWriteDataExtensionProperty(Utf8JsonWriter writer, T value, JsonSerializerOptions options, ref WriteStack state)
         {
+            Debug.Assert(value != null);
+
             if (!IsInternalConverter)
             {
-                return TryWrite(writer, (T)value, options, ref state);
+                return TryWrite(writer, value, options, ref state);
             }
 
-            Debug.Assert(this is JsonDictionaryConverter<object>);
+            Debug.Assert(this is JsonDictionaryConverter<T>);
 
             state.Current.PolymorphicJsonPropertyInfo = state.Current.DeclaredJsonPropertyInfo!.RuntimeClassInfo.ElementClassInfo!.PropertyInfoForClassInfo;
 
@@ -318,7 +320,7 @@ namespace System.Text.Json.Serialization
                 ThrowHelper.ThrowJsonException_SerializerCycleDetected(options.EffectiveMaxDepth);
             }
 
-            var dictionaryConverter = (JsonDictionaryConverter<object>)(object)this;
+            var dictionaryConverter = (JsonDictionaryConverter<T>)this;
 
             bool isContinuation = state.IsContinuation;
             bool success;

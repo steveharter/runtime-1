@@ -32,7 +32,7 @@ namespace System.Text.Json.Serialization
 
         public override JsonClassInfo.ParameterizedConstructorDelegate<T>? CreateParameterizedConstructor<T>(ConstructorInfo constructor)
         {
-            Type type = typeof(T);
+            Type type = constructor.DeclaringType!;
 
             Debug.Assert(!type.IsAbstract);
             Debug.Assert(type.GetConstructors(BindingFlags.Public | BindingFlags.Instance).Contains(constructor));
@@ -79,7 +79,7 @@ namespace System.Text.Json.Serialization
 
             int parameterCount = constructor.GetParameters().Length;
 
-            Debug.Assert(parameterCount < JsonConstants.UnboxedParameterCountThreshold);
+            Debug.Assert(parameterCount <= JsonConstants.UnboxedParameterCountThreshold);
 
             return (arg0, arg1, arg2, arg3) =>
             {

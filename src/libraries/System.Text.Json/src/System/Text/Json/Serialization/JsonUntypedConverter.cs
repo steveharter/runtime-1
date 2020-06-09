@@ -20,14 +20,13 @@ namespace System.Text.Json.Serialization
         {
             TypeToConvert = typeToConvert;
             GenericTypeToConvert = genericTypeToConvert;
-
+            IsValueType = typeToConvert.IsValueType;
             HandleNull = IsValueType;
             CanBeNull = !IsValueType || Nullable.GetUnderlyingType(TypeToConvert) != null;
 
             // Today only typeof(object) can have polymorphic writes.
             // In the future, this will be check for !IsSealed (and excluding value types).
             CanBePolymorphic = typeToConvert == typeof(object);
-            IsValueType = typeToConvert.IsValueType;
             IsInternalConverter = GetType().Assembly == typeof(JsonConverter).Assembly;
             CanUseDirectReadOrWrite = !CanBePolymorphic && IsInternalConverter && ClassType == ClassType.Value;
         }
@@ -36,7 +35,6 @@ namespace System.Text.Json.Serialization
         /// Can <see langword="null"/> be assigned to <see cref="TypeToConvert"/>?
         /// </summary>
         internal bool CanBeNull { get; }
-
 
         internal virtual ClassType ClassType
         {
