@@ -123,6 +123,16 @@ namespace System.Text.Json.Serialization.Tests
 
     internal static class JsonSerializerExtensions
     {
+        // Options for delay-loading System.Linq.Expressions.dll (SLE):
+        // 1) Add a System.Text.Extensions.dll assembly with extension method and converters like what exists
+        //  in this project. System.Text.Json.dll does not reference SLE.
+        // 2) Put both the converters and knob in System.Text.Json.dll.
+        // 2a) Add policy property to JsonSerializerOptions and when set, dynamically load SLE,
+        // find the converter Types, instantiate, and add them to the option instance.
+        // 2b) Reference SLE from System.Text.Json.dll.
+        // Use the linker functionality to remove the reference to SLE in some way,
+        // perhaps by adding a new JsonSerializerOptions(bool useDynamicMode) ctor that adds the dynamic
+        // converter which is linked out if not called.
         public static void SetSystemObjectDeserializationPolicy(this JsonSerializerOptions options, SystemObjectDeserializationPolicy value)
         {
             if (value == SystemObjectDeserializationPolicy.JsonElementDynamic ||
@@ -131,14 +141,12 @@ namespace System.Text.Json.Serialization.Tests
                 options.Converters.Add(new ExpandoObjectConverter());
             }
 
-
             if (value != SystemObjectDeserializationPolicy.JsonElement)
             {
                 options.Converters.Add(new SystemObjectConverter(value));
             }
         }
     }
-
 
     internal sealed class SystemObjectConverter : JsonConverter<object>
     {

@@ -19,32 +19,45 @@ namespace System.Text.Json.Serialization.Tests
             dynamic obj = JsonSerializer.Deserialize<dynamic>(DynamicTests_DefaultConverters.Json, options);
             Assert.IsType<ExpandoObject>(obj);
 
-            VerifyPrimitives();
-            VerifyObject();
-            VerifyArray();
+            VerifyJsonElementPrimitives(obj);
+            VerifyObjectWithJsonElement(obj);
+            VerifyJsonArrayWithJsonElement(obj);
 
-            void VerifyPrimitives()
+            static void VerifyJsonElementPrimitives(dynamic obj)
             {
+                Assert.IsType<ExpandoObject>(obj);
+
                 // Primitives use JsonElement.
                 Assert.Equal("Hello", obj.MyString.GetString());
                 Assert.True(obj.MyBoolean.GetBoolean());
                 Assert.Equal(42, obj.MyInt.GetInt32());
                 Assert.Equal(4.2, obj.MyDouble.GetDouble());
                 Assert.Equal(DynamicTests_DefaultConverters.MyDateTime, obj.MyDateTime.GetDateTime());
+
+                // Primitives use JsonElement which is immutable, but being dynamic allows the property's type to be changed
+                // to a non-JsonElement type.
+                DynamicTests_CustomConverters.VerifyMutablePrimitives_Dynamic(obj);
             }
 
-            void VerifyObject()
+            static void VerifyObjectWithJsonElement(dynamic obj)
             {
+                Assert.IsType<ExpandoObject>(obj);
                 Assert.IsType<ExpandoObject>(obj.MyObject);
                 Assert.Equal("World", obj.MyObject.MyString.GetString());
+
+                DynamicTests_CustomConverters.VerifyMutableObject_Dynamic(obj);
             }
 
-            void VerifyArray()
+            static void VerifyJsonArrayWithJsonElement(dynamic obj)
             {
+                Assert.IsType<ExpandoObject>(obj);
+
                 Assert.IsType<JsonArray>(obj.MyArray);
                 Assert.Equal(2, obj.MyArray.Count);
                 Assert.Equal(1, obj.MyArray[0].GetInt32());
                 Assert.Equal(2, obj.MyArray[1].GetInt32());
+
+                DynamicTests_CustomConverters.VerifyMutableArray_JsonArray(obj);
             }
         }
 
@@ -63,32 +76,57 @@ namespace System.Text.Json.Serialization.Tests
             Assert.IsAssignableFrom<JsonObject>(obj);
             var jsonObj = (JsonObject)obj;
 
-            VerifyPrimitives();
-            VerifyObject();
-            VerifyArray();
+            VerifyDynamicPrimitivesFromJsonObject(jsonObj);
+            VerifyJsonObject(jsonObj);
+            VerifyJsonArrayFromJsonObject(jsonObj);
 
-            void VerifyPrimitives()
+            static void VerifyDynamicPrimitivesFromJsonObject(JsonObject obj)
             {
                 // Primitives are auto-converted.
-                Assert.Equal("Hello", jsonObj["MyString"]);
-                Assert.Equal(true, jsonObj["MyBoolean"]);
-                Assert.Equal(42L, jsonObj["MyInt"]);
-                Assert.Equal(4.2, jsonObj["MyDouble"]);
-                Assert.Equal(DynamicTests_DefaultConverters.MyDateTime, jsonObj["MyDateTime"]);
+                Assert.Equal("Hello", obj["MyString"]);
+                Assert.Equal(true, obj["MyBoolean"]);
+                Assert.Equal(42L, obj["MyInt"]);
+                Assert.Equal(4.2, obj["MyDouble"]);
+                Assert.Equal(DynamicTests_DefaultConverters.MyDateTime, obj["MyDateTime"]);
+
+                obj["MyString"] = "World";
+                Assert.Equal("World", obj["MyString"]);
+
+                obj["MyBoolean"] = false;
+                Assert.Equal(false, obj["MyBoolean"]);
+
+                obj["MyInt"] = 43;
+                Assert.Equal(43, obj["MyInt"]);
+
+                obj["MyDouble"] = 4.4;
+                Assert.Equal(4.4, obj["MyDouble"]);
+
+                DateTime dt = DateTime.Now;
+                obj["MyDateTime"] = dt;
+                Assert.Equal(dt, obj["MyDateTime"]);
             }
 
-            void VerifyObject()
+            static void VerifyJsonObject(JsonObject obj)
             {
-                Assert.IsType<JsonObject>(jsonObj.GetObject("MyObject"));
-                Assert.Equal("World", jsonObj.GetObject("MyObject")["MyString"]);
+                Assert.IsType<JsonObject>(obj["MyObject"]);
+                Assert.Equal("World", obj.GetObject("MyObject")["MyString"]);
+
+                JsonObject newJsonObj = new JsonObject();
+                newJsonObj["MyString"] = "Hello";
+                obj["MyObject"] = newJsonObj;
+                Assert.Equal("Hello", obj.GetObject("MyObject")["MyString"]);
             }
 
-            void VerifyArray()
+            static void VerifyJsonArrayFromJsonObject(JsonObject obj)
             {
-                Assert.IsType<JsonArray>(jsonObj.GetArray("MyArray"));
-                Assert.Equal(2, jsonObj.GetArray("MyArray").Count);
-                Assert.Equal(1L, jsonObj.GetArray("MyArray")[0]);
-                Assert.Equal(2L, jsonObj.GetArray("MyArray")[1]);
+                Assert.IsType<JsonArray>(obj.GetArray("MyArray"));
+                Assert.Equal(2, obj.GetArray("MyArray").Count);
+                Assert.Equal(1L, obj.GetArray("MyArray")[0]);
+                Assert.Equal(2L, obj.GetArray("MyArray")[1]);
+
+                obj["MyArray"] = new JsonArray();
+                Assert.IsType<JsonArray>(obj.GetArray("MyArray"));
+                Assert.Equal(0, obj.GetArray("MyArray").Count);
             }
         }
 
@@ -104,32 +142,49 @@ namespace System.Text.Json.Serialization.Tests
             dynamic obj = JsonSerializer.Deserialize<dynamic>(DynamicTests_DefaultConverters.Json, options);
             Assert.IsType<ExpandoObject>(obj);
 
-            VerifyPrimitives();
-            VerifyObject();
-            VerifyArray();
+            VerifyDynamicPrimitives(obj);
+            VerifyDynamic(obj);
+            VerifyJsonArrayWithDynamicPrimitives(obj);
 
-            void VerifyPrimitives()
+            static void VerifyDynamicPrimitives(dynamic obj)
             {
+                Assert.IsType<ExpandoObject>(obj);
+
                 // Primitives are auto-converted.
                 Assert.Equal("Hello", obj.MyString);
                 Assert.True(obj.MyBoolean);
                 Assert.Equal(42L, obj.MyInt);
                 Assert.Equal(4.2, obj.MyDouble);
                 Assert.Equal(DynamicTests_DefaultConverters.MyDateTime, obj.MyDateTime);
+
+                DynamicTests_CustomConverters.VerifyMutablePrimitives_Dynamic(obj);
             }
 
-            void VerifyObject()
+            static void VerifyDynamic(dynamic obj)
             {
                 Assert.IsType<ExpandoObject>(obj.MyObject);
                 Assert.Equal("World", obj.MyObject.MyString);
+
+                DynamicTests_CustomConverters.VerifyMutableObject_Dynamic(obj);
             }
 
-            void VerifyArray()
+            static void VerifyJsonArrayWithDynamicPrimitives(dynamic obj)
             {
+                Assert.IsType<ExpandoObject>(obj);
+
                 Assert.IsType<JsonArray>(obj.MyArray);
                 Assert.Equal(2, obj.MyArray.Count);
                 Assert.Equal(1, obj.MyArray[0]);
                 Assert.Equal(2, obj.MyArray[1]);
+
+                int count = 0;
+                foreach (long value in obj.MyArray)
+                {
+                    count++;
+                }
+                Assert.Equal(2, count);
+
+                DynamicTests_CustomConverters.VerifyMutableArray_JsonArray(obj);
             }
         }
 
@@ -239,6 +294,44 @@ namespace System.Text.Json.Serialization.Tests
             // Types are different.
             object newtonsoftObj = Newtonsoft.Json.JsonConvert.DeserializeObject<object>(Value);
             Assert.IsType<Newtonsoft.Json.Linq.JArray>(newtonsoftObj);
+        }
+
+        private static void VerifyMutablePrimitives_Dynamic(dynamic obj)
+        {
+            Assert.IsType<ExpandoObject>(obj);
+
+            obj.MyString = "World";
+            Assert.Equal("World", obj.MyString);
+
+            obj.MyBoolean = false;
+            Assert.False(obj.MyBoolean);
+
+            obj.MyInt = 43;
+            Assert.Equal(43, obj.MyInt);
+
+            obj.MyDouble = 4.3;
+            Assert.Equal(4.3, obj.MyDouble);
+
+            DateTime dt = DateTime.Now;
+            obj.MyDateTime = dt;
+            Assert.Equal(dt, obj.MyDateTime);
+        }
+
+        private static void VerifyMutableObject_Dynamic(dynamic obj)
+        {
+            Assert.IsType<ExpandoObject>(obj);
+
+            obj.MyObject = new ExpandoObject();
+            obj.MyObject.MyString = "Hello";
+            Assert.Equal("Hello", obj.MyObject.MyString);
+        }
+
+        private static void VerifyMutableArray_JsonArray(dynamic obj)
+        {
+            Assert.IsType<ExpandoObject>(obj);
+
+            obj.MyArray = new JsonArray();
+            Assert.Equal(0, obj.MyArray.Count);
         }
     }
 }
