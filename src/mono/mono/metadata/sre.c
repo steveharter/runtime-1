@@ -3712,9 +3712,11 @@ typebuilder_setup_one_field (MonoDynamicImage *dynamic_image, MonoClass *klass, 
 		if (klass->enumtype && strcmp (field->name, "value__") == 0) // used by enum classes to store the instance value
 			field->type->attrs |= FIELD_ATTRIBUTE_RT_SPECIAL_NAME;
 
-		if (!klass->enumtype && !mono_type_get_underlying_type (field->type)) {
-			mono_class_set_type_load_failure (klass, "Field '%s' is an enum type with a bad underlying type", field->name);
-			goto leave;
+		if (!mono_type_get_underlying_type (field->type)) {
+			if (!(klass->enumtype && mono_metadata_type_equal (field->type, m_class_get_byval_arg (klass)))) {
+				mono_class_set_type_load_failure (klass, "Field '%s' is an enum type with a bad underlying type", field->name);
+				goto leave;
+			}
 		}
 
 		if ((fb->attrs & FIELD_ATTRIBUTE_HAS_FIELD_RVA) && (rva_data = fb->rva_data)) {
@@ -4084,12 +4086,15 @@ ves_icall_TypeBuilder_create_runtime_class (MonoReflectionTypeBuilderHandle ref_
 	 *
 	 * Together with this we must ensure the contents of all instances to match the created type.
 	 */
-	if (domain->type_hash && mono_class_is_gtd (klass)) {
+	if (mono_class_is_gtd (klass)) {
+		MonoMemoryManager *memory_manager = mono_domain_ambient_memory_manager (domain);
 		struct remove_instantiations_user_data data;
 		data.klass = klass;
 		data.error = error;
 		mono_error_assert_ok (error);
-		mono_g_hash_table_foreach_remove (domain->type_hash, remove_instantiations_of_and_ensure_contents, &data);
+		mono_mem_manager_lock (memory_manager);
+		mono_g_hash_table_foreach_remove (memory_manager->type_hash, remove_instantiations_of_and_ensure_contents, &data);
+		mono_mem_manager_unlock (memory_manager);
 		goto_if_nok (error, failure);
 	}
 
