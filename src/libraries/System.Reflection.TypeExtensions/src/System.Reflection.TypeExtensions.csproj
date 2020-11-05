@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <RunMatchingRefApiCompat>false</RunMatchingRefApiCompat>
     <IsPartialFacadeAssembly>true</IsPartialFacadeAssembly>
     <Nullable>enable</Nullable>
     <TargetFrameworks>$(NetCoreAppCurrent)</TargetFrameworks>
     <ExcludeCurrentNetCoreAppFromPackage>true</ExcludeCurrentNetCoreAppFromPackage>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="System\Reflection\NullableCondition.cs" />
     <Compile Include="System\Reflection\Requires.cs" />
+    <Compile Include="System\Reflection\TupleInfo.cs" />
     <Compile Include="System\Reflection\TypeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

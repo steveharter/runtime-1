@@ -14,8 +14,11 @@
     <Compile Include="MethodBaseTests.cs" />
     <Compile Include="MethodInfoTests.cs" />
     <Compile Include="ModuleTests.cs" />
+    <Compile Include="NullableConditionTests_NoNullableContext.cs" />
+    <Compile Include="NullableConditionTests_NullableContext.cs" />
     <Compile Include="PropertyInfoTests.cs" />
     <Compile Include="TypeTests.cs" />
+    <Compile Include="TupleInfoTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(CommonTestPath)Data\TinyAssembly.dll">

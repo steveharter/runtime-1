@@ -16,24 +16,50 @@ namespace System.Reflection
     {
         public static System.Reflection.MethodInfo? GetAddMethod(this System.Reflection.EventInfo eventInfo) { throw null; }
         public static System.Reflection.MethodInfo? GetAddMethod(this System.Reflection.EventInfo eventInfo, bool nonPublic) { throw null; }
+        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.EventInfo eventInfo) { throw null; }
         public static System.Reflection.MethodInfo? GetRaiseMethod(this System.Reflection.EventInfo eventInfo) { throw null; }
         public static System.Reflection.MethodInfo? GetRaiseMethod(this System.Reflection.EventInfo eventInfo, bool nonPublic) { throw null; }
         public static System.Reflection.MethodInfo? GetRemoveMethod(this System.Reflection.EventInfo eventInfo) { throw null; }
         public static System.Reflection.MethodInfo? GetRemoveMethod(this System.Reflection.EventInfo eventInfo, bool nonPublic) { throw null; }
+        public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.EventInfo eventInfo) { throw null; }
+    }
+    public static partial class FieldInfoExtensions
+    {
+        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.FieldInfo fieldInfo) { throw null; }
+        public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.FieldInfo fieldInfo) { throw null; }
     }
     public static partial class MemberInfoExtensions
     {
         public static int GetMetadataToken(this System.Reflection.MemberInfo member) { throw null; }
+        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.MemberInfo member) { throw null; }
+        public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.MemberInfo member) { throw null; }
         public static bool HasMetadataToken(this System.Reflection.MemberInfo member) { throw null; }
     }
     public static partial class MethodInfoExtensions
     {
         public static System.Reflection.MethodInfo GetBaseDefinition(this System.Reflection.MethodInfo method) { throw null; }
+        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.MethodInfo method) { throw null; }
+        public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.MethodInfo method) { throw null; }
     }
     public static partial class ModuleExtensions
     {
         public static System.Guid GetModuleVersionId(this System.Reflection.Module module) { throw null; }
         public static bool HasModuleVersionId(this System.Reflection.Module module) { throw null; }
+    }
+    public enum NullableCondition
+    {
+        MaybeNull = 0,
+        MaybeNullWhenTrue = 1,
+        MaybeNullWhenFalse = 2,
+        NotNull = 3,
+        NotNullIfNotNull = 4,
+        NotNullWhenTrue = 5,
+        NotNullWhenFalse = 6,
+    }
+    public static partial class ParameterInfoExtensions
+    {
+        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.ParameterInfo parameter) { throw null; }
+        public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.ParameterInfo parameter) { throw null; }
     }
     public static partial class PropertyInfoExtensions
     {
@@ -41,8 +67,18 @@ namespace System.Reflection
         public static System.Reflection.MethodInfo[] GetAccessors(this System.Reflection.PropertyInfo property, bool nonPublic) { throw null; }
         public static System.Reflection.MethodInfo? GetGetMethod(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo? GetGetMethod(this System.Reflection.PropertyInfo property, bool nonPublic) { throw null; }
+        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo? GetSetMethod(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo? GetSetMethod(this System.Reflection.PropertyInfo property, bool nonPublic) { throw null; }
+        public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.PropertyInfo property) { throw null; }
+    }
+    public partial struct TupleInfo
+    {
+        private object _dummy;
+        private int _dummyPrimitive;
+        public readonly string Name { get { throw null; } }
+        public readonly string? TransformName { get { throw null; } }
+        public readonly System.Type Type { get { throw null; } }
     }
     public static partial class TypeExtensions
     {
