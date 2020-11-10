@@ -16,10 +16,10 @@ namespace System.Text.Json.Serialization.Tests
                 DictionaryKeyPolicy = JsonNamingPolicy.CamelCase // e.g. Key1 -> key1.
             };
 
-            const string JsonString = @"[{""Key1"":1,""Key2"":2},{""Key1"":3,""Key2"":4}]";
+            const string JsonValue = @"[{""Key1"":1,""Key2"":2},{""Key1"":3,""Key2"":4}]";
 
             // Without key policy, deserialize keys as they are.
-            Dictionary<string, int>[] obj = JsonSerializer.Deserialize<Dictionary<string, int>[]>(JsonString);
+            Dictionary<string, int>[] obj = JsonSerializer.Deserialize<Dictionary<string, int>[]>(JsonValue);
 
             Assert.Equal(2, obj.Length);
 
@@ -32,7 +32,7 @@ namespace System.Text.Json.Serialization.Tests
             Assert.Equal(4, obj[1]["Key2"]);
 
             // Ensure we ignore key policy and deserialize keys as they are.
-            obj = JsonSerializer.Deserialize<Dictionary<string, int>[]>(JsonString, options);
+            obj = JsonSerializer.Deserialize<Dictionary<string, int>[]>(JsonValue, options);
 
             Assert.Equal(2, obj.Length);
 
