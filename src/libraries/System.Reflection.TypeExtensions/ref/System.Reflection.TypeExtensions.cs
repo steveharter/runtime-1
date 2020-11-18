@@ -12,11 +12,29 @@ namespace System.Reflection
         public static System.Reflection.Module[] GetModules(this System.Reflection.Assembly assembly) { throw null; }
         public static System.Type[] GetTypes(this System.Reflection.Assembly assembly) { throw null; }
     }
+    public sealed partial class AttributedInfo
+    {
+        internal AttributedInfo() { }
+        public System.Reflection.DoesNotReturnCondition DoesNotReturn { get { throw null; } }
+        public bool HasNullableContext { get { throw null; } }
+        public string? MemberReference { get { throw null; } }
+        public string[]? MemberReferences { get { throw null; } }
+        public System.Reflection.NullableInCondition NullableIn { get { throw null; } }
+        public System.Reflection.NullableOutCondition NullableOut { get { throw null; } }
+    }
+
+    public enum DoesNotReturnCondition
+    {
+        NotApplicable = 0,
+        Returns = 1,
+        DoesNotReturn = 2,
+        DoesNotReturnWhenTrue = 3,
+        DoesNotReturnWhenFalse = 4,
+    }
     public static partial class EventInfoExtensions
     {
         public static System.Reflection.MethodInfo? GetAddMethod(this System.Reflection.EventInfo eventInfo) { throw null; }
         public static System.Reflection.MethodInfo? GetAddMethod(this System.Reflection.EventInfo eventInfo, bool nonPublic) { throw null; }
-        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.EventInfo eventInfo) { throw null; }
         public static System.Reflection.MethodInfo? GetRaiseMethod(this System.Reflection.EventInfo eventInfo) { throw null; }
         public static System.Reflection.MethodInfo? GetRaiseMethod(this System.Reflection.EventInfo eventInfo, bool nonPublic) { throw null; }
         public static System.Reflection.MethodInfo? GetRemoveMethod(this System.Reflection.EventInfo eventInfo) { throw null; }
@@ -25,20 +43,19 @@ namespace System.Reflection
     }
     public static partial class FieldInfoExtensions
     {
-        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.FieldInfo fieldInfo) { throw null; }
+        public static System.Reflection.AttributedInfo GetAttributedInfo(this System.Reflection.FieldInfo fieldInfo) { throw null; }
         public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.FieldInfo fieldInfo) { throw null; }
     }
     public static partial class MemberInfoExtensions
     {
         public static int GetMetadataToken(this System.Reflection.MemberInfo member) { throw null; }
-        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.MemberInfo member) { throw null; }
         public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.MemberInfo member) { throw null; }
         public static bool HasMetadataToken(this System.Reflection.MemberInfo member) { throw null; }
     }
     public static partial class MethodInfoExtensions
     {
+        public static System.Reflection.AttributedInfo GetAttributedInfo(this System.Reflection.MethodInfo method) { throw null; }
         public static System.Reflection.MethodInfo GetBaseDefinition(this System.Reflection.MethodInfo method) { throw null; }
-        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.MethodInfo method) { throw null; }
         public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.MethodInfo method) { throw null; }
     }
     public static partial class ModuleExtensions
@@ -46,28 +63,35 @@ namespace System.Reflection
         public static System.Guid GetModuleVersionId(this System.Reflection.Module module) { throw null; }
         public static bool HasModuleVersionId(this System.Reflection.Module module) { throw null; }
     }
-    public enum NullableCondition
+    public enum NullableInCondition
     {
-        MaybeNull = 0,
-        MaybeNullWhenTrue = 1,
+        NotApplicable = 0,
+        AllowNull = 1,
+        DisallowNull = 2,
+    }
+    public enum NullableOutCondition
+    {
+        NotApplicable = 0,
+        MaybeNull = 1,
         MaybeNullWhenFalse = 2,
-        NotNull = 3,
-        NotNullIfNotNull = 4,
+        MaybeNullWhenTrue = 3,
+        NotNull = 4,
         NotNullWhenTrue = 5,
         NotNullWhenFalse = 6,
+        NotNullIfNotNull = 7,
     }
     public static partial class ParameterInfoExtensions
     {
-        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.ParameterInfo parameter) { throw null; }
+        public static System.Reflection.AttributedInfo GetAttributedInfo(this System.Reflection.ParameterInfo parameter) { throw null; }
         public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.ParameterInfo parameter) { throw null; }
     }
     public static partial class PropertyInfoExtensions
     {
         public static System.Reflection.MethodInfo[] GetAccessors(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo[] GetAccessors(this System.Reflection.PropertyInfo property, bool nonPublic) { throw null; }
+        public static System.Reflection.AttributedInfo GetAttributedInfo(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo? GetGetMethod(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo? GetGetMethod(this System.Reflection.PropertyInfo property, bool nonPublic) { throw null; }
-        public static System.Reflection.NullableCondition GetNullability(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo? GetSetMethod(this System.Reflection.PropertyInfo property) { throw null; }
         public static System.Reflection.MethodInfo? GetSetMethod(this System.Reflection.PropertyInfo property, bool nonPublic) { throw null; }
         public static System.Reflection.TupleInfo[] GetTupleInfo(this System.Reflection.PropertyInfo property) { throw null; }

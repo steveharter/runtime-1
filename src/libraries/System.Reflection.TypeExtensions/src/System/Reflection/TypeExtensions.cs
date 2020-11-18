@@ -239,12 +239,6 @@ namespace System.Reflection
             return eventInfo.GetAddMethod(nonPublic);
         }
 
-        public static NullableCondition GetNullability(this EventInfo eventInfo)
-        {
-            Requires.NotNull(eventInfo, nameof(eventInfo));
-            throw null!;
-        }
-
         public static MethodInfo? GetRaiseMethod(this EventInfo eventInfo)
         {
             Requires.NotNull(eventInfo, nameof(eventInfo));
@@ -277,10 +271,10 @@ namespace System.Reflection
 
     public static class FieldInfoExtensions
     {
-        public static NullableCondition GetNullability(this FieldInfo fieldInfo)
+        public static AttributedInfo GetAttributedInfo(this FieldInfo fieldInfo)
         {
             Requires.NotNull(fieldInfo, nameof(fieldInfo));
-            throw null!;
+            return new AttributedInfo(fieldInfo, MetadataProviderStrategy.s_fieldStrategy);
         }
 
         public static TupleInfo[] GetTupleInfo(this FieldInfo fieldInfo)
@@ -349,12 +343,6 @@ namespace System.Reflection
             return token;
         }
 
-        public static NullableCondition GetNullability(this MemberInfo member)
-        {
-            Requires.NotNull(member, nameof(member));
-            throw null!;
-        }
-
         public static TupleInfo[] GetTupleInfo(this MemberInfo member)
         {
             throw null!;
@@ -369,10 +357,10 @@ namespace System.Reflection
             return method.GetBaseDefinition();
         }
 
-        public static NullableCondition GetNullability(this MethodInfo method)
+        public static AttributedInfo GetAttributedInfo(this MethodInfo method)
         {
             Requires.NotNull(method, nameof(method));
-            throw null!;
+            return new AttributedInfo(method, MetadataProviderStrategy.s_methodStrategy);
         }
 
         public static TupleInfo[] GetTupleInfo(this MethodInfo method)
@@ -398,13 +386,10 @@ namespace System.Reflection
 
     public static class ParameterInfoExtensions
     {
-        public static NullableCondition GetNullability(this ParameterInfo parameter)
+        public static AttributedInfo GetAttributedInfo(this ParameterInfo parameter)
         {
             Requires.NotNull(parameter, nameof(parameter));
-            return NullableConditionFactory.Create(
-                parameter.GetCustomAttributesData(),
-                parameter.Member.DeclaringType!,
-                parameter.ParameterType); ;
+            return new AttributedInfo(parameter, MetadataProviderStrategy.s_parameterStrategy);
         }
 
         public static TupleInfo[] GetTupleInfo(this ParameterInfo parameter)
@@ -412,7 +397,6 @@ namespace System.Reflection
             throw null!;
         }
     }
-
 
     public static class PropertyInfoExtensions
     {
@@ -440,19 +424,10 @@ namespace System.Reflection
             return property.GetGetMethod(nonPublic);
         }
 
-        public static NullableCondition GetNullability(this PropertyInfo property)
+        public static AttributedInfo GetAttributedInfo(this PropertyInfo property)
         {
             Requires.NotNull(property, nameof(property));
-            ParameterInfo? param = property.GetGetMethod()?.ReturnParameter;
-            if (param == null)
-            {
-                throw new ArgumentException("PropertyInfo does not have a get method.", nameof(property));
-            }
-
-            return NullableConditionFactory.Create(
-                param.GetCustomAttributesData(),
-                property.DeclaringType!,
-                property.PropertyType);
+            return new AttributedInfo(property, MetadataProviderStrategy.s_propertyStrategy);
         }
 
         public static MethodInfo? GetSetMethod(this PropertyInfo property)

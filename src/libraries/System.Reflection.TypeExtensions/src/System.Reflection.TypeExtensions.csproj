@@ -7,7 +7,15 @@
     <ExcludeCurrentNetCoreAppFromPackage>true</ExcludeCurrentNetCoreAppFromPackage>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="System\Reflection\NullableCondition.cs" />
+    <Compile Include="System\Reflection\Nullable\DoesNotReturnCondition.cs" />
+    <Compile Include="System\Reflection\Nullable\FieldStrategy.cs" />
+    <Compile Include="System\Reflection\Nullable\MetadataProviderStrategy.cs" />
+    <Compile Include="System\Reflection\Nullable\MethodStrategy.cs" />
+    <Compile Include="System\Reflection\Nullable\NullableInCondition.cs" />
+    <Compile Include="System\Reflection\Nullable\AttributedInfo.cs" />
+    <Compile Include="System\Reflection\Nullable\NullableOutCondition.cs" />
+    <Compile Include="System\Reflection\Nullable\ParameterStrategy.cs" />
+    <Compile Include="System\Reflection\Nullable\PropertyStrategy.cs" />
     <Compile Include="System\Reflection\Requires.cs" />
     <Compile Include="System\Reflection\TupleInfo.cs" />
     <Compile Include="System\Reflection\TypeExtensions.cs" />

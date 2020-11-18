@@ -17,26 +17,36 @@ namespace System.Reflection.Tests
             public TestClass()
             {
                 NonNullableObject = 1;
-                NonNullableObjectWithAttribute = 1;
+
+                // these will fail to compile:
+                //object obj = AllowNull_DisallowNull;
+                //AllowNull_DisallowNull = null;
+
+                //object x = AllowNull_MaybeNull;
             }
 
             public object NonNullableObject { get; set; }
-            [NotNull] public object NonNullableObjectWithAttribute { get; set; }
-            //[NotNull] [MYATTR] public object NonNullableObjectWithAttribute { get; set; }
-            //public object NonNullableObjectWithAttribute { get; set; }
+            [DisallowNull] public object? AllowNull_DisallowNull { get; set; }
+            [AllowNull] [MaybeNull] public object AllowNull_MaybeNull { get; set; }
         }
 
         [Fact]
-        public void T()
+        public void Test()
         {
             var tc = new TestClass();
             tc.NonNullableObject = null!;
 
-            PropertyInfo info = typeof(TestClass).GetProperty("NonNullableObjectWithAttribute")!;
-            Assert.Equal(NullableCondition.NotNull, info.GetNullability());
+            PropertyInfo info;
+
+            info = typeof(TestClass).GetProperty("AllowNull_MaybeNull")!;
+            Assert.Equal(NullableInCondition.AllowNull, info.GetAttributedInfo().NullableIn);
+            Assert.Equal(NullableOutCondition.MaybeNull, info.GetAttributedInfo().NullableOut);
+            Assert.True(info.GetAttributedInfo().HasNullableContext);
 
             info = typeof(TestClass).GetProperty("NonNullableObject")!;
-            Assert.Equal(NullableCondition.NotNull, info.GetNullability());
-       }
+            Assert.Equal(NullableInCondition.DisallowNull, info.GetAttributedInfo().NullableIn);
+            Assert.Equal(NullableOutCondition.NotNull, info.GetAttributedInfo().NullableOut);
+            Assert.True(info.GetAttributedInfo().HasNullableContext);
+        }
     }
 }
