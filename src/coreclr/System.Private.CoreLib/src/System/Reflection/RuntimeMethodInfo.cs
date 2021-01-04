@@ -348,6 +348,8 @@ namespace System.Reflection
         [DoesNotReturn]
         private void ThrowNoInvokeException()
         {
+System.Diagnostics.Debugger.Break();
+
             // method is on a class that contains stack pointers
             if ((InvocationFlags & INVOCATION_FLAGS.INVOCATION_FLAGS_CONTAINS_STACK_POINTERS) != 0)
             {
@@ -380,10 +382,11 @@ namespace System.Reflection
             throw new TargetException();
         }
 
-        [DebuggerStepThroughAttribute]
-        [Diagnostics.DebuggerHidden]
+        //[DebuggerStepThroughAttribute]
+        //[Diagnostics.DebuggerHidden]
         public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture)
         {
+System.Diagnostics.Debugger.Break();
             object[]? arguments = InvokeArgumentsCheck(obj, invokeAttr, binder, parameters, culture);
 
             bool wrapExceptions = (invokeAttr & BindingFlags.DoNotWrapExceptions) == 0;
