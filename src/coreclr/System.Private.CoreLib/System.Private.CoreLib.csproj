@@ -304,8 +304,8 @@
     <Compile Include="$(CommonPath)System\NotImplemented.cs">
       <Link>Common\System\NotImplemented.cs</Link>
     </Compile>
-    <Compile Include="src\System\ValueHolders.cs" />
-    <Compile Include="src\System\ValueHolder.cs" />
+    <Compile Include="src\System\Reflection\ValueHolders.cs" />
+    <Compile Include="src\System\Reflection\ValueHolder.cs" />
   </ItemGroup>
   <Import Project="$(LibrariesProjectRoot)\System.Private.CoreLib\src\System.Private.CoreLib.Shared.projitems" Label="Shared" />
 
