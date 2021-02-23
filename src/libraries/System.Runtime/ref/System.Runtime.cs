@@ -4456,6 +4456,11 @@ namespace System
         private object _dummy;
         private int _dummyPrimitive;
         public override bool Equals(object? o) { throw null; }
+        public static TypedReference GetNull() { throw null; }
+        public static System.TypedReference FromIntPtr(System.IntPtr value, System.Type type) { throw null; }
+        public static System.TypedReference FromIntPtr<T>(System.IntPtr value) { throw null; }
+        public static System.TypedReference FromRef<T>(ref T value) { throw null; }
+        public static System.TypedReference FromValue<T>(T value) { throw null; }
         public override int GetHashCode() { throw null; }
         public static System.Type GetTargetType(System.TypedReference value) { throw null; }
         public static System.TypedReference MakeTypedReference(object target, System.Reflection.FieldInfo[] flds) { throw null; }
@@ -8286,6 +8291,51 @@ namespace System.Reflection
         public InvalidFilterCriteriaException(string? message) { }
         public InvalidFilterCriteriaException(string? message, System.Exception? inner) { }
     }
+    public static class InvokeParameters
+    {
+        public static System.Reflection.InvokeParameters<T1> AddRef<T1>(ref T1 value1) { throw null; }
+        public static System.Reflection.InvokeParameters<T1> Add<T1>(T1 value1) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj) { }
+        [System.CLSCompliantAttribute(false)]
+        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj, TypedReference arg1) { }
+        [System.CLSCompliantAttribute(false)]
+        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2) { }
+        [System.CLSCompliantAttribute(false)]
+        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) { }
+    }
+    public ref partial struct InvokeParameters<T1>
+    {
+        public System.Reflection.InvokeParameter<T1> Value1;
+        public InvokeParameters(System.Reflection.InvokeParameter<T1> value1) { throw null; }
+        public System.Reflection.InvokeParameters<T1, T2> AddRef<T2>(ref T2 value2) { throw null; }
+        public System.Reflection.InvokeParameters<T1, T2> Add<T2>(T2 value2) { throw null; }
+    }
+    public ref partial struct InvokeParameters<T1, T2>
+    {
+        public System.Reflection.InvokeParameter<T1> Value1;
+        public System.Reflection.InvokeParameter<T2> Value2;
+        public InvokeParameters(System.Reflection.InvokeParameter<T1> value1, System.Reflection.InvokeParameter<T2> value2) { throw null; }
+        public System.Reflection.InvokeParameters<T1, T2, T3> AddRef<T3>(ref T3 value3) { throw null; }
+        public System.Reflection.InvokeParameters<T1, T2, T3> Add<T3>(T3 value3) { throw null; }
+    }
+    public ref partial struct InvokeParameters<T1, T2, T3>
+    {
+        public System.Reflection.InvokeParameter<T1> Value1;
+        public System.Reflection.InvokeParameter<T2> Value2;
+        public System.Reflection.InvokeParameter<T3> Value3;
+        public InvokeParameters(System.Reflection.InvokeParameter<T1> value1, System.Reflection.InvokeParameter<T2> value2, System.Reflection.InvokeParameter<T3> value3) { throw null; }
+        public void Invoke(System.Reflection.MethodInfo methodInfo) { }
+    }
+    public ref partial struct InvokeParameter<T>
+    {
+        private T Value;
+        private object _dummy;
+        private int _dummyPrimitive;
+        public static System.Reflection.InvokeParameter<T> Create(T? value) { throw null; }
+        public static System.Reflection.InvokeParameter<T> CreateRef(ref T value) { throw null; }
+        public static InvokeParameter<IntPtr> CreateByRefLike(IntPtr value, Type type) { throw null; }
+    }
     public partial interface IReflect
     {
         System.Type UnderlyingSystemType { get; }
@@ -8433,6 +8483,14 @@ namespace System.Reflection
         public abstract System.Reflection.ParameterInfo[] GetParameters();
         public object? Invoke(object? obj, object?[]? parameters) { throw null; }
         public abstract object? Invoke(object? obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder? binder, object?[]? parameters, System.Globalization.CultureInfo? culture);
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) { throw null; }
         public static bool operator ==(System.Reflection.MethodBase? left, System.Reflection.MethodBase? right) { throw null; }
         public static bool operator !=(System.Reflection.MethodBase? left, System.Reflection.MethodBase? right) { throw null; }
     }

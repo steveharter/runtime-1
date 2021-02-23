@@ -4,8 +4,10 @@
 // TypedReference is basically only ever seen on the call stack, and in param arrays.
 //  These are blob that must be dealt with by the compiler.
 
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Internal.Runtime.CompilerServices;
 
 namespace System
@@ -14,8 +16,103 @@ namespace System
     [System.Runtime.Versioning.NonVersionable] // This only applies to field layout
     public ref struct TypedReference
     {
-        private readonly ByReference<byte> _value;
-        private readonly IntPtr _type;
+        private ByReference<byte> _value;
+        private IntPtr _type;
+
+        public T AsValue<T>()
+        {
+            return __refvalue(this, T);
+        }
+
+        public static TypedReference FromRef<T>(ref T value)
+        {
+            // if value == null...
+            TypedReference tr;
+            RuntimeType rtType = (RuntimeType)value!.GetType();
+            if (RuntimeTypeHandle.IsValueType(rtType) && typeof(T) == typeof(object))
+            {
+                BoxObject boxObject = Unsafe.As<BoxObject>(value);
+                tr = __makeref(boxObject.FirstByte); //interior_ptr?
+                tr._type = rtType.m_handle;
+            }
+            else
+            {
+                tr = __makeref(value);
+                tr._type = rtType.m_handle; // todo: polymorphic tests
+            }
+
+            return tr;
+        }
+
+        public static TypedReference FromValue<T>(T value)
+        {
+            TypedReference tr;
+            RuntimeType rtType = (RuntimeType)value!.GetType();
+            if (RuntimeTypeHandle.IsValueType(rtType) && typeof(T) == typeof(object))
+            {
+                BoxObject boxObject = Unsafe.As<BoxObject>(value);
+                tr = __makeref(boxObject.FirstByte); //interior_ptr?
+                tr._type = rtType.m_handle;
+            }
+            else
+            {
+                tr = __makeref(value);
+                tr._type = rtType.m_handle; // todo: polymorphic tests
+            }
+
+            return tr;
+        }
+
+        public static unsafe TypedReference FromIntPtr<T>(IntPtr value)
+        {
+            unsafe
+            {
+                return FromIntPtr(value, typeof(T));
+            }
+        }
+
+        public static unsafe TypedReference FromIntPtr(IntPtr value, Type type)
+        {
+            // if value == 0 .... if type == null
+            unsafe
+            {
+                byte* ptr = (byte*)value.ToPointer();
+                TypedReference tr = __makeref(ptr[0]);
+                RuntimeType rtType = (RuntimeType)type;
+                tr._type = rtType.m_handle;
+                return tr;
+            }
+        }
+
+        internal static TypedReference Create<T>(ref InvokeParameter<T> value)
+        {
+            if (value.ByRefLikeType != null)
+            {
+                Debug.Assert(typeof(T) == typeof(IntPtr));
+                unsafe
+                {
+                    IntPtr intPtr = (IntPtr)(object)value.Value!;
+                    byte* ptr = (byte*)intPtr.ToPointer();
+                    TypedReference tr = __makeref(ptr[0]);
+
+                    // assume pointer for now
+                    RuntimeType rtType = (RuntimeType)value.ByRefLikeType!;//.MakePointerType();
+                    tr._type = rtType.m_handle;
+
+                    return tr;
+                }
+            }
+            else
+            {
+                return value.IsRef ? __makeref(value.Ref.Value) : __makeref(value.Value);
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private sealed class BoxObject
+        {
+            public byte FirstByte;
+        }
 
         public static TypedReference MakeTypedReference(object target, FieldInfo[] flds)
         {
@@ -103,6 +200,14 @@ namespace System
         public static void SetTypedReference(TypedReference target, object? value)
         {
             throw new NotSupportedException();
+        }
+
+        public static TypedReference GetNull()
+        {
+            object? obj = null;
+            TypedReference tr = __makeref(obj);
+            tr._type = IntPtr.Zero; // Debug.Assert to see if this is necessary
+            return tr;
         }
     }
 }
