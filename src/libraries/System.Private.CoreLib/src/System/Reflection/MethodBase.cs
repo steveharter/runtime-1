@@ -53,6 +53,15 @@ namespace System.Reflection
         public object? Invoke(object? obj, object?[]? parameters) => Invoke(obj, BindingFlags.Default, binder: null, parameters: parameters, culture: null);
         public abstract object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture);
 
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj) => throw new NotSupportedException("todo");
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1) => throw new NotSupportedException("todo");
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2) => throw new NotSupportedException("todo");
+        [System.CLSCompliantAttribute(false)]
+        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) => throw new NotSupportedException("todo");
+
         public abstract RuntimeMethodHandle MethodHandle { get; }
 
         public virtual bool IsSecurityCritical => throw NotImplemented.ByDesign;

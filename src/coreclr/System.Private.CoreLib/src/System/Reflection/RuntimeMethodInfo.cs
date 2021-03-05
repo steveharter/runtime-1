@@ -401,6 +401,26 @@ namespace System.Reflection
             }
         }
 
+        public override void Invoke(TypedReference returnValue, TypedReference obj)
+        {
+            InvokeParameters.Invoke(this, returnValue, obj);
+        }
+
+        public override void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1)
+        {
+            InvokeParameters.Invoke(this, returnValue, obj, arg1);
+        }
+
+        public override void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2)
+        {
+            InvokeParameters.Invoke(this, returnValue, obj, arg1, arg2);
+        }
+
+        public override void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3)
+        {
+            InvokeParameters.Invoke(this, returnValue, obj, arg1, arg2, arg3);
+        }
+
         [DebuggerStepThroughAttribute]
         [Diagnostics.DebuggerHidden]
         private object[]? InvokeArgumentsCheck(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture)
