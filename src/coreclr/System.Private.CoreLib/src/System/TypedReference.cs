@@ -14,9 +14,10 @@ namespace System
 {
     [CLSCompliant(false)]
     [System.Runtime.Versioning.NonVersionable] // This only applies to field layout
+    [DebuggerDisplay("Type = {_type?.m_type} Value = {_value.Value}")]
     public ref struct TypedReference
     {
-        private ByReference<byte> _value;
+        private readonly ByReference<byte> _value;
         private IntPtr _type;
 
         public T AsValue<T>()
@@ -26,38 +27,25 @@ namespace System
 
         public static TypedReference FromRef<T>(ref T value)
         {
-            // if value == null...
             TypedReference tr;
-            RuntimeType rtType = (RuntimeType)value!.GetType();
-            if (RuntimeTypeHandle.IsValueType(rtType) && typeof(T) == typeof(object))
+
+            if (typeof(T) == typeof(object))
             {
-                BoxObject boxObject = Unsafe.As<BoxObject>(value);
-                tr = __makeref(boxObject.FirstByte); //interior_ptr?
-                tr._type = rtType.m_handle;
+                RuntimeType rtType = (RuntimeType)value!.GetType();
+                if (RuntimeTypeHandle.IsValueType(rtType))
+                {
+                    BoxObject boxObject = Unsafe.As<BoxObject>(value);
+                    tr = __makeref(boxObject.FirstByte); //interior_ptr?
+                    tr._type = rtType.m_handle;
+                    return tr;
+                }
+
+                tr = __makeref(value);
+                tr._type = rtType.m_handle; // todo: polymorphic tests
             }
             else
             {
                 tr = __makeref(value);
-                tr._type = rtType.m_handle; // todo: polymorphic tests
-            }
-
-            return tr;
-        }
-
-        public static TypedReference FromValue<T>(T value)
-        {
-            TypedReference tr;
-            RuntimeType rtType = (RuntimeType)value!.GetType();
-            if (RuntimeTypeHandle.IsValueType(rtType) && typeof(T) == typeof(object))
-            {
-                BoxObject boxObject = Unsafe.As<BoxObject>(value);
-                tr = __makeref(boxObject.FirstByte); //interior_ptr?
-                tr._type = rtType.m_handle;
-            }
-            else
-            {
-                tr = __makeref(value);
-                tr._type = rtType.m_handle; // todo: polymorphic tests
             }
 
             return tr;
@@ -73,15 +61,27 @@ namespace System
 
         public static unsafe TypedReference FromIntPtr(IntPtr value, Type type)
         {
-            // if value == 0 .... if type == null
+            TypedReference tr;
+
+            if (!(type is RuntimeType rtType))
+            {
+                throw new ArgumentException("todo");
+            }
+
+            if (value == IntPtr.Zero)
+            {
+                tr = default(TypedReference);
+                tr._type = rtType.m_handle;
+            }
+
             unsafe
             {
                 byte* ptr = (byte*)value.ToPointer();
-                TypedReference tr = __makeref(ptr[0]);
-                RuntimeType rtType = (RuntimeType)type;
-                tr._type = rtType.m_handle;
-                return tr;
+                tr = __makeref(ptr[0]);
             }
+
+            tr._type = rtType.m_handle;
+            return tr;
         }
 
         internal static TypedReference Create<T>(ref InvokeParameter<T> value)
@@ -204,9 +204,12 @@ namespace System
 
         public static TypedReference GetNull()
         {
-            object? obj = null;
-            TypedReference tr = __makeref(obj);
-            tr._type = IntPtr.Zero; // Debug.Assert to see if this is necessary
+            //object? obj = null;
+            //TypedReference tr = __makeref(obj);
+            //tr._type = IntPtr.Zero; // Debug.Assert to see if this is necessary
+            TypedReference tr = default;
+            Debug.Assert(tr._type == IntPtr.Zero);
+            Debug.Assert(tr._value.Value == 0);
             return tr;
         }
     }

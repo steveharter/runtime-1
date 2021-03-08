@@ -4469,7 +4469,6 @@ namespace System
         public static System.TypedReference FromIntPtr(System.IntPtr value, System.Type type) { throw null; }
         public static System.TypedReference FromIntPtr<T>(System.IntPtr value) { throw null; }
         public static System.TypedReference FromRef<T>(ref T value) { throw null; }
-        public static System.TypedReference FromValue<T>(T value) { throw null; }
         public override int GetHashCode() { throw null; }
         public static System.Type GetTargetType(System.TypedReference value) { throw null; }
         public static System.TypedReference MakeTypedReference(object target, System.Reflection.FieldInfo[] flds) { throw null; }

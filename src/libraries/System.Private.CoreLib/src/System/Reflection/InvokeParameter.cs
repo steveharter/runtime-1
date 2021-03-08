@@ -221,8 +221,8 @@ namespace System.Reflection
                 throw new InvalidOperationException("Method must not contain open generic parameters.");
 
             Type returnType = emitNew ? method.DeclaringType! : (methodInfo == null ? typeof(void) : methodInfo.ReturnType);
-            if (returnType.IsByRef)
-                throw new NotSupportedException("Ref returning Methods not supported.");
+            //if (returnType.IsByRef)
+            //    throw new NotSupportedException("Ref returning Methods not supported.");
 
             bool hasRetVal = returnType != typeof(void);
             bool isValueType = method.DeclaringType!.IsValueType;
@@ -245,27 +245,38 @@ namespace System.Reflection
             int typeRefIndex = 0;
             if (hasRetVal)
             {
-                ilg.Emit(OpCodes.Ldarg, typeRefIndex);
-                ilg.Emit(OpCodes.Refanyval, returnType);
-            }
+                ilg.Emit(OpCodes.Ldarg_0);
 
-            typeRefIndex++; // skip over the 'returnValue' parameter
+                if (returnType.IsByRef)
+                {
+                    // todo https://github.com/dotnet/designs/pull/17/files#diff-95671f0ce30ebf166d73fd612d241c26555bc12eae18c570a26f4fe1b0fb716eR43
+                    ilg.Emit(OpCodes.Refanyval, returnType);
+                }
+                else
+                {
+                    ilg.Emit(OpCodes.Refanyval, returnType);
+                }
+            }
 
             if (hasThis)
             {
-                ilg.Emit(OpCodes.Ldarg, typeRefIndex);
+                ilg.Emit(OpCodes.Ldarg_1);
                 ilg.Emit(OpCodes.Refanyval, method.DeclaringType);
+
                 if (!isValueType)
                 {
                     ilg.Emit(OpCodes.Ldobj, method.DeclaringType);
                 }
             }
 
+            typeRefIndex = 2;
+
             for (int i = 0; i < parameters.Length; i++)
             {
                 ParameterInfo parameter = parameters[i];
                 Type parameterType = parameter.ParameterType;
-                ilg.Emit(OpCodes.Ldarg, ++typeRefIndex);
+                ilg.Emit(OpCodes.Ldarg, typeRefIndex++);
+
                 if (parameterType.IsByRef)
                 {
                     ilg.Emit(OpCodes.Refanyval, parameterType.GetElementType()!);
@@ -281,6 +292,7 @@ namespace System.Reflection
             {
                 if (constructorInfo!.IsStatic)
                     throw new NotSupportedException("Cannot call static constructor.");
+
                 ilg.Emit(OpCodes.Newobj, constructorInfo);
             }
             else
