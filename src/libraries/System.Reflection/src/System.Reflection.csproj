@@ -3,7 +3,7 @@
     <IsPartialFacadeAssembly>true</IsPartialFacadeAssembly>
     <TargetFrameworks>$(NetCoreAppCurrent)</TargetFrameworks>
     <Nullable>enable</Nullable>
-	<RunMatchingRefApiCompat>false</RunMatchingRefApiCompat>
+	<RunMatchingRefApiCompat>true</RunMatchingRefApiCompat>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(CoreLibProject)" />

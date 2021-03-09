@@ -8302,7 +8302,7 @@ namespace System.Reflection
     public static class InvokeParameters
     {
         public static System.Reflection.InvokeParameters<T1> AddRef<T1>(ref T1 value1) { throw null; }
-        public static System.Reflection.InvokeParameters<T1> Add<T1>(T1 value1) { throw null; }
+        public static System.Reflection.InvokeParameters<T1> Add<T1>(in T1 value1) { throw null; }
         [System.CLSCompliantAttribute(false)]
         public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj) { }
         [System.CLSCompliantAttribute(false)]
@@ -8315,32 +8315,34 @@ namespace System.Reflection
     public ref partial struct InvokeParameters<T1>
     {
         public System.Reflection.InvokeParameter<T1> Value1;
-        public InvokeParameters(System.Reflection.InvokeParameter<T1> value1) { throw null; }
+        public InvokeParameters(in System.Reflection.InvokeParameter<T1> value1) { throw null; }
         public System.Reflection.InvokeParameters<T1, T2> AddRef<T2>(ref T2 value2) { throw null; }
-        public System.Reflection.InvokeParameters<T1, T2> Add<T2>(T2 value2) { throw null; }
+        public System.Reflection.InvokeParameters<T1, T2> Add<T2>(in T2 value2) { throw null; }
     }
     public ref partial struct InvokeParameters<T1, T2>
     {
         public System.Reflection.InvokeParameter<T1> Value1;
         public System.Reflection.InvokeParameter<T2> Value2;
-        public InvokeParameters(System.Reflection.InvokeParameter<T1> value1, System.Reflection.InvokeParameter<T2> value2) { throw null; }
+        public InvokeParameters(in System.Reflection.InvokeParameter<T1> value1, in System.Reflection.InvokeParameter<T2> value2) { throw null; }
         public System.Reflection.InvokeParameters<T1, T2, T3> AddRef<T3>(ref T3 value3) { throw null; }
-        public System.Reflection.InvokeParameters<T1, T2, T3> Add<T3>(T3 value3) { throw null; }
+        public System.Reflection.InvokeParameters<T1, T2, T3> Add<T3>(in T3 value3) { throw null; }
     }
     public ref partial struct InvokeParameters<T1, T2, T3>
     {
         public System.Reflection.InvokeParameter<T1> Value1;
         public System.Reflection.InvokeParameter<T2> Value2;
         public System.Reflection.InvokeParameter<T3> Value3;
-        public InvokeParameters(System.Reflection.InvokeParameter<T1> value1, System.Reflection.InvokeParameter<T2> value2, System.Reflection.InvokeParameter<T3> value3) { throw null; }
+        public InvokeParameters(in System.Reflection.InvokeParameter<T1> value1, in System.Reflection.InvokeParameter<T2> value2, in System.Reflection.InvokeParameter<T3> value3) { throw null; }
         public void Invoke(System.Reflection.MethodInfo methodInfo) { }
+        [System.CLSCompliantAttribute(false)]
+        public static void Invoke(System.Reflection.MethodInfo methodInfo, TypedReference returnValue, TypedReference obj) { }
     }
     public ref partial struct InvokeParameter<T>
     {
         private T Value;
         private object _dummy;
         private int _dummyPrimitive;
-        public static System.Reflection.InvokeParameter<T> Create(T? value) { throw null; }
+        public static System.Reflection.InvokeParameter<T> Create(in T? value) { throw null; }
         public static System.Reflection.InvokeParameter<T> CreateRef(ref T value) { throw null; }
         public static InvokeParameter<IntPtr> CreateByRefLike(IntPtr value, Type type) { throw null; }
     }

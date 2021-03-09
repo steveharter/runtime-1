@@ -86,7 +86,7 @@ namespace System
 
         internal static TypedReference Create<T>(ref InvokeParameter<T> value)
         {
-            if (value.ByRefLikeType != null)
+            if (value.IntPtrType != null)
             {
                 Debug.Assert(typeof(T) == typeof(IntPtr));
                 unsafe
@@ -96,7 +96,7 @@ namespace System
                     TypedReference tr = __makeref(ptr[0]);
 
                     // assume pointer for now
-                    RuntimeType rtType = (RuntimeType)value.ByRefLikeType!;//.MakePointerType();
+                    RuntimeType rtType = (RuntimeType)value.IntPtrType!;//.MakePointerType();
                     tr._type = rtType.m_handle;
 
                     return tr;

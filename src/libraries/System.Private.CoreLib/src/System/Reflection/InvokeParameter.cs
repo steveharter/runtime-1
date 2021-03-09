@@ -14,14 +14,14 @@ namespace System.Reflection
         internal bool IsRef;
         internal ByReference<T> Ref; // storage for TypedReference
         internal T Value;
-        internal Type ByRefLikeType;
+        internal Type IntPtrType;
 
-        internal InvokeParameter(T value)
+        internal InvokeParameter(in T value)
         {
             IsRef = false;
             Ref = default;
             Value = value;
-            ByRefLikeType = default!;
+            IntPtrType = default!;
         }
 
         internal InvokeParameter(ByReference<T> value)
@@ -29,7 +29,7 @@ namespace System.Reflection
             IsRef = true;
             Ref = value;
             Value = default!;
-            ByRefLikeType = default!;
+            IntPtrType = default!;
         }
 
         internal InvokeParameter(IntPtr value, Type type)
@@ -37,10 +37,10 @@ namespace System.Reflection
             IsRef = false;
             Ref = default;
             Value = (T)(object)value;
-            ByRefLikeType = type;
+            IntPtrType = type;
         }
 
-        public static InvokeParameter<T> Create(T value)
+        public static InvokeParameter<T> Create(in T value)
         {
             return new InvokeParameter<T>(value);
         }
@@ -58,7 +58,7 @@ namespace System.Reflection
 
     public static class InvokeParameters
     {
-        public static InvokeParameters<T1> Add<T1>(T1 value1)
+        public static InvokeParameters<T1> Add<T1>(in T1 value1)
         {
             return new InvokeParameters<T1>(InvokeParameter<T1>.Create(value1));
         }
@@ -104,12 +104,12 @@ namespace System.Reflection
     {
         public InvokeParameter<T1> Value1;
 
-        public InvokeParameters(InvokeParameter<T1> value1)
+        public InvokeParameters(in InvokeParameter<T1> value1)
         {
             Value1 = value1;
         }
 
-        public InvokeParameters<T1, T2> Add<T2>(T2 value2)
+        public InvokeParameters<T1, T2> Add<T2>(in T2 value2)
         {
             return new InvokeParameters<T1, T2>(Value1, InvokeParameter<T2>.Create(value2));
         }
@@ -127,16 +127,18 @@ namespace System.Reflection
 
     public ref struct InvokeParameters<T1, T2>
     {
+        // If TypedReference could be treated like ByReference, we could just reference the previous
+        // values through TypedReference instead of copying (e.g. in Value1)
         public InvokeParameter<T1> Value1;
         public InvokeParameter<T2> Value2;
 
-        public InvokeParameters(InvokeParameter<T1> value1, InvokeParameter<T2> value2)
+        public InvokeParameters(in InvokeParameter<T1> value1, in InvokeParameter<T2> value2)
         {
             Value1 = value1;
             Value2 = value2;
         }
 
-        public InvokeParameters<T1, T2, T3> Add<T3>(T3 value3)
+        public InvokeParameters<T1, T2, T3> Add<T3>(in T3 value3)
         {
             return new InvokeParameters<T1, T2, T3>(Value1, Value2, InvokeParameter<T3>.Create(value3));
         }
@@ -152,14 +154,13 @@ namespace System.Reflection
         //}
     }
 
-
     public ref struct InvokeParameters<T1, T2, T3>
     {
         public InvokeParameter<T1> Value1;
         public InvokeParameter<T2> Value2;
         public InvokeParameter<T3> Value3;
 
-        public InvokeParameters(InvokeParameter<T1> value1, InvokeParameter<T2> value2, InvokeParameter<T3> value3)
+        public InvokeParameters(in InvokeParameter<T1> value1, in InvokeParameter<T2> value2, in InvokeParameter<T3> value3)
         {
             Value1 = value1;
             Value2 = value2;
@@ -168,13 +169,27 @@ namespace System.Reflection
 
         public void Invoke(MethodInfo methodInfo)
         {
-            throw new NotImplementedException();
-            //InvokeHelpers.InvokeDelegate3 d = InvokeHelpers.GetOrCreateInvokeAndCreateDelegate<InvokeHelpers.InvokeDelegate3>(methodInfo);
-            //d(
-            //    TypedReference.Create<T1>(ref Value1),
-            //    TypedReference.Create<T2>(ref Value2),
-            //    TypedReference.Create<T3>(ref Value3)
-            //);
+            InvokeHelpers.InvokeDelegate3 d = InvokeHelpers.GetOrCreateInvokeAndCreateDelegate<InvokeHelpers.InvokeDelegate3>(methodInfo);
+            d(
+                default(TypedReference),
+                default(TypedReference),
+                TypedReference.Create<T1>(ref Value1),
+                TypedReference.Create<T2>(ref Value2),
+                TypedReference.Create<T3>(ref Value3)
+            );
+        }
+
+        [CLSCompliant(false)]
+        public void Invoke(MethodInfo methodInfo, TypedReference returnValue, TypedReference obj)
+        {
+            InvokeHelpers.InvokeDelegate3 d = InvokeHelpers.GetOrCreateInvokeAndCreateDelegate<InvokeHelpers.InvokeDelegate3>(methodInfo);
+            d(
+                returnValue,
+                obj,
+                TypedReference.Create<T1>(ref Value1),
+                TypedReference.Create<T2>(ref Value2),
+                TypedReference.Create<T3>(ref Value3)
+            );
         }
     }
 
