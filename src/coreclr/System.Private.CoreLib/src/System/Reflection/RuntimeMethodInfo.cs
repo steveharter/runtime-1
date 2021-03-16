@@ -27,6 +27,7 @@ namespace System.Reflection
         private RuntimeType m_declaringType;
         private object? m_keepalive;
         private INVOCATION_FLAGS m_invocationFlags;
+        private FastInvoke.Func5? m_invoke;
 
         internal INVOCATION_FLAGS InvocationFlags
         {
@@ -86,6 +87,7 @@ namespace System.Reflection
             m_handle = handle.Value;
             m_reflectedTypeCache = reflectedTypeCache;
             m_methodAttributes = methodAttributes;
+            m_invoke = null;
         }
         #endregion
 
@@ -401,24 +403,14 @@ namespace System.Reflection
             }
         }
 
-        public override void Invoke(TypedReference returnValue, TypedReference obj)
+        protected override void InvokeDirect(TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4, TypedReference arg5)
         {
-            InvokeParameters.Invoke(this, returnValue, obj);
-        }
+            if (m_invoke == null)
+            {
+                m_invoke = FastInvoke.CreateInvokeDelegate(this, emitNew: false);
+            }
 
-        public override void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1)
-        {
-            InvokeParameters.Invoke(this, returnValue, obj, arg1);
-        }
-
-        public override void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2)
-        {
-            InvokeParameters.Invoke(this, returnValue, obj, arg1, arg2);
-        }
-
-        public override void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3)
-        {
-            InvokeParameters.Invoke(this, returnValue, obj, arg1, arg2, arg3);
+            m_invoke(arg1, arg2, arg3, arg4, arg5);
         }
 
         [DebuggerStepThroughAttribute]

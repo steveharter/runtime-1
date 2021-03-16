@@ -24,6 +24,8 @@ namespace System.Reflection
         private BindingFlags m_bindingFlags;
         private Signature? m_signature;
         private ParameterInfo[]? m_parameters;
+        private FastInvoke.Func5? m_fastInvokeGetter;
+        private FastInvoke.Func5? m_fastInvokeSetter;
         #endregion
 
         #region Constructor
@@ -341,6 +343,25 @@ namespace System.Reflection
             return m.Invoke(obj, invokeAttr, binder, index, null);
         }
 
+
+        [DebuggerStepThroughAttribute]
+        [Diagnostics.DebuggerHidden]
+        public override void GetValueDirect(TypedReference obj, TypedReference returnValue)
+        {
+            if (m_fastInvokeGetter == null)
+            {
+                MethodInfo? m = GetGetMethod(nonPublic: true);
+                if (m == null)
+                {
+                    throw new ArgumentException(System.SR.Arg_GetMethNotFnd);
+                }
+
+                m_fastInvokeGetter = FastInvoke.CreateInvokeDelegate(m, emitNew: false);
+            }
+
+            m_fastInvokeGetter(obj, returnValue, default(TypedReference), default(TypedReference), default(TypedReference));
+        }
+
         [DebuggerStepThroughAttribute]
         [Diagnostics.DebuggerHidden]
         public override void SetValue(object? obj, object? value, object?[]? index)
@@ -379,6 +400,24 @@ namespace System.Reflection
             }
 
             m.Invoke(obj, invokeAttr, binder, args, culture);
+        }
+
+        [DebuggerStepThroughAttribute]
+        [Diagnostics.DebuggerHidden]
+        public override void SetValueDirect(TypedReference obj, TypedReference returnValue)
+        {
+            if (m_fastInvokeSetter == null)
+            {
+                MethodInfo? m = GetSetMethod(nonPublic: true);
+                if (m == null)
+                {
+                    throw new ArgumentException(System.SR.Arg_GetMethNotFnd);
+                }
+
+                m_fastInvokeSetter = FastInvoke.CreateInvokeDelegate(m, emitNew: false);
+            }
+
+            m_fastInvokeSetter(obj, returnValue, default(TypedReference), default(TypedReference), default(TypedReference));
         }
         #endregion
 

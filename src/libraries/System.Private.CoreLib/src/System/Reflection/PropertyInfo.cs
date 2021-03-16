@@ -43,7 +43,8 @@ namespace System.Reflection
         [DebuggerStepThrough]
         public virtual object? GetValue(object? obj, object?[]? index) => GetValue(obj, BindingFlags.Default, binder: null, index: index, culture: null);
         public abstract object? GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture);
-
+        [CLSCompliant(false)]
+        public virtual void GetValueDirect(TypedReference obj, TypedReference returnValue) { throw new NotSupportedException(SR.NotSupported_AbstractNonCLS); }
         public virtual object? GetConstantValue() { throw NotImplemented.ByDesign; }
         public virtual object? GetRawConstantValue() { throw NotImplemented.ByDesign; }
 
@@ -55,6 +56,8 @@ namespace System.Reflection
         public virtual void SetValue(object? obj, object? value, object?[]? index) => SetValue(obj, value, BindingFlags.Default, binder: null, index: index, culture: null);
         public abstract void SetValue(object? obj, object? value, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture);
 
+        [CLSCompliant(false)]
+        public virtual void SetValueDirect(TypedReference obj, TypedReference value) { throw new NotSupportedException(SR.NotSupported_AbstractNonCLS); }
         public override bool Equals(object? obj) => base.Equals(obj);
         public override int GetHashCode() => base.GetHashCode();
 

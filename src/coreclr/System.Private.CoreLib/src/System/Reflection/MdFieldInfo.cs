@@ -66,6 +66,12 @@ namespace System.Reflection
         {
             throw new FieldAccessException(SR.Acc_ReadOnly);
         }
+        [DebuggerStepThroughAttribute]
+        [Diagnostics.DebuggerHidden]
+        public override void SetValueDirect(TypedReference obj, TypedReference returnValue)
+        {
+            throw new FieldAccessException(SR.Acc_ReadOnly);
+        }
 
         [DebuggerStepThroughAttribute]
         [Diagnostics.DebuggerHidden]

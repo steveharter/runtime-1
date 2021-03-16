@@ -18,6 +18,8 @@ namespace System.Reflection
         private string? m_name;
         private RuntimeType? m_fieldType;
         private INVOCATION_FLAGS m_invocationFlags;
+        private FastInvoke.Func2? m_fastInvokeGetter;
+        private FastInvoke.Func2? m_fastInvokeSetter;
 
         internal INVOCATION_FLAGS InvocationFlags
         {
@@ -159,11 +161,23 @@ namespace System.Reflection
         [Diagnostics.DebuggerHidden]
         public override object? GetValueDirect(TypedReference obj)
         {
-            if (obj.IsNull)
+            if (obj.IsNull) //todo: static fields?
                 throw new ArgumentException(SR.Arg_TypedReference_Null);
 
             // Passing TypedReference by reference is easier to make correct in native code
             return RuntimeFieldHandle.GetValueDirect(this, (RuntimeType)FieldType, &obj, (RuntimeType?)DeclaringType);
+        }
+
+        [DebuggerStepThroughAttribute]
+        [Diagnostics.DebuggerHidden]
+        public override void GetValueDirect(TypedReference obj, TypedReference returnValue)
+        {
+            if (m_fastInvokeGetter == null)
+            {
+                m_fastInvokeGetter = FastInvoke.CreateFieldGetter(this);
+            }
+
+            m_fastInvokeGetter(obj, returnValue);
         }
 
         [DebuggerStepThroughAttribute]
@@ -208,6 +222,20 @@ namespace System.Reflection
 
             // Passing TypedReference by reference is easier to make correct in native code
             RuntimeFieldHandle.SetValueDirect(this, (RuntimeType)FieldType, &obj, value, (RuntimeType?)DeclaringType);
+        }
+
+        [DebuggerStepThroughAttribute]
+        [Diagnostics.DebuggerHidden]
+        public override void SetValueDirect(TypedReference obj, TypedReference value)
+        {
+            if (m_fastInvokeSetter == null)
+            {
+                //m_fastInvokeGetter = FastInvoke.CreateFieldGetter(this);
+                throw new NotImplementedException();
+            }
+
+            throw new NotImplementedException();
+            //m_fastInvokeGetter(obj, returnValue);
         }
 
         public override RuntimeFieldHandle FieldHandle => new RuntimeFieldHandle(this);

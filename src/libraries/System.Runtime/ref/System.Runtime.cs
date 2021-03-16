@@ -4469,6 +4469,8 @@ namespace System
         public static System.TypedReference FromIntPtr(System.IntPtr value, System.Type type) { throw null; }
         public static System.TypedReference FromIntPtr<T>(System.IntPtr value) { throw null; }
         public static System.TypedReference FromRef<T>(ref T value) { throw null; }
+        public static System.TypedReference FromObject(ref object value) { throw null; }
+        public static System.TypedReference FromObject(ref object value, Type type) { throw null; }
         public override int GetHashCode() { throw null; }
         public static System.Type GetTargetType(System.TypedReference value) { throw null; }
         public static System.TypedReference MakeTypedReference(object target, System.Reflection.FieldInfo[] flds) { throw null; }
@@ -8249,12 +8251,16 @@ namespace System.Reflection
         public abstract object? GetValue(object? obj);
         [System.CLSCompliantAttribute(false)]
         public virtual object? GetValueDirect(System.TypedReference obj) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public virtual void GetValueDirect(TypedReference obj, TypedReference returnValue) { throw null; }
         public static bool operator ==(System.Reflection.FieldInfo? left, System.Reflection.FieldInfo? right) { throw null; }
         public static bool operator !=(System.Reflection.FieldInfo? left, System.Reflection.FieldInfo? right) { throw null; }
         public void SetValue(object? obj, object? value) { }
         public abstract void SetValue(object? obj, object? value, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder? binder, System.Globalization.CultureInfo? culture);
         [System.CLSCompliantAttribute(false)]
         public virtual void SetValueDirect(System.TypedReference obj, object value) { }
+        [System.CLSCompliantAttribute(false)]
+        public virtual void SetValueDirect(System.TypedReference obj, System.TypedReference value) { }
     }
     [System.FlagsAttribute]
     public enum GenericParameterAttributes
@@ -8298,53 +8304,6 @@ namespace System.Reflection
         protected InvalidFilterCriteriaException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) { }
         public InvalidFilterCriteriaException(string? message) { }
         public InvalidFilterCriteriaException(string? message, System.Exception? inner) { }
-    }
-    public static class InvokeParameters
-    {
-        public static System.Reflection.InvokeParameters<T1> AddRef<T1>(ref T1 value1) { throw null; }
-        public static System.Reflection.InvokeParameters<T1> Add<T1>(in T1 value1) { throw null; }
-        [System.CLSCompliantAttribute(false)]
-        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj) { }
-        [System.CLSCompliantAttribute(false)]
-        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj, TypedReference arg1) { }
-        [System.CLSCompliantAttribute(false)]
-        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2) { }
-        [System.CLSCompliantAttribute(false)]
-        public static void Invoke(MethodBase methodBase, TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) { }
-    }
-    public ref partial struct InvokeParameters<T1>
-    {
-        public System.Reflection.InvokeParameter<T1> Value1;
-        public InvokeParameters(in System.Reflection.InvokeParameter<T1> value1) { throw null; }
-        public System.Reflection.InvokeParameters<T1, T2> AddRef<T2>(ref T2 value2) { throw null; }
-        public System.Reflection.InvokeParameters<T1, T2> Add<T2>(in T2 value2) { throw null; }
-    }
-    public ref partial struct InvokeParameters<T1, T2>
-    {
-        public System.Reflection.InvokeParameter<T1> Value1;
-        public System.Reflection.InvokeParameter<T2> Value2;
-        public InvokeParameters(in System.Reflection.InvokeParameter<T1> value1, in System.Reflection.InvokeParameter<T2> value2) { throw null; }
-        public System.Reflection.InvokeParameters<T1, T2, T3> AddRef<T3>(ref T3 value3) { throw null; }
-        public System.Reflection.InvokeParameters<T1, T2, T3> Add<T3>(in T3 value3) { throw null; }
-    }
-    public ref partial struct InvokeParameters<T1, T2, T3>
-    {
-        public System.Reflection.InvokeParameter<T1> Value1;
-        public System.Reflection.InvokeParameter<T2> Value2;
-        public System.Reflection.InvokeParameter<T3> Value3;
-        public InvokeParameters(in System.Reflection.InvokeParameter<T1> value1, in System.Reflection.InvokeParameter<T2> value2, in System.Reflection.InvokeParameter<T3> value3) { throw null; }
-        public void Invoke(System.Reflection.MethodInfo methodInfo) { }
-        [System.CLSCompliantAttribute(false)]
-        public static void Invoke(System.Reflection.MethodInfo methodInfo, TypedReference returnValue, TypedReference obj) { }
-    }
-    public ref partial struct InvokeParameter<T>
-    {
-        private T Value;
-        private object _dummy;
-        private int _dummyPrimitive;
-        public static System.Reflection.InvokeParameter<T> Create(in T? value) { throw null; }
-        public static System.Reflection.InvokeParameter<T> CreateRef(ref T value) { throw null; }
-        public static InvokeParameter<IntPtr> CreateByRefLike(IntPtr value, Type type) { throw null; }
     }
     public partial interface IReflect
     {
@@ -8494,13 +8453,25 @@ namespace System.Reflection
         public object? Invoke(object? obj, object?[]? parameters) { throw null; }
         public abstract object? Invoke(object? obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder? binder, object?[]? parameters, System.Globalization.CultureInfo? culture);
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj) { throw null; }
+        public void InvokeActionDirect(TypedReference obj) { throw null; }
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1) { throw null; }
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg) { throw null; }
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2) { throw null; }
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg1, TypedReference arg2) { throw null; }
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) { throw null; }
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference returnValue) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference arg, TypedReference returnValue) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference returnValue) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference returnValue) { throw null; }
+        [System.CLSCompliantAttribute(false)]
+        protected virtual void InvokeDirect(TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4, TypedReference arg5) { throw null; }
         public static bool operator ==(System.Reflection.MethodBase? left, System.Reflection.MethodBase? right) { throw null; }
         public static bool operator !=(System.Reflection.MethodBase? left, System.Reflection.MethodBase? right) { throw null; }
     }
@@ -8777,11 +8748,15 @@ namespace System.Reflection
         public object? GetValue(object? obj) { throw null; }
         public virtual object? GetValue(object? obj, object?[]? index) { throw null; }
         public abstract object? GetValue(object? obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder? binder, object?[]? index, System.Globalization.CultureInfo? culture);
+        [System.CLSCompliantAttribute(false)]
+        public virtual void GetValueDirect(TypedReference obj, TypedReference returnValue) { throw null; }
         public static bool operator ==(System.Reflection.PropertyInfo? left, System.Reflection.PropertyInfo? right) { throw null; }
         public static bool operator !=(System.Reflection.PropertyInfo? left, System.Reflection.PropertyInfo? right) { throw null; }
         public void SetValue(object? obj, object? value) { }
         public virtual void SetValue(object? obj, object? value, object?[]? index) { }
         public abstract void SetValue(object? obj, object? value, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder? binder, object?[]? index, System.Globalization.CultureInfo? culture);
+        [System.CLSCompliantAttribute(false)]
+        public virtual void SetValueDirect(System.TypedReference obj, System.TypedReference value) { }
     }
     public abstract partial class ReflectionContext
     {

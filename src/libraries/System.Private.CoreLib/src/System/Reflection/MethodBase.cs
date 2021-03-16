@@ -54,13 +54,30 @@ namespace System.Reflection
         public abstract object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture);
 
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj) => throw new NotSupportedException("todo");
+        public void InvokeActionDirect(TypedReference obj) => InvokeDirect(obj);
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1) => throw new NotSupportedException("todo");
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg) => InvokeDirect(obj, arg);
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2) => throw new NotSupportedException("todo");
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg1, TypedReference arg2) => InvokeDirect(obj, arg1, arg2);
         [System.CLSCompliantAttribute(false)]
-        public virtual void Invoke(TypedReference returnValue, TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) => throw new NotSupportedException("todo");
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3) => InvokeDirect(obj, arg1, arg2, arg3);
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeActionDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4) => InvokeDirect(obj, arg1, arg2, arg3, arg4);
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference returnValue) => InvokeDirect(returnValue, obj);
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference arg, TypedReference returnValue) => InvokeDirect(returnValue, obj, arg);
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference returnValue) => InvokeDirect(returnValue, obj, arg1, arg2);
+        [System.CLSCompliantAttribute(false)]
+        public void InvokeFuncDirect(TypedReference obj, TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference returnValue) => InvokeDirect(returnValue, obj, arg1, arg2, arg3);
+        [System.CLSCompliantAttribute(false)]
+        protected virtual void InvokeDirect(
+            TypedReference arg1,
+            TypedReference arg2 = default(TypedReference),
+            TypedReference arg3 = default(TypedReference),
+            TypedReference arg4 = default(TypedReference),
+            TypedReference arg5 = default(TypedReference)) => throw new NotSupportedException(SR.NotSupported_SubclassOverride);
 
         public abstract RuntimeMethodHandle MethodHandle { get; }
 

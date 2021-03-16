@@ -25,30 +25,56 @@ namespace System
             return __refvalue(this, T);
         }
 
-        public static TypedReference FromRef<T>(ref T value)
+        /// <summary>
+        /// Create a TypedReference using value.GetType()
+        /// Supports boxing
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TypedReference FromObject(ref object value)
+        {
+            if (value == null)
+            {
+                return default(TypedReference);
+                // set type?
+            }
+
+            return FromObject(ref value, (RuntimeType)value!.GetType());
+        }
+
+        public static TypedReference FromObject(ref object value, Type type)
+        {
+            if (value == null)
+            {
+                return default(TypedReference);
+                // set type?
+            }
+
+            return FromObject(ref value, (RuntimeType)type);
+        }
+
+        internal static TypedReference FromObject(ref object value, RuntimeType rtType)
         {
             TypedReference tr;
 
-            if (typeof(T) == typeof(object))
+            if (RuntimeTypeHandle.IsValueType(rtType))
             {
-                RuntimeType rtType = (RuntimeType)value!.GetType();
-                if (RuntimeTypeHandle.IsValueType(rtType))
-                {
-                    BoxObject boxObject = Unsafe.As<BoxObject>(value);
-                    tr = __makeref(boxObject.FirstByte); //interior_ptr?
-                    tr._type = rtType.m_handle;
-                    return tr;
-                }
-
-                tr = __makeref(value);
-                tr._type = rtType.m_handle; // todo: polymorphic tests
+                BoxObject boxObject = Unsafe.As<BoxObject>(value);
+                tr = __makeref(boxObject.FirstByte);
             }
             else
             {
                 tr = __makeref(value);
             }
 
+            tr._type = rtType.m_handle;
             return tr;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TypedReference FromRef<T>(ref T value)
+        {
+            return __makeref(value);
         }
 
         public static unsafe TypedReference FromIntPtr<T>(IntPtr value)
@@ -82,30 +108,6 @@ namespace System
 
             tr._type = rtType.m_handle;
             return tr;
-        }
-
-        internal static TypedReference Create<T>(ref InvokeParameter<T> value)
-        {
-            if (value.IntPtrType != null)
-            {
-                Debug.Assert(typeof(T) == typeof(IntPtr));
-                unsafe
-                {
-                    IntPtr intPtr = (IntPtr)(object)value.Value!;
-                    byte* ptr = (byte*)intPtr.ToPointer();
-                    TypedReference tr = __makeref(ptr[0]);
-
-                    // assume pointer for now
-                    RuntimeType rtType = (RuntimeType)value.IntPtrType!;//.MakePointerType();
-                    tr._type = rtType.m_handle;
-
-                    return tr;
-                }
-            }
-            else
-            {
-                return value.IsRef ? __makeref(value.Ref.Value) : __makeref(value.Value);
-            }
         }
 
         [StructLayout(LayoutKind.Sequential)]

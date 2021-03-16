@@ -71,7 +71,11 @@ namespace System.Reflection
         [CLSCompliant(false)]
         public virtual void SetValueDirect(TypedReference obj, object value) { throw new NotSupportedException(SR.NotSupported_AbstractNonCLS); }
         [CLSCompliant(false)]
+        public virtual void SetValueDirect(TypedReference obj, TypedReference value) { throw new NotSupportedException(SR.NotSupported_AbstractNonCLS); }
+        [CLSCompliant(false)]
         public virtual object? GetValueDirect(TypedReference obj) { throw new NotSupportedException(SR.NotSupported_AbstractNonCLS); }
+        [CLSCompliant(false)]
+        public virtual void GetValueDirect(TypedReference obj, TypedReference returnValue) { throw new NotSupportedException(SR.NotSupported_AbstractNonCLS); }
 
         public virtual object? GetRawConstantValue() { throw new NotSupportedException(SR.NotSupported_AbstractNonCLS); }
 
