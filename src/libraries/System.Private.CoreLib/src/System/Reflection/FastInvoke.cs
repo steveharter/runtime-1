@@ -28,7 +28,11 @@ namespace System.Reflection
             //    throw new NotSupportedException("Ref returning Methods not supported.");
 
             bool hasRetVal = returnType != typeof(void);
-            bool isValueType = method.DeclaringType!.IsValueType;
+
+            Type? declaringType = method.DeclaringType;
+            Debug.Assert(declaringType != null);
+
+            bool isValueType = declaringType.IsValueType;
 
             ParameterInfo[] parameters = method.GetParametersNoCopy();
             bool hasThis = !(emitNew || method.IsStatic);
@@ -37,7 +41,7 @@ namespace System.Reflection
             Array.Fill(delegateParameters, typeof(TypedReference));
 
             var dm = new DynamicMethod(
-                "InvokeStub_" + method.DeclaringType!.Name + "." + method.Name,
+                "InvokeStub_" + declaringType.Name + "." + method.Name,
                 typeof(void),
                 delegateParameters,
                 restrictedSkipVisibility: true);
@@ -63,11 +67,11 @@ namespace System.Reflection
             if (hasThis)
             {
                 ilg.Emit(OpCodes.Ldarg, typeRefIndex);
-                ilg.Emit(OpCodes.Refanyval, method.DeclaringType);
+                ilg.Emit(OpCodes.Refanyval, declaringType);
 
                 if (!isValueType)
                 {
-                    ilg.Emit(OpCodes.Ldobj, method.DeclaringType);
+                    ilg.Emit(OpCodes.Ldobj, declaringType);
                 }
             }
 
@@ -133,7 +137,7 @@ namespace System.Reflection
             Type[] delegateParameters = new Type[2] { typeof(TypedReference), typeof(TypedReference) };
 
             var dm = new DynamicMethod(
-                    name: "FieldGetterStub_" + field.DeclaringType!.Name + "." + field.Name,
+                    name: "FieldGetterStub_" + declaringType.Name + "." + field.Name,
                     returnType: typeof(void),
                     parameterTypes: delegateParameters,
                     restrictedSkipVisibility: true);
@@ -146,11 +150,11 @@ namespace System.Reflection
             if (hasThis)
             {
                 ilg.Emit(OpCodes.Ldarg_1);
-                ilg.Emit(OpCodes.Refanyval, field.DeclaringType);
+                ilg.Emit(OpCodes.Refanyval, declaringType);
 
                 if (!isValueType)
                 {
-                    ilg.Emit(OpCodes.Ldobj, field.DeclaringType);
+                    ilg.Emit(OpCodes.Ldobj, declaringType);
                 }
             }
 
@@ -173,7 +177,7 @@ namespace System.Reflection
             Type[] delegateParameters = new Type[2] { typeof(TypedReference), typeof(TypedReference) };
 
             var dm = new DynamicMethod(
-                    name: "FieldGetterStub_" + field.DeclaringType!.Name + "." + field.Name,
+                    name: "FieldSetterStub_" + declaringType!.Name + "." + field.Name,
                     returnType: typeof(void),
                     parameterTypes: delegateParameters,
                     restrictedSkipVisibility: true);
@@ -183,22 +187,22 @@ namespace System.Reflection
 
             ILGenerator ilg = dm.GetILGenerator();
 
-            //ilg.Emit(declaringType.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, declaringType);
-
             if (hasThis)
             {
                 ilg.Emit(OpCodes.Ldarg_0);
-                ilg.Emit(OpCodes.Refanyval, field.DeclaringType);
+                ilg.Emit(OpCodes.Refanyval, declaringType);
 
                 if (!isValueType)
                 {
-                    ilg.Emit(OpCodes.Ldobj, field.DeclaringType);
+                    ilg.Emit(OpCodes.Ldobj, declaringType);
                 }
             }
 
             ilg.Emit(OpCodes.Ldarg_1);
             ilg.Emit(OpCodes.Refanyval, fieldType);
+            ilg.Emit(OpCodes.Ldobj, declaringType);
             ilg.Emit(OpCodes.Stfld, field);
+
             ilg.Emit(OpCodes.Ret);
 
             return (Func2)dm.CreateDelegate(typeof(Func2));
