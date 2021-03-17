@@ -28,7 +28,7 @@ namespace System.Reflection
         private BindingFlags m_bindingFlags;
         private volatile Signature? m_signature;
         private INVOCATION_FLAGS m_invocationFlags;
-        private FastInvoke.Func5? m_invoke;
+        //private FastInvoke.Func5? m_fastInvoke;
 
         internal INVOCATION_FLAGS InvocationFlags
         {
@@ -328,12 +328,12 @@ namespace System.Reflection
 
         protected override void InvokeDirect(TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4, TypedReference arg5)
         {
-            if (m_invoke == null)
-            {
-                m_invoke = FastInvoke.CreateInvokeDelegate(this, emitNew: false);
-            }
+            //if (m_fastInvoke == null)
+            //{
+            //    m_fastInvoke = FastInvoke.CreateInvokeDelegate(this, emitNew: true);
+            //}
 
-            m_invoke(arg1, arg2, arg3, arg4, arg5);
+            //m_fastInvoke(arg1, arg2, arg3, arg4, arg5);
         }
 
         [RequiresUnreferencedCode("Trimming may change method bodies. For example it can change some instructions, remove branches or local variables.")]

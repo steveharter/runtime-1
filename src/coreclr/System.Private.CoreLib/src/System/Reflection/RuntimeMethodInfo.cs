@@ -27,7 +27,7 @@ namespace System.Reflection
         private RuntimeType m_declaringType;
         private object? m_keepalive;
         private INVOCATION_FLAGS m_invocationFlags;
-        private FastInvoke.Func5? m_invoke;
+        private FastInvoke.Func5? m_fastInvoke;
 
         internal INVOCATION_FLAGS InvocationFlags
         {
@@ -87,7 +87,6 @@ namespace System.Reflection
             m_handle = handle.Value;
             m_reflectedTypeCache = reflectedTypeCache;
             m_methodAttributes = methodAttributes;
-            m_invoke = null;
         }
         #endregion
 
@@ -405,12 +404,12 @@ namespace System.Reflection
 
         protected override void InvokeDirect(TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4, TypedReference arg5)
         {
-            if (m_invoke == null)
+            if (m_fastInvoke == null)
             {
-                m_invoke = FastInvoke.CreateInvokeDelegate(this, emitNew: false);
+                m_fastInvoke = FastInvoke.CreateInvokeDelegate(this, emitNew: false);
             }
 
-            m_invoke(arg1, arg2, arg3, arg4, arg5);
+            m_fastInvoke(arg1, arg2, arg3, arg4, arg5);
         }
 
         [DebuggerStepThroughAttribute]

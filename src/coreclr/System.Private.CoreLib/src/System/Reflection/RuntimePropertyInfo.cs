@@ -350,16 +350,15 @@ namespace System.Reflection
         {
             if (m_fastInvokeGetter == null)
             {
-                MethodInfo? m = GetGetMethod(nonPublic: true);
-                if (m == null)
+                if (m_getterMethod == null)
                 {
                     throw new ArgumentException(System.SR.Arg_GetMethNotFnd);
                 }
 
-                m_fastInvokeGetter = FastInvoke.CreateInvokeDelegate(m, emitNew: false);
+                m_fastInvokeGetter = FastInvoke.CreateInvokeDelegate(m_getterMethod, emitNew: false);
             }
 
-            m_fastInvokeGetter(obj, returnValue, default(TypedReference), default(TypedReference), default(TypedReference));
+            m_fastInvokeGetter(returnValue, obj, default(TypedReference), default(TypedReference), default(TypedReference));
         }
 
         [DebuggerStepThroughAttribute]
@@ -404,20 +403,19 @@ namespace System.Reflection
 
         [DebuggerStepThroughAttribute]
         [Diagnostics.DebuggerHidden]
-        public override void SetValueDirect(TypedReference obj, TypedReference returnValue)
+        public override void SetValueDirect(TypedReference obj, TypedReference value)
         {
             if (m_fastInvokeSetter == null)
             {
-                MethodInfo? m = GetSetMethod(nonPublic: true);
-                if (m == null)
+                if (m_setterMethod == null)
                 {
-                    throw new ArgumentException(System.SR.Arg_GetMethNotFnd);
+                    throw new ArgumentException(System.SR.Arg_SetMethNotFnd);
                 }
 
-                m_fastInvokeSetter = FastInvoke.CreateInvokeDelegate(m, emitNew: false);
+                m_fastInvokeSetter = FastInvoke.CreateInvokeDelegate(m_setterMethod, emitNew: false);
             }
 
-            m_fastInvokeSetter(obj, returnValue, default(TypedReference), default(TypedReference), default(TypedReference));
+            m_fastInvokeSetter(obj, value, default(TypedReference), default(TypedReference), default(TypedReference));
         }
         #endregion
 

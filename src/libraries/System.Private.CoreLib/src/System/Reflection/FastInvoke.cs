@@ -32,8 +32,7 @@ namespace System.Reflection
 
             ParameterInfo[] parameters = method.GetParametersNoCopy();
             bool hasThis = !(emitNew || method.IsStatic);
-            //int numDelegateParameters = (hasRetVal ? 1 : 0) + parameters.Length + (hasThis ? 1 : 0);
-            int numDelegateParameters = 2 + parameters.Length;// + (hasThis ? 1 : 0);
+            int numDelegateParameters = 5;// (hasRetVal ? 2 : 1) + parameters.Length;
             Type[] delegateParameters = new Type[numDelegateParameters];
             Array.Fill(delegateParameters, typeof(TypedReference));
 
@@ -63,7 +62,7 @@ namespace System.Reflection
 
             if (hasThis)
             {
-                ilg.Emit(OpCodes.Ldarg, typeRefIndex++);
+                ilg.Emit(OpCodes.Ldarg, typeRefIndex);
                 ilg.Emit(OpCodes.Refanyval, method.DeclaringType);
 
                 if (!isValueType)
@@ -72,13 +71,11 @@ namespace System.Reflection
                 }
             }
 
-            typeRefIndex = 1;
-
             for (int i = 0; i < parameters.Length; i++)
             {
                 ParameterInfo parameter = parameters[i];
                 Type parameterType = parameter.ParameterType;
-                ilg.Emit(OpCodes.Ldarg, typeRefIndex++);
+                ilg.Emit(OpCodes.Ldarg, ++typeRefIndex);
 
                 if (parameterType.IsByRef)
                 {
@@ -91,12 +88,6 @@ namespace System.Reflection
                 }
             }
 
-            // do we need this?
-            while (typeRefIndex < 4)
-            {
-                ilg.Emit(OpCodes.Ldarg, typeRefIndex++);
-            }
-
             if (emitNew)
             {
                 if (constructorInfo!.IsStatic)
@@ -106,9 +97,10 @@ namespace System.Reflection
             }
             else
             {
-                if (isValueType)
+                //if (isValueType && !method.IsStatic)
+                if (!method.IsStatic)
                 {
-                    ilg.Emit(OpCodes.Constrained, method.DeclaringType);
+                    //ilg.Emit(OpCodes.Constrained, method.DeclaringType);
                 }
 
                 if (methodInfo != null)
@@ -151,9 +143,6 @@ namespace System.Reflection
 
             ILGenerator ilg = dm.GetILGenerator();
 
-            ilg.Emit(OpCodes.Ldarg_0);
-            ilg.Emit(OpCodes.Refanyval, fieldType);
-
             if (hasThis)
             {
                 ilg.Emit(OpCodes.Ldarg_1);
@@ -165,7 +154,51 @@ namespace System.Reflection
                 }
             }
 
+            ilg.Emit(OpCodes.Ldarg_0);
             ilg.Emit(OpCodes.Ldfld, field);
+            ilg.Emit(OpCodes.Refanyval, fieldType);
+
+            ilg.Emit(OpCodes.Ret);
+
+            return (Func2)dm.CreateDelegate(typeof(Func2));
+        }
+
+        public static Func2 CreateFieldSetter(FieldInfo field)
+        {
+            Type? declaringType = field.DeclaringType;
+            Debug.Assert(declaringType != null);
+
+            Type fieldType = field.FieldType;
+
+            Type[] delegateParameters = new Type[2] { typeof(TypedReference), typeof(TypedReference) };
+
+            var dm = new DynamicMethod(
+                    name: "FieldGetterStub_" + field.DeclaringType!.Name + "." + field.Name,
+                    returnType: typeof(void),
+                    parameterTypes: delegateParameters,
+                    restrictedSkipVisibility: true);
+
+            bool hasThis = !field.IsStatic;
+            bool isValueType = declaringType.IsValueType;
+
+            ILGenerator ilg = dm.GetILGenerator();
+
+            //ilg.Emit(declaringType.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, declaringType);
+
+            if (hasThis)
+            {
+                ilg.Emit(OpCodes.Ldarg_0);
+                ilg.Emit(OpCodes.Refanyval, field.DeclaringType);
+
+                if (!isValueType)
+                {
+                    ilg.Emit(OpCodes.Ldobj, field.DeclaringType);
+                }
+            }
+
+            ilg.Emit(OpCodes.Ldarg_1);
+            ilg.Emit(OpCodes.Refanyval, fieldType);
+            ilg.Emit(OpCodes.Stfld, field);
             ilg.Emit(OpCodes.Ret);
 
             return (Func2)dm.CreateDelegate(typeof(Func2));

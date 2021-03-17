@@ -177,7 +177,7 @@ namespace System.Reflection
                 m_fastInvokeGetter = FastInvoke.CreateFieldGetter(this);
             }
 
-            m_fastInvokeGetter(obj, returnValue);
+            m_fastInvokeGetter(returnValue, obj);
         }
 
         [DebuggerStepThroughAttribute]
@@ -230,12 +230,10 @@ namespace System.Reflection
         {
             if (m_fastInvokeSetter == null)
             {
-                //m_fastInvokeGetter = FastInvoke.CreateFieldGetter(this);
-                throw new NotImplementedException();
+                m_fastInvokeSetter = FastInvoke.CreateFieldSetter(this);
             }
 
-            throw new NotImplementedException();
-            //m_fastInvokeGetter(obj, returnValue);
+            m_fastInvokeSetter(obj, value);
         }
 
         public override RuntimeFieldHandle FieldHandle => new RuntimeFieldHandle(this);

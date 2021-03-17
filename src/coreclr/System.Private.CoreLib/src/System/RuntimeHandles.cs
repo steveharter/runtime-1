@@ -771,6 +771,7 @@ namespace System
         private object? m_e;
         private object? m_f;
         private object? m_g;
+        private object? m_h;
 #pragma warning restore CA1823, 414, 169
 
         public RuntimeMethodHandleInternal m_value;
@@ -1104,6 +1105,8 @@ namespace System
         private object? m_d;
         private int m_b;
         private object? m_e;
+        private object? m_f;
+        private object? m_g;
         private RuntimeFieldHandleInternal m_fieldHandle;
 #pragma warning restore 414, 169
 
