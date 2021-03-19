@@ -1121,7 +1121,6 @@ protected:
     OBJECTREF           m_empty3;
     OBJECTREF           m_empty4;
     OBJECTREF           m_empty5;
-    OBJECTREF           m_empty6;
     FieldDesc *         m_pFD;
 
 public:

@@ -24,8 +24,6 @@ namespace System.Reflection
         private BindingFlags m_bindingFlags;
         private Signature? m_signature;
         private ParameterInfo[]? m_parameters;
-        private FastInvoke.Func5? m_fastInvokeGetter;
-        private FastInvoke.Func5? m_fastInvokeSetter;
         #endregion
 
         #region Constructor
@@ -348,17 +346,14 @@ namespace System.Reflection
         [Diagnostics.DebuggerHidden]
         public override void GetValueDirect(TypedReference obj, TypedReference returnValue)
         {
-            if (m_fastInvokeGetter == null)
+            if (m_getterMethod != null)
             {
-                if (m_getterMethod == null)
-                {
-                    throw new ArgumentException(System.SR.Arg_GetMethNotFnd);
-                }
-
-                m_fastInvokeGetter = FastInvoke.CreateInvokeDelegate(m_getterMethod, emitNew: false);
+                m_getterMethod.GetFastInvokeDelegate()(returnValue, obj, default(TypedReference), default(TypedReference), default(TypedReference));
             }
-
-            m_fastInvokeGetter(returnValue, obj, default(TypedReference), default(TypedReference), default(TypedReference));
+            else
+            {
+                throw new InvalidOperationException("todo");
+            }
         }
 
         [DebuggerStepThroughAttribute]
@@ -405,17 +400,14 @@ namespace System.Reflection
         [Diagnostics.DebuggerHidden]
         public override void SetValueDirect(TypedReference obj, TypedReference value)
         {
-            if (m_fastInvokeSetter == null)
+            if (m_setterMethod != null)
             {
-                if (m_setterMethod == null)
-                {
-                    throw new ArgumentException(System.SR.Arg_SetMethNotFnd);
-                }
-
-                m_fastInvokeSetter = FastInvoke.CreateInvokeDelegate(m_setterMethod, emitNew: false);
+                m_setterMethod.GetFastInvokeDelegate()(obj, value, default(TypedReference), default(TypedReference), default(TypedReference));
             }
-
-            m_fastInvokeSetter(obj, value, default(TypedReference), default(TypedReference), default(TypedReference));
+            else
+            {
+                throw new InvalidOperationException("todo");
+            }
         }
         #endregion
 

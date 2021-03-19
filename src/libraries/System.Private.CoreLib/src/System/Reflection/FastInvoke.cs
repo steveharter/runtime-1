@@ -9,7 +9,7 @@ namespace System.Reflection
     internal static class FastInvoke
     {
         public delegate void Func5(TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4, TypedReference arg5);
-        public delegate void Func2(TypedReference arg1, TypedReference arg2);
+        public delegate void FieldAccessor(TypedReference arg1, TypedReference arg2, bool isGetter);
 
         public static Func5 CreateInvokeDelegate(MethodBase method, bool emitNew)
         {
@@ -127,17 +127,17 @@ namespace System.Reflection
             return (Func5)dm.CreateDelegate(typeof(Func5));
         }
 
-        public static Func2 CreateFieldGetter(FieldInfo field)
+        public static FieldAccessor CreateFieldAccessor(FieldInfo field)
         {
             Type? declaringType = field.DeclaringType;
             Debug.Assert(declaringType != null);
 
             Type fieldType = field.FieldType;
 
-            Type[] delegateParameters = new Type[2] { typeof(TypedReference), typeof(TypedReference) };
+            Type[] delegateParameters = new Type[3] { typeof(TypedReference), typeof(TypedReference), typeof(bool) };
 
             var dm = new DynamicMethod(
-                    name: "FieldGetterStub_" + declaringType.Name + "." + field.Name,
+                    name: "FieldAccessorStub_" + declaringType.Name + "." + field.Name,
                     returnType: typeof(void),
                     parameterTypes: delegateParameters,
                     restrictedSkipVisibility: true);
@@ -147,6 +147,20 @@ namespace System.Reflection
 
             ILGenerator ilg = dm.GetILGenerator();
 
+            Label setField = ilg.DefineLabel();
+            Label exit = ilg.DefineLabel();
+
+            // Determine if Ldfld or Stfld should be called.
+            ilg.DeclareLocal(typeof(bool)); //0
+            ilg.DeclareLocal(fieldType);    //1
+            ilg.DeclareLocal(fieldType.MakePointerType());  //2
+
+            ilg.Emit(OpCodes.Ldarg_2);
+            ilg.Emit(OpCodes.Stloc_0);
+            ilg.Emit(OpCodes.Ldloc_0);
+            ilg.Emit(OpCodes.Brfalse_S, setField);
+
+            // Ldfld:
             if (hasThis)
             {
                 ilg.Emit(OpCodes.Ldarg_1);
@@ -158,34 +172,24 @@ namespace System.Reflection
                 }
             }
 
-            ilg.Emit(OpCodes.Ldarg_0);
+            // Get the value from the field.
             ilg.Emit(OpCodes.Ldfld, field);
+            ilg.Emit(OpCodes.Stloc_1);
+
+            // Get the "returnValue" TypedReference.
+            ilg.Emit(OpCodes.Ldarg_0);
             ilg.Emit(OpCodes.Refanyval, fieldType);
+            ilg.Emit(OpCodes.Stloc_2);
+            ilg.Emit(OpCodes.Ldloc_2);
 
-            ilg.Emit(OpCodes.Ret);
+            // Copy the field value to the TypedReference's ref.
+            ilg.Emit(OpCodes.Ldloc_1);
+            ilg.Emit(OpCodes.Stobj, fieldType);
 
-            return (Func2)dm.CreateDelegate(typeof(Func2));
-        }
+            ilg.Emit(OpCodes.Br_S, exit);
 
-        public static Func2 CreateFieldSetter(FieldInfo field)
-        {
-            Type? declaringType = field.DeclaringType;
-            Debug.Assert(declaringType != null);
-
-            Type fieldType = field.FieldType;
-
-            Type[] delegateParameters = new Type[2] { typeof(TypedReference), typeof(TypedReference) };
-
-            var dm = new DynamicMethod(
-                    name: "FieldSetterStub_" + declaringType!.Name + "." + field.Name,
-                    returnType: typeof(void),
-                    parameterTypes: delegateParameters,
-                    restrictedSkipVisibility: true);
-
-            bool hasThis = !field.IsStatic;
-            bool isValueType = declaringType.IsValueType;
-
-            ILGenerator ilg = dm.GetILGenerator();
+            // Stfld:
+            ilg.MarkLabel(setField);
 
             if (hasThis)
             {
@@ -203,9 +207,10 @@ namespace System.Reflection
             ilg.Emit(OpCodes.Ldobj, declaringType);
             ilg.Emit(OpCodes.Stfld, field);
 
+            ilg.MarkLabel(exit);
             ilg.Emit(OpCodes.Ret);
 
-            return (Func2)dm.CreateDelegate(typeof(Func2));
+            return (FieldAccessor)dm.CreateDelegate(typeof(FieldAccessor));
         }
     }
 }

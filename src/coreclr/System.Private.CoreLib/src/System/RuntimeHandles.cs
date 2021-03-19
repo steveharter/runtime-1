@@ -1106,7 +1106,6 @@ namespace System
         private int m_b;
         private object? m_e;
         private object? m_f;
-        private object? m_g;
         private RuntimeFieldHandleInternal m_fieldHandle;
 #pragma warning restore 414, 169
 

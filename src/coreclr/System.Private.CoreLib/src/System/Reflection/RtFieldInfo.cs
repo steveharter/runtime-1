@@ -18,8 +18,7 @@ namespace System.Reflection
         private string? m_name;
         private RuntimeType? m_fieldType;
         private INVOCATION_FLAGS m_invocationFlags;
-        private FastInvoke.Func2? m_fastInvokeGetter;
-        private FastInvoke.Func2? m_fastInvokeSetter;
+        private FastInvoke.FieldAccessor? m_fastAccessor;
 
         internal INVOCATION_FLAGS InvocationFlags
         {
@@ -172,12 +171,12 @@ namespace System.Reflection
         [Diagnostics.DebuggerHidden]
         public override void GetValueDirect(TypedReference obj, TypedReference returnValue)
         {
-            if (m_fastInvokeGetter == null)
+            if (m_fastAccessor == null)
             {
-                m_fastInvokeGetter = FastInvoke.CreateFieldGetter(this);
+                m_fastAccessor = FastInvoke.CreateFieldAccessor(this);
             }
 
-            m_fastInvokeGetter(returnValue, obj);
+            m_fastAccessor(returnValue, obj, isGetter: true);
         }
 
         [DebuggerStepThroughAttribute]
@@ -228,12 +227,12 @@ namespace System.Reflection
         [Diagnostics.DebuggerHidden]
         public override void SetValueDirect(TypedReference obj, TypedReference value)
         {
-            if (m_fastInvokeSetter == null)
+            if (m_fastAccessor == null)
             {
-                m_fastInvokeSetter = FastInvoke.CreateFieldSetter(this);
+                m_fastAccessor = FastInvoke.CreateFieldAccessor(this);
             }
 
-            m_fastInvokeSetter(obj, value);
+            m_fastAccessor(obj, value, isGetter: false);
         }
 
         public override RuntimeFieldHandle FieldHandle => new RuntimeFieldHandle(this);

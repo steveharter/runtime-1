@@ -134,6 +134,16 @@ namespace System.Reflection
             return m_declaringType;
         }
 
+        internal FastInvoke.Func5 GetFastInvokeDelegate()
+        {
+            if (m_fastInvoke == null)
+            {
+                m_fastInvoke = FastInvoke.CreateInvokeDelegate(this, emitNew: false);
+            }
+
+            return m_fastInvoke;
+        }
+
         internal sealed override int GenericParameterCount => RuntimeMethodHandle.GetGenericParameterCount(this);
         #endregion
 
@@ -404,12 +414,7 @@ namespace System.Reflection
 
         protected override void InvokeDirect(TypedReference arg1, TypedReference arg2, TypedReference arg3, TypedReference arg4, TypedReference arg5)
         {
-            if (m_fastInvoke == null)
-            {
-                m_fastInvoke = FastInvoke.CreateInvokeDelegate(this, emitNew: false);
-            }
-
-            m_fastInvoke(arg1, arg2, arg3, arg4, arg5);
+            GetFastInvokeDelegate()(arg1, arg2, arg3, arg4, arg5);
         }
 
         [DebuggerStepThroughAttribute]
