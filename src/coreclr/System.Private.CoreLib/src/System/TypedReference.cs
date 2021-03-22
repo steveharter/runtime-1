@@ -25,6 +25,14 @@ namespace System
             return __refvalue(this, T);
         }
 
+        public ref T AsRef<T>()
+        {
+            throw new NotSupportedException();
+            // We may need to have an 'out' parameter instead
+            //ref T temp = ref __refvalue(this, T);
+            //return ref temp; // error CS8157: Cannot return 'temp' by reference because it was initialized to a value that cannot be returned by reference
+        }
+
         /// <summary>
         /// Create a TypedReference using value.GetType()
         /// Supports boxing
@@ -40,17 +48,6 @@ namespace System
             }
 
             return FromObject(ref value, (RuntimeType)value!.GetType());
-        }
-
-        public static TypedReference FromObject(ref object value, Type type)
-        {
-            if (value == null)
-            {
-                return default(TypedReference);
-                // set type?
-            }
-
-            return FromObject(ref value, (RuntimeType)type);
         }
 
         internal static TypedReference FromObject(ref object value, RuntimeType rtType)

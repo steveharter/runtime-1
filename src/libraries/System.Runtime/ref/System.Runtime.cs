@@ -4463,6 +4463,7 @@ namespace System
     {
         private object _dummy;
         private int _dummyPrimitive;
+        public ref T AsRef<T>() { throw null; }
         public T AsValue<T>() { throw null; }
         public override bool Equals(object? o) { throw null; }
         public static TypedReference GetNull() { throw null; }
@@ -4470,7 +4471,6 @@ namespace System
         public static System.TypedReference FromIntPtr<T>(System.IntPtr value) { throw null; }
         public static System.TypedReference FromRef<T>(ref T value) { throw null; }
         public static System.TypedReference FromObject(ref object value) { throw null; }
-        public static System.TypedReference FromObject(ref object value, Type type) { throw null; }
         public override int GetHashCode() { throw null; }
         public static System.Type GetTargetType(System.TypedReference value) { throw null; }
         public static System.TypedReference MakeTypedReference(object target, System.Reflection.FieldInfo[] flds) { throw null; }

@@ -28,7 +28,7 @@ namespace System.Reflection
         private BindingFlags m_bindingFlags;
         private volatile Signature? m_signature;
         private INVOCATION_FLAGS m_invocationFlags;
-        //private FastInvoke.Func5? m_fastInvoke;
+        private FastInvoke.Func5? m_fastInvoke;
 
         internal INVOCATION_FLAGS InvocationFlags
         {
@@ -95,6 +95,16 @@ namespace System.Reflection
 
         internal override bool CacheEquals(object? o) =>
             o is RuntimeConstructorInfo m && m.m_handle == m_handle;
+
+        internal FastInvoke.Func5 GetFastInvokeDelegate()
+        {
+            if (m_fastInvoke == null)
+            {
+                m_fastInvoke = FastInvoke.CreateInvokeDelegate(this, emitNew: true);
+            }
+
+            return m_fastInvoke;
+        }
 
         private Signature Signature => m_signature ??= new Signature(this, m_declaringType);
 
