@@ -24,10 +24,8 @@ namespace System.Reflection
             }
 
             Type returnType = emitNew ? method.DeclaringType! : (methodInfo == null ? typeof(void) : methodInfo.ReturnType);
-            //if (returnType.IsByRef)
-            //    throw new NotSupportedException("Ref returning Methods not supported.");
-
             bool hasRetVal = returnType != typeof(void);
+            Type? refReturnType = default;
 
             Type? declaringType = method.DeclaringType;
             Debug.Assert(declaringType != null);
@@ -49,14 +47,14 @@ namespace System.Reflection
             ILGenerator ilg = dm.GetILGenerator();
 
             int typeRefIndex = 0;
+
             if (hasRetVal)
             {
                 ilg.Emit(OpCodes.Ldarg, typeRefIndex++);
-
                 if (returnType.IsByRef)
                 {
-                    // todo https://github.com/dotnet/designs/pull/17/files#diff-95671f0ce30ebf166d73fd612d241c26555bc12eae18c570a26f4fe1b0fb716eR43
-                    ilg.Emit(OpCodes.Refanyval, returnType);
+                    refReturnType = returnType.GetElementType()!;
+                    ilg.Emit(OpCodes.Refanyval, refReturnType);
                 }
                 else
                 {
@@ -104,6 +102,7 @@ namespace System.Reflection
                 //if (isValueType && !method.IsStatic)
                 if (!method.IsStatic)
                 {
+                    // todo: enums, System.Object support
                     //ilg.Emit(OpCodes.Constrained, method.DeclaringType);
                 }
 
@@ -119,7 +118,16 @@ namespace System.Reflection
 
             if (hasRetVal)
             {
-                ilg.Emit(OpCodes.Stobj, returnType);
+                if (returnType.IsByRef)
+                {
+                    Debug.Assert(refReturnType != null);
+                    ilg.Emit(OpCodes.Ldobj, refReturnType);
+                    ilg.Emit(OpCodes.Stobj, refReturnType);
+                }
+                else
+                {
+                    ilg.Emit(OpCodes.Stobj, returnType);
+                }
             }
 
             ilg.Emit(OpCodes.Ret);
@@ -150,14 +158,9 @@ namespace System.Reflection
             Label setField = ilg.DefineLabel();
             Label exit = ilg.DefineLabel();
 
-            // Determine if Ldfld or Stfld should be called.
-            ilg.DeclareLocal(typeof(bool)); //0
-            ilg.DeclareLocal(fieldType);    //1
-            ilg.DeclareLocal(fieldType.MakePointerType());  //2
+            LocalBuilder tempRef = ilg.DeclareLocal(fieldType.MakePointerType());
 
             ilg.Emit(OpCodes.Ldarg_2);
-            ilg.Emit(OpCodes.Stloc_0);
-            ilg.Emit(OpCodes.Ldloc_0);
             ilg.Emit(OpCodes.Brfalse_S, setField);
 
             // Ldfld:
@@ -166,24 +169,23 @@ namespace System.Reflection
                 ilg.Emit(OpCodes.Ldarg_1);
                 ilg.Emit(OpCodes.Refanyval, declaringType);
 
-                if (!isValueType)
-                {
-                    ilg.Emit(OpCodes.Ldobj, declaringType);
-                }
+                //if (!isValueType)
+                //{
+                //    ilg.Emit(OpCodes.Ldobj, declaringType);
+                //}
             }
+            // todo: static fields
+
+            ilg.Emit(OpCodes.Stloc, tempRef);
+
+            ilg.Emit(OpCodes.Ldarg_0);
+            ilg.Emit(OpCodes.Refanyval, fieldType);
+
+            ilg.Emit(OpCodes.Ldloc, tempRef);
+            ilg.Emit(OpCodes.Ldind_Ref);
 
             // Get the value from the field.
             ilg.Emit(OpCodes.Ldfld, field);
-            ilg.Emit(OpCodes.Stloc_1);
-
-            // Get the "returnValue" TypedReference.
-            ilg.Emit(OpCodes.Ldarg_0);
-            ilg.Emit(OpCodes.Refanyval, fieldType);
-            ilg.Emit(OpCodes.Stloc_2);
-            ilg.Emit(OpCodes.Ldloc_2);
-
-            // Copy the field value to the TypedReference's ref.
-            ilg.Emit(OpCodes.Ldloc_1);
             ilg.Emit(OpCodes.Stobj, fieldType);
 
             ilg.Emit(OpCodes.Br_S, exit);
