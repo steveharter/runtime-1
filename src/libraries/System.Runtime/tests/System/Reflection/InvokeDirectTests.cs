@@ -18,7 +18,7 @@ namespace System.Reflection.Tests
 
             var obj = new TestClass();
 
-            mi.InvokeFuncDirect(
+            mi.InvokeActionDirect(
                 TypedReference.FromRef(ref obj),
                 TypedReference.FromRef(ref intField),
                 TypedReference.FromRef(ref intProperty),
@@ -40,7 +40,7 @@ namespace System.Reflection.Tests
 
             var obj = default(TestStruct);
 
-            mi.InvokeFuncDirect(
+            mi.InvokeActionDirect(
                 TypedReference.FromRef(ref obj),
                 TypedReference.FromRef(ref intField),
                 TypedReference.FromRef(ref intProperty),
@@ -61,7 +61,7 @@ namespace System.Reflection.Tests
 
             var obj = default(TestRefStruct);
 
-            mi.InvokeFuncDirect(
+            mi.InvokeActionDirect(
                 TypedReference.FromIntPtr(new IntPtr(&obj), typeof(TestRefStruct)),
                 TypedReference.FromRef(ref intField),
                 TypedReference.FromRef(ref intProperty));
