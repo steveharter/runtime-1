@@ -123,6 +123,18 @@ namespace System.Text.Json
         }
 #endif
 
+#if BUILDING_INBOX_LIBRARY
+        internal void WriteToStream(Stream destination)
+        {
+            destination.Write(WrittenMemory.Span);
+        }
+#else
+        internal void WriteToStream(Stream destination)
+        {
+            destination.Write(_rentedBuffer, 0, _index);
+        }
+#endif
+
         private void CheckAndResizeBuffer(int sizeHint)
         {
             Debug.Assert(_rentedBuffer != null);

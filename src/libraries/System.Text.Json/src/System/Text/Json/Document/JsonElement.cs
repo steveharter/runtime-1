@@ -1169,6 +1169,14 @@ namespace System.Text.Json
             return _parent.GetRawValueAsString(_idx);
         }
 
+        internal ReadOnlySpan<byte> GetRawUtf8()
+        {
+            Debug.Assert(_parent is JsonDocument);
+
+            var document = (JsonDocument)_parent;
+            return document.GetRawValueAsUtf8Span(_idx);
+        }
+
         internal string GetPropertyRawText()
         {
             CheckValidInstance();

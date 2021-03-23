@@ -11,6 +11,14 @@ namespace System.Text.Json
 {
     public static partial class JsonSerializer
     {
+        // We flush the Stream when the buffer is >=90% of capacity.
+        // This threshold is a compromise between buffer utilization and minimizing cases where the buffer
+        // needs to be expanded\doubled because it is not large enough to write the current property or element.
+        // We check for flush after each object property and array element is written to the buffer.
+        // Once the buffer is expanded to contain the largest single element\property, a 90% thresold
+        // means the buffer may be expanded a maximum of 4 times: 1-(1\(2^4))==.9375.
+        private const float FlushThreshold = .9f;
+
         /// <summary>
         /// Convert the provided value to UTF-8 encoded JSON text and write it to the <see cref="System.IO.Stream"/>.
         /// </summary>
@@ -36,6 +44,17 @@ namespace System.Text.Json
                 throw new ArgumentNullException(nameof(utf8Json));
 
             return WriteAsyncCore(utf8Json, value, typeof(TValue), options, cancellationToken);
+        }
+
+        internal static void Serialize<[DynamicallyAccessedMembers(MembersAccessedOnWrite)] TValue>(
+            Stream utf8Json,
+            TValue value,
+            JsonSerializerOptions? options = null)
+        {
+            if (utf8Json == null)
+                throw new ArgumentNullException(nameof(utf8Json));
+
+            WriteCore(utf8Json, value, typeof(TValue), options);
         }
 
         /// <summary>
@@ -89,14 +108,6 @@ namespace System.Text.Json
             JsonSerializerOptions? options,
             CancellationToken cancellationToken)
         {
-            // We flush the Stream when the buffer is >=90% of capacity.
-            // This threshold is a compromise between buffer utilization and minimizing cases where the buffer
-            // needs to be expanded\doubled because it is not large enough to write the current property or element.
-            // We check for flush after each object property and array element is written to the buffer.
-            // Once the buffer is expanded to contain the largest single element\property, a 90% thresold
-            // means the buffer may be expanded a maximum of 4 times: 1-(1\(2^4))==.9375.
-            const float FlushThreshold = .9f;
-
             if (options == null)
             {
                 options = JsonSerializerOptions.s_defaultOptions;
@@ -125,6 +136,46 @@ namespace System.Text.Json
                     isFinalBlock = WriteCore(converterBase, writer, value, options, ref state);
 
                     await bufferWriter.WriteToStreamAsync(utf8Json, cancellationToken).ConfigureAwait(false);
+
+                    bufferWriter.Clear();
+                } while (!isFinalBlock);
+            }
+        }
+
+        private static void WriteCore<TValue>(
+            Stream utf8Json,
+            TValue value,
+            Type inputType,
+            JsonSerializerOptions? options)
+        {
+            if (options == null)
+            {
+                options = JsonSerializerOptions.s_defaultOptions;
+            }
+
+            JsonWriterOptions writerOptions = options.GetWriterOptions();
+
+            using (var bufferWriter = new PooledByteBufferWriter(options.DefaultBufferSize))
+            using (var writer = new Utf8JsonWriter(bufferWriter, writerOptions))
+            {
+                //  We treat typeof(object) special and allow polymorphic behavior.
+                if (inputType == JsonClassInfo.ObjectType && value != null)
+                {
+                    inputType = value!.GetType();
+                }
+
+                WriteStack state = default;
+                JsonConverter converterBase = state.Initialize(inputType, options, supportContinuation: true);
+
+                bool isFinalBlock;
+
+                do
+                {
+                    state.FlushThreshold = (int)(bufferWriter.Capacity * FlushThreshold);
+
+                    isFinalBlock = WriteCore(converterBase, writer, value, options, ref state);
+
+                    bufferWriter.WriteToStream(utf8Json);
 
                     bufferWriter.Clear();
                 } while (!isFinalBlock);
