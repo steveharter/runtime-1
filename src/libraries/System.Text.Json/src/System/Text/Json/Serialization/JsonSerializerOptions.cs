@@ -594,6 +594,12 @@ namespace System.Text.Json
             return result;
         }
 
+        internal bool TryAddTypeInfo(JsonTypeInfo typeInfo)
+        {
+            _haveTypesBeenCreated = true;
+            return _classes.TryAdd(typeInfo.Type, typeInfo);
+        }
+
         internal JsonTypeInfo GetClassFromContextOrCreate(Type type)
         {
             JsonTypeInfo? info = _context?.GetTypeInfo(type);
@@ -602,6 +608,17 @@ namespace System.Text.Json
                 return info;
             }
 
+            if (_typeInfoCreationFunc == null)
+            {
+                ThrowHelper.ThrowNotSupportedException_NoMetadataForType(type);
+                return null!;
+            }
+
+            return _typeInfoCreationFunc(type, this);
+        }
+
+        internal JsonTypeInfo CreateTypeInfo(Type type)
+        {
             if (_typeInfoCreationFunc == null)
             {
                 ThrowHelper.ThrowNotSupportedException_NoMetadataForType(type);

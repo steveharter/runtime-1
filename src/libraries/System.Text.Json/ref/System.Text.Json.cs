@@ -745,6 +745,15 @@ namespace System.Text.Json.Serialization
         public JsonNumberHandlingAttribute(System.Text.Json.Serialization.JsonNumberHandling handling) { }
         public System.Text.Json.Serialization.JsonNumberHandling Handling { get { throw null; } }
     }
+    public abstract partial class JsonObjectPolicy
+    {
+        protected JsonObjectPolicy(System.Text.Json.JsonSerializerOptions options) { }
+        public System.Text.Json.JsonSerializerOptions Options { get { throw null; } }
+        protected System.Text.Json.Serialization.Metadata.JsonTypeInfo CreateEmptyTypeInfo(System.Type type) { throw null; }
+        protected System.Text.Json.Serialization.Metadata.JsonTypeInfo CreateTypeInfoFromMetadata(System.Type type) { throw null; }
+        public abstract System.Text.Json.Serialization.Metadata.JsonTypeInfo GetTypeInfo(System.Type type);
+        protected bool TryAddTypeInfo(System.Text.Json.Serialization.Metadata.JsonTypeInfo typeInfo) { throw null; }
+    }
     [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple=false)]
     public sealed partial class JsonPropertyNameAttribute : System.Text.Json.Serialization.JsonAttribute
     {

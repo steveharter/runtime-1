@@ -32,15 +32,11 @@ namespace System.Text.Json.Serialization.Metadata
         internal int ParameterCount { get; private set; }
 
         // All of the serializable parameters on a POCO constructor keyed on parameter name.
-        // Only paramaters which bind to properties are cached.
-        internal Dictionary<string, JsonParameterInfo>? ParameterCache;
+        // Only parameters which bind to properties are cached.
+        internal JsonPropertyDictionary<JsonParameterInfo>? ParameterCache;
 
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
-        internal Dictionary<string, JsonPropertyInfo>? PropertyCache;
-
-        // All of the serializable properties on a POCO including the optional extension property.
-        // Used for performance during serialization instead of 'PropertyCache' above.
-        internal JsonPropertyInfo[]? PropertyCacheArray;
+        internal JsonPropertyDictionary<JsonPropertyInfo>? PropertyCache;
 
         // Fast cache of constructor parameters by first JSON ordering; may not contain all parameters. Accessed before ParameterCache.
         // Use an array (instead of List<T>) for highest performance.
@@ -136,7 +132,7 @@ namespace System.Text.Json.Serialization.Metadata
         }
 
         // AggressiveInlining used although a large method it is only called from one location and is on a hot path.
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal JsonPropertyInfo GetProperty(
             ReadOnlySpan<byte> propertyName,
             ref ReadStackFrame frame,
@@ -208,6 +204,8 @@ namespace System.Text.Json.Serialization.Metadata
 
             if (PropertyCache.TryGetValue(JsonHelpers.Utf8GetString(propertyName), out JsonPropertyInfo? info))
             {
+                Debug.Assert(info != null);
+
                 if (Options.PropertyNameCaseInsensitive)
                 {
                     if (propertyName.SequenceEqual(info.NameAsUtf8Bytes))
@@ -225,8 +223,8 @@ namespace System.Text.Json.Serialization.Metadata
                 }
                 else
                 {
-                    Debug.Assert(key == GetKey(info.NameAsUtf8Bytes!.AsSpan()));
-                    utf8PropertyName = info.NameAsUtf8Bytes!;
+                    Debug.Assert(key == GetKey(info.NameAsUtf8Bytes.AsSpan()));
+                    utf8PropertyName = info.NameAsUtf8Bytes;
                 }
             }
             else
@@ -345,6 +343,8 @@ namespace System.Text.Json.Serialization.Metadata
 
             if (ParameterCache.TryGetValue(JsonHelpers.Utf8GetString(propertyName), out JsonParameterInfo? info))
             {
+                Debug.Assert(info != null);
+
                 if (Options.PropertyNameCaseInsensitive)
                 {
                     if (propertyName.SequenceEqual(info.NameAsUtf8Bytes))
@@ -566,37 +566,25 @@ namespace System.Text.Json.Serialization.Metadata
             frame.CtorArgumentState.ParameterRefCache = null;
         }
 
-        internal void InitializeSerializePropCache()
+        internal void InitializePropCache()
         {
             Debug.Assert(PropInitFunc != null);
             Debug.Assert(Options._context != null);
 
-            PropertyCacheArray = PropInitFunc(Options._context);
-        }
+            JsonPropertyInfo[] array = PropInitFunc(Options._context);
 
-        internal void InitializeDeserializePropCache()
-        {
-            if (PropertyCacheArray == null)
+            var properties = new JsonPropertyDictionary<JsonPropertyInfo>(Options.PropertyNameCaseInsensitive, array.Length);
+            for (int i = 0; i < array.Length; i++)
             {
-                InitializeSerializePropCache();
-            }
-
-            Dictionary<string, JsonPropertyInfo> propertyCache = new(Options.PropertyNameCaseInsensitive
-                ? StringComparer.OrdinalIgnoreCase
-                : StringComparer.Ordinal);
-
-            for (int i = 0; i < PropertyCacheArray!.Length; i++)
-            {
-                JsonPropertyInfo jsonPropertyInfo = PropertyCacheArray[i];
-
-                if (!JsonHelpers.TryAdd(propertyCache, jsonPropertyInfo.NameAsString, jsonPropertyInfo))
+                JsonPropertyInfo property = array[i];
+                if (!properties.TryAdd(property.NameAsString, property))
                 {
-                    ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameConflict(Type, jsonPropertyInfo);
+                    ThrowHelper.ThrowInvalidOperationException_SerializerPropertyNameConflict(Type, property.ClrName!);
                 }
             }
 
             // Avoid threading issues by populating a local cache, and assigning it to the global cache after completion.
-            PropertyCache = propertyCache;
+            PropertyCache = properties;
         }
     }
 }
