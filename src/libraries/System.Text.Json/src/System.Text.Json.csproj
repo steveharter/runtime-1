@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TargetFrameworks>$(NetCoreAppCurrent);netstandard2.0;netcoreapp3.0;net461</TargetFrameworks>
@@ -58,6 +58,8 @@
     <Compile Include="System\Text\Json\Nodes\JsonObject.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonObject.Dynamic.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonObject.IDictionary.cs" />
+    <Compile Include="System\Text\Json\Nodes\JsonObject.KeyCollection.cs" />
+    <Compile Include="System\Text\Json\Nodes\JsonObject.ValueCollection.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonValue.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonValueOfT.cs" />
     <Compile Include="System\Text\Json\Nodes\MetaDynamic.cs" />
@@ -84,7 +86,7 @@
     <Compile Include="System\Text\Json\Serialization\Attributes\JsonSerializableAttribute.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\Object\ObjectSourceGenConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\IgnoreReferenceResolver.cs" />
-    <Compile Include="System\Text\Json\Serialization\JsonObjectPolicy.cs" />
+    <Compile Include="System\Text\Json\Serialization\JsonObjectMetadataHandler.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonSerializerContext.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Collections.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Converters.cs" />

@@ -5,16 +5,25 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace System.Text.Json.Serialization
 {
+    // notes:
+    // JsonTypeInfo to add static CreateJsonProperty() method that takes required info (name)
+    // and then adds public properties for rest (converter=nullbydefault, nullhandling, setter\getter)
+    // IList<JsonPropertyInfo> ConstructorParameters
+    // ConstructorFunc ConstructorFunc
+    // JsonTypeInfo.CreateFunc
+
+    // Remove JsonParameterInfo and combine with JsonPropertyInfo (add Position and DefaultValue property)
+
     /// <summary>
     /// Determines the policy used to define the metadata for a JSON object which includes the list of properties
     /// and their behavior.
     /// </summary>
-    public abstract class JsonObjectPolicy
+    public abstract class JsonObjectMetadataHandler
     {
         /// <summary>
-        /// Initializes a new instance of <see cref="JsonObjectPolicy"/>.
+        /// Initializes a new instance of <see cref="JsonObjectMetadataHandler"/>.
         /// </summary>
-        protected JsonObjectPolicy(JsonSerializerOptions options)
+        protected JsonObjectMetadataHandler(JsonSerializerOptions options)
         {
             Options = options;
         }
@@ -37,6 +46,17 @@ namespace System.Text.Json.Serialization
         protected JsonTypeInfo CreateEmptyTypeInfo(Type type)
         {
             return new JsonTypeInfo(type, Options);
+        }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        protected JsonPropertyInfo CreateProperty<T>(string name)
+        {
+            return new JsonPropertyInfo<T>();
         }
 
         /// <summary>

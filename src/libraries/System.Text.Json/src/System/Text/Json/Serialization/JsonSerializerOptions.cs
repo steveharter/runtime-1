@@ -37,6 +37,7 @@ namespace System.Text.Json
         private MemberAccessor? _memberAccessorStrategy;
         private JsonNamingPolicy? _dictionaryKeyPolicy;
         private JsonNamingPolicy? _jsonPropertyNamingPolicy;
+        private JsonObjectMetadataHandler? _objectHandler;
         private JsonCommentHandling _readCommentHandling;
         private ReferenceHandler? _referenceHandler;
         private JavaScriptEncoder? _encoder;
@@ -81,6 +82,7 @@ namespace System.Text.Json
             _memberAccessorStrategy = options._memberAccessorStrategy;
             _dictionaryKeyPolicy = options._dictionaryKeyPolicy;
             _jsonPropertyNamingPolicy = options._jsonPropertyNamingPolicy;
+            _objectHandler = options._objectHandler;
             _readCommentHandling = options._readCommentHandling;
             _referenceHandler = options._referenceHandler;
             _encoder = options._encoder;
@@ -431,6 +433,22 @@ namespace System.Text.Json
 
         // The default is 64 because that is what the reader uses, so re-use the same JsonReaderOptions.DefaultMaxDepth constant.
         internal int EffectiveMaxDepth { get; private set; } = JsonReaderOptions.DefaultMaxDepth;
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        public JsonObjectMetadataHandler? ObjectHandler
+        {
+            get
+            {
+                return _objectHandler;
+            }
+            set
+            {
+                VerifyMutable();
+                _objectHandler = value;
+            }
+        }
 
         /// <summary>
         /// Specifies the policy used to convert a property's name on an object to another format, such as camel-casing.

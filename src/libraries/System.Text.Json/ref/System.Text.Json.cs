@@ -267,6 +267,7 @@ namespace System.Text.Json
         public bool IncludeFields { get { throw null; } set { } }
         public int MaxDepth { get { throw null; } set { } }
         public System.Text.Json.Serialization.JsonNumberHandling NumberHandling { get { throw null; } set { } }
+        public System.Text.Json.Serialization.JsonObjectMetadataHandler? ObjectMetadataHandler { get { throw null; } set { } }
         public bool PropertyNameCaseInsensitive { get { throw null; } set { } }
         public System.Text.Json.JsonNamingPolicy? PropertyNamingPolicy { get { throw null; } set { } }
         public System.Text.Json.JsonCommentHandling ReadCommentHandling { get { throw null; } set { } }
@@ -745,9 +746,9 @@ namespace System.Text.Json.Serialization
         public JsonNumberHandlingAttribute(System.Text.Json.Serialization.JsonNumberHandling handling) { }
         public System.Text.Json.Serialization.JsonNumberHandling Handling { get { throw null; } }
     }
-    public abstract partial class JsonObjectPolicy
+    public abstract partial class JsonObjectMetadataHandler
     {
-        protected JsonObjectPolicy(System.Text.Json.JsonSerializerOptions options) { }
+        protected JsonObjectMetadataHandler(System.Text.Json.JsonSerializerOptions options) { }
         public System.Text.Json.JsonSerializerOptions Options { get { throw null; } }
         protected System.Text.Json.Serialization.Metadata.JsonTypeInfo CreateEmptyTypeInfo(System.Type type) { throw null; }
         protected System.Text.Json.Serialization.Metadata.JsonTypeInfo CreateTypeInfoFromMetadata(System.Type type) { throw null; }
