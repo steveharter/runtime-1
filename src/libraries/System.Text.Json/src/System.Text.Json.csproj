@@ -58,8 +58,6 @@
     <Compile Include="System\Text\Json\Nodes\JsonObject.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonObject.Dynamic.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonObject.IDictionary.cs" />
-    <Compile Include="System\Text\Json\JsonPropertyDictionary.KeyCollection.cs" />
-    <Compile Include="System\Text\Json\JsonPropertyDictionary.ValueCollection.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonValue.cs" />
     <Compile Include="System\Text\Json\Nodes\JsonValueOfT.cs" />
     <Compile Include="System\Text\Json\Nodes\MetaDynamic.cs" />
@@ -88,7 +86,6 @@
     <Compile Include="System\Text\Json\Serialization\IgnoreReferenceResolver.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonObjectPolicy.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonSerializerContext.cs" />
-    <Compile Include="System\Text\Json\JsonPropertyDictionary.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Collections.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Converters.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfoInternalOfT.cs" />
