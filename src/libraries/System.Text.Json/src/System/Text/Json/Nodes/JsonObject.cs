@@ -125,9 +125,7 @@ namespace System.Text.Json.Nodes
         {
             if (child != null)
             {
-                Initialize();
-                Debug.Assert(_dictionary != null);
-                string propertyName = _dictionary.FindValue(child)!.Value.Key;
+                string propertyName = FindNode(child)!.Value.Key;
                 if (propertyName.IndexOfAny(ReadStack.SpecialCharacters) != -1)
                 {
                     path.Add($"['{propertyName}']");
@@ -146,21 +144,24 @@ namespace System.Text.Json.Nodes
 
         internal void SetItem(string propertyName, JsonNode? value)
         {
-            Initialize();
-            Debug.Assert(_dictionary != null);
-            JsonNode? existing = _dictionary.SetValue(propertyName, value, () => value?.AssignParent(this));
+            if (propertyName == null)
+            {
+                throw new ArgumentNullException(nameof(propertyName));
+            }
+
+            JsonNode? existing = SetNode(propertyName, value);
             DetachParent(existing);
         }
 
         private void DetachParent(JsonNode? item)
         {
-            Initialize();
-            Debug.Assert(_dictionary != null);
-
             if (item != null)
             {
                 item.Parent = null;
             }
+
+            // Prevent previous child from being returned from these cached variables.
+            ClearLastValueCache();
         }
 
         [ExcludeFromCodeCoverage] // Justification = "Design-time"

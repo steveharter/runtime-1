@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Buffers;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json.Serialization.Metadata;
 
@@ -56,16 +55,12 @@ namespace System.Text.Json.Serialization.Converters
                 typeInfo.CreateObjectWithArgs = options.MemberAccessorStrategy.CreateParameterizedConstructor<T>(ConstructorInfo!);
             }
 
-            List<KeyValuePair<string, JsonParameterInfo?>> cache = typeInfo.ParameterCache!.List;
-            object[] arguments = ArrayPool<object>.Shared.Rent(cache.Count);
-            for (int i = 0; i < typeInfo.ParameterCount; i++)
+            object[] arguments = ArrayPool<object>.Shared.Rent(typeInfo.ParameterCount);
+            foreach (JsonParameterInfo jsonParameterInfo in typeInfo.ParameterCache!.Values)
             {
-                JsonParameterInfo? parameterInfo = cache[i].Value;
-                Debug.Assert(parameterInfo != null);
-
-                if (parameterInfo.ShouldDeserialize)
+                if (jsonParameterInfo.ShouldDeserialize)
                 {
-                    arguments[parameterInfo.Position] = parameterInfo.DefaultValue!;
+                    arguments[jsonParameterInfo.Position] = jsonParameterInfo.DefaultValue!;
                 }
             }
 

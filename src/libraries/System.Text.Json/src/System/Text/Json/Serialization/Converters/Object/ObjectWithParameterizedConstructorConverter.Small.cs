@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json.Serialization.Metadata;
 
@@ -86,12 +85,8 @@ namespace System.Text.Json.Serialization.Converters
 
             var arguments = new Arguments<TArg0, TArg1, TArg2, TArg3>();
 
-            List<KeyValuePair<string, JsonParameterInfo?>> cache = typeInfo.ParameterCache!.List;
-            for (int i = 0; i < typeInfo.ParameterCount; i++)
+            foreach (JsonParameterInfo parameterInfo in typeInfo.ParameterCache!.Values)
             {
-                JsonParameterInfo? parameterInfo = cache[i].Value;
-                Debug.Assert(parameterInfo != null);
-
                 if (parameterInfo.ShouldDeserialize)
                 {
                     int position = parameterInfo.Position;

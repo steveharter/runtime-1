@@ -22,7 +22,7 @@ namespace System.Text.Json.Serialization.Converters
             JsonTypeInfo jsonTypeInfo = state.Current.JsonTypeInfo;
             if (jsonTypeInfo.PropertyCache == null)
             {
-                jsonTypeInfo.InitializePropCache();
+                jsonTypeInfo.InitializeDeserializePropCache();
             }
 
             return base.OnTryRead(ref reader, typeToConvert, options, ref state, out value);
@@ -35,9 +35,9 @@ namespace System.Text.Json.Serialization.Converters
             ref WriteStack state)
         {
             JsonTypeInfo jsonTypeInfo = state.Current.JsonTypeInfo;
-            if (jsonTypeInfo.PropertyCache == null)
+            if (jsonTypeInfo.PropertyCacheArray == null)
             {
-                jsonTypeInfo.InitializePropCache();
+                jsonTypeInfo.InitializeSerializePropCache();
             }
 
             return base.OnTryWrite(writer, value, options, ref state);

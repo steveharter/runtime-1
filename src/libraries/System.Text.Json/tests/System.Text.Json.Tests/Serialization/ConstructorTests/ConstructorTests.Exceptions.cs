@@ -124,6 +124,7 @@ namespace System.Text.Json.Serialization.Tests
         {
             InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(() => Serializer.DeserializeWrapper<Class_ExtData_CtorParam>("{}"));
             string exStr = ex.ToString();
+            Assert.Contains("System.Collections.Generic.Dictionary`2[System.String,System.Text.Json.JsonElement] ExtensionData", exStr);
             Assert.Contains("System.Text.Json.Serialization.Tests.ConstructorTests+Class_ExtData_CtorParam", exStr);
             Assert.Contains("(System.Collections.Generic.Dictionary`2[System.String,System.Text.Json.JsonElement])", exStr);
         }

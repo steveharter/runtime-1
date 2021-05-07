@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -245,12 +244,18 @@ namespace System.Text.Json.Serialization.Converters
                     }
                 }
 
-                List<KeyValuePair<string, JsonPropertyInfo?>> propertyList = state.Current.JsonTypeInfo.PropertyCache!.List!;
-                int propertyCount = propertyList.Count;
+                JsonPropertyInfo? dataExtensionProperty = state.Current.JsonTypeInfo.DataExtensionProperty;
+
+                int propertyCount = 0;
+                JsonPropertyInfo[]? propertyCacheArray = state.Current.JsonTypeInfo.PropertyCacheArray;
+                if (propertyCacheArray != null)
+                {
+                    propertyCount = propertyCacheArray.Length;
+                }
 
                 for (int i = 0; i < propertyCount; i++)
                 {
-                    JsonPropertyInfo jsonPropertyInfo = propertyList![i].Value!;
+                    JsonPropertyInfo jsonPropertyInfo = propertyCacheArray![i];
 
                     // Remember the current property for JsonPath support if an exception is thrown.
                     state.Current.DeclaredJsonPropertyInfo = jsonPropertyInfo;
@@ -258,26 +263,21 @@ namespace System.Text.Json.Serialization.Converters
 
                     if (jsonPropertyInfo.ShouldSerialize)
                     {
-                        if (!jsonPropertyInfo.GetMemberAndWriteJson(objectValue, ref state, writer))
+                        if (jsonPropertyInfo == dataExtensionProperty)
                         {
-                            Debug.Assert(jsonPropertyInfo.ConverterBase.ConverterStrategy != ConverterStrategy.Value);
-                            return false;
+                            if (!jsonPropertyInfo.GetMemberAndWriteJsonExtensionData(objectValue, ref state, writer))
+                            {
+                                return false;
+                            }
                         }
-                    }
-
-                    state.Current.EndProperty();
-                }
-
-                JsonPropertyInfo? dataExtensionProperty = state.Current.JsonTypeInfo.DataExtensionProperty;
-                if (dataExtensionProperty != null)
-                {
-                    // Remember the current property for JsonPath support if an exception is thrown.
-                    state.Current.DeclaredJsonPropertyInfo = dataExtensionProperty;
-                    state.Current.NumberHandling = dataExtensionProperty.NumberHandling;
-
-                    if (!dataExtensionProperty.GetMemberAndWriteJsonExtensionData(objectValue, ref state, writer))
-                    {
-                        return false;
+                        else
+                        {
+                            if (!jsonPropertyInfo.GetMemberAndWriteJson(objectValue, ref state, writer))
+                            {
+                                Debug.Assert(jsonPropertyInfo.ConverterBase.ConverterStrategy != ConverterStrategy.Value);
+                                return false;
+                            }
+                        }
                     }
 
                     state.Current.EndProperty();
@@ -302,22 +302,37 @@ namespace System.Text.Json.Serialization.Converters
                     state.Current.ProcessedStartToken = true;
                 }
 
-                List<KeyValuePair<string, JsonPropertyInfo?>>? propertyList = state.Current.JsonTypeInfo.PropertyCache!.List!;
-                int propertyCount = propertyList.Count;
+                JsonPropertyInfo? dataExtensionProperty = state.Current.JsonTypeInfo.DataExtensionProperty;
 
-                while (state.Current.EnumeratorIndex < propertyCount)
+                int propertyCount = 0;
+                JsonPropertyInfo[]? propertyCacheArray = state.Current.JsonTypeInfo.PropertyCacheArray;
+                if (propertyCacheArray != null)
                 {
-                    JsonPropertyInfo? jsonPropertyInfo = propertyList![state.Current.EnumeratorIndex].Value;
-                    Debug.Assert(jsonPropertyInfo != null);
+                    propertyCount = propertyCacheArray.Length;
+                }
+
+                while (propertyCount > state.Current.EnumeratorIndex)
+                {
+                    JsonPropertyInfo jsonPropertyInfo = propertyCacheArray![state.Current.EnumeratorIndex];
                     state.Current.DeclaredJsonPropertyInfo = jsonPropertyInfo;
                     state.Current.NumberHandling = jsonPropertyInfo.NumberHandling;
 
                     if (jsonPropertyInfo.ShouldSerialize)
                     {
-                        if (!jsonPropertyInfo.GetMemberAndWriteJson(objectValue!, ref state, writer))
+                        if (jsonPropertyInfo == dataExtensionProperty)
                         {
-                            Debug.Assert(jsonPropertyInfo.ConverterBase.ConverterStrategy != ConverterStrategy.Value);
-                            return false;
+                            if (!jsonPropertyInfo.GetMemberAndWriteJsonExtensionData(objectValue!, ref state, writer))
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            if (!jsonPropertyInfo.GetMemberAndWriteJson(objectValue!, ref state, writer))
+                            {
+                                Debug.Assert(jsonPropertyInfo.ConverterBase.ConverterStrategy != ConverterStrategy.Value);
+                                return false;
+                            }
                         }
                     }
 
@@ -328,27 +343,6 @@ namespace System.Text.Json.Serialization.Converters
                     {
                         return false;
                     }
-                }
-
-                if (state.Current.EnumeratorIndex == propertyCount)
-                {
-                    JsonPropertyInfo? dataExtensionProperty = state.Current.JsonTypeInfo.DataExtensionProperty;
-                    if (dataExtensionProperty != null)
-                    {
-                        // Remember the current property for JsonPath support if an exception is thrown.
-                        state.Current.DeclaredJsonPropertyInfo = dataExtensionProperty;
-                        state.Current.NumberHandling = dataExtensionProperty.NumberHandling;
-
-                        if (!dataExtensionProperty.GetMemberAndWriteJsonExtensionData(objectValue, ref state, writer))
-                        {
-                            return false;
-                        }
-
-                        state.Current.EndProperty();
-                        // Since this is the last property, we can defer calling ShouldFlush().
-                    }
-
-                    state.Current.EnumeratorIndex++;
                 }
 
                 if (!state.Current.ProcessedEndToken)
