@@ -88,11 +88,13 @@
     <Compile Include="System\Text\Json\Serialization\IgnoreReferenceResolver.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonObjectMetadataHandler.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonSerializerContext.cs" />
+    <Compile Include="System\Text\Json\Serialization\Metadata\JsonCollectionInfo.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Collections.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Converters.cs" />
-    <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfoInternalOfT.cs" />
+    <Compile Include="System\Text\Json\Serialization\Metadata\JsonObjectInfo.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfoOfT.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.cs" />
+    <Compile Include="System\Text\Json\Serialization\Metadata\JsonValueInfo.cs" />
     <Compile Include="System\Text\Json\Serialization\ReferenceEqualsWrapper.cs" />
     <Compile Include="System\Text\Json\Serialization\ConverterStrategy.cs" />
     <Compile Include="System\Text\Json\Serialization\ConverterList.cs" />

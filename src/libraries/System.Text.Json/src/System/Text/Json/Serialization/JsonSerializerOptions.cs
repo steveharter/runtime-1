@@ -37,7 +37,7 @@ namespace System.Text.Json
         private MemberAccessor? _memberAccessorStrategy;
         private JsonNamingPolicy? _dictionaryKeyPolicy;
         private JsonNamingPolicy? _jsonPropertyNamingPolicy;
-        private JsonObjectMetadataHandler? _objectHandler;
+        private JsonObjectMetadataHandler? _objectMetadataHandler;
         private JsonCommentHandling _readCommentHandling;
         private ReferenceHandler? _referenceHandler;
         private JavaScriptEncoder? _encoder;
@@ -82,7 +82,7 @@ namespace System.Text.Json
             _memberAccessorStrategy = options._memberAccessorStrategy;
             _dictionaryKeyPolicy = options._dictionaryKeyPolicy;
             _jsonPropertyNamingPolicy = options._jsonPropertyNamingPolicy;
-            _objectHandler = options._objectHandler;
+            _objectMetadataHandler = options._objectMetadataHandler;
             _readCommentHandling = options._readCommentHandling;
             _referenceHandler = options._referenceHandler;
             _encoder = options._encoder;
@@ -437,16 +437,16 @@ namespace System.Text.Json
         /// <summary>
         /// todo
         /// </summary>
-        public JsonObjectMetadataHandler? ObjectHandler
+        public JsonObjectMetadataHandler? ObjectMetadataHandler
         {
             get
             {
-                return _objectHandler;
+                return _objectMetadataHandler;
             }
             set
             {
                 VerifyMutable();
-                _objectHandler = value;
+                _objectMetadataHandler = value;
             }
         }
 

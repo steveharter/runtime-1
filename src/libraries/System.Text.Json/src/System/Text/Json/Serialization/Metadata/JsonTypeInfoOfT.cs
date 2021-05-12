@@ -9,17 +9,19 @@ namespace System.Text.Json.Serialization.Metadata
     /// <summary>
     /// Provides JSON serialization-related metadata about a type.
     /// </summary>
-    /// <typeparam name="T">The generic definition of the type.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public abstract class JsonTypeInfo<T> : JsonTypeInfo
     {
-        internal JsonTypeInfo(Type type, JsonSerializerOptions options, ConverterStrategy converterStrategy) :
-            base(type, options, converterStrategy)
-        { }
-
-        internal JsonTypeInfo()
+        internal JsonTypeInfo(ConverterStrategy strategy, JsonSerializerOptions options) : base(typeof(T), options, strategy)
         {
-            Debug.Assert(false, "This constructor should not be called.");
+        }
+
+        internal void SetCreateObjectFunc(Func<T>? createObjectFunc)
+        {
+            if (createObjectFunc != null)
+            {
+                CreateObject = () => createObjectFunc();
+            }
         }
     }
 }

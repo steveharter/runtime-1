@@ -751,6 +751,7 @@ namespace System.Text.Json.Serialization
         protected JsonObjectMetadataHandler(System.Text.Json.JsonSerializerOptions options) { }
         public System.Text.Json.JsonSerializerOptions Options { get { throw null; } }
         protected System.Text.Json.Serialization.Metadata.JsonTypeInfo CreateEmptyTypeInfo(System.Type type) { throw null; }
+        protected System.Text.Json.Serialization.Metadata.JsonPropertyInfo CreateProperty<T>(string name) { throw null; }
         protected System.Text.Json.Serialization.Metadata.JsonTypeInfo CreateTypeInfoFromMetadata(System.Type type) { throw null; }
         public abstract System.Text.Json.Serialization.Metadata.JsonTypeInfo GetTypeInfo(System.Type type);
         protected bool TryAddTypeInfo(System.Text.Json.Serialization.Metadata.JsonTypeInfo typeInfo) { throw null; }

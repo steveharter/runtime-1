@@ -20,7 +20,7 @@ namespace System.Text.Json.Serialization.Metadata
             JsonSerializerOptions options,
             JsonTypeInfo elementInfo,
             JsonNumberHandling numberHandling)
-            => new JsonTypeInfoInternal<TElement[]>(
+            => new JsonCollectionInfo<TElement[]>(
                 options,
                 createObjectFunc: null,
                 new ArrayConverter<TElement[], TElement>(),
@@ -43,7 +43,7 @@ namespace System.Text.Json.Serialization.Metadata
             JsonTypeInfo elementInfo,
             JsonNumberHandling numberHandling)
             where TCollection : List<TElement>
-            => new JsonTypeInfoInternal<TCollection>(
+            => new JsonCollectionInfo<TCollection>(
                 options,
                 createObjectFunc,
                 new ListOfTConverter<TCollection, TElement>(),
@@ -70,7 +70,7 @@ namespace System.Text.Json.Serialization.Metadata
             JsonNumberHandling numberHandling)
             where TCollection : Dictionary<TKey, TValue>
             where TKey : notnull
-            => new JsonTypeInfoInternal<TCollection>(
+            => new JsonCollectionInfo<TCollection>(
                 options,
                 createObjectFunc,
                 new DictionaryOfTKeyTValueConverter<TCollection, TKey, TValue>(),

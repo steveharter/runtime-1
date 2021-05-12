@@ -6,13 +6,28 @@ using System.Text.Json.Serialization.Metadata;
 namespace System.Text.Json.Serialization
 {
     // notes:
-    // JsonTypeInfo to add static CreateJsonProperty() method that takes required info (name)
-    // and then adds public properties for rest (converter=nullbydefault, nullhandling, setter\getter)
-    // IList<JsonPropertyInfo> ConstructorParameters
-    // ConstructorFunc ConstructorFunc
-    // JsonTypeInfo.CreateFunc
+    // JsonTypeInfo to add
+    // - static JsonTypeInfo<TClass> Create<TClass>(JsonSerializerOptions options)
+    // - Converter {get;set} (null by default)
+    // - NumberHandling {get;set;}
+    // - JsonPropertyInfo CreateJsonProperty<TProperty>(string name, Func<in TClass, TProperty>? getter, Action<in TClass, TProperty>? setter)
 
-    // Remove JsonParameterInfo and combine with JsonPropertyInfo (add Position and DefaultValue property)
+    // Make JsonTypeInfo<T> public
+    // - Func<TClass> Constructor {get;set}
+
+    // Remove JsonTypeInfoInternal<T>? Combine with JsonTypeInfo<T>
+
+    // JsonPropertyInfo to add:
+    // - JsonIgnoreCondition
+    // - JsonNumberHandling
+    // - IList<JsonPropertyInfo> ConstructorParameters
+    // - ConstructorFunc ConstructorFunc
+    // - JsonTypeInfo.CreateFunc
+    // - JsonConverter Converter {get;set;}
+    // Remove internal JsonParameterInfo and combine with JsonPropertyInfo
+
+    // Internal for now and just used for constructors:
+    // - DefaultValue<TProperty> {get;set;}
 
     /// <summary>
     /// Determines the policy used to define the metadata for a JSON object which includes the list of properties

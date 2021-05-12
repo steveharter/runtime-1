@@ -81,7 +81,7 @@ namespace System.Text.Json.Serialization.Metadata
         /// </summary>
         /// <typeparam name="T">The type of the class or struct.</typeparam>
         /// <returns>A <see cref="JsonTypeInfo{T}"/> instance representing the class or struct.</returns>
-        public static JsonTypeInfo<T> CreateObjectInfo<T>() where T : notnull => new JsonTypeInfoInternal<T>();
+        public static JsonTypeInfo<T> CreateObjectInfo<T>() where T : notnull => new JsonObjectInfo<T>(null!);
 
         /// <summary>
         /// Initializes metadata for a class or struct.
@@ -123,7 +123,7 @@ namespace System.Text.Json.Serialization.Metadata
                 throw new ArgumentNullException(nameof(propInitFunc));
             }
 
-            ((JsonTypeInfoInternal<T>)info).InitializeAsObject(options, createObjectFunc, propInitFunc, numberHandling);
+            ((JsonObjectInfo<T>)info).InitializeAsObject(options, createObjectFunc, propInitFunc, numberHandling);
             Debug.Assert(info.PropertyInfoForTypeInfo!.ConverterStrategy == ConverterStrategy.Object);
         }
 
@@ -134,7 +134,7 @@ namespace System.Text.Json.Serialization.Metadata
         /// <returns>A <see cref="JsonTypeInfo{T}"/> instance representing the type.</returns>
         public static JsonTypeInfo<T> CreateValueInfo<T>(JsonSerializerOptions options, JsonConverter converter)
         {
-            JsonTypeInfo<T> info = new JsonTypeInfoInternal<T>(options);
+            JsonTypeInfo<T> info = new JsonValueInfo<T>(options);
             info.PropertyInfoForTypeInfo = CreateJsonPropertyInfoForClassInfo(typeof(T), info, converter, options);
             return info;
         }
