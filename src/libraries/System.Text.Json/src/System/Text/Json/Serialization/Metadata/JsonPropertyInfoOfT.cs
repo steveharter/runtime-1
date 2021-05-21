@@ -314,6 +314,18 @@ namespace System.Text.Json.Serialization.Metadata
                     writer.WritePropertyNameSection(EscapedNameSection);
                 }
 
+                if (Converter.CanBePolymorphic)
+                {
+                    Type actualRuntimeType = value.GetType();
+                    if (Converter.RuntimeType != actualRuntimeType)
+                    {
+                        JsonTypeInfo jsonTypeInfo = Options.GetOrAddClass(actualRuntimeType); // todo: remember last converter for perf
+                        JsonConverter converter = jsonTypeInfo.PropertyInfoForTypeInfo.ConverterBase;
+                        state.Current.PolymorphicJsonPropertyInfo = jsonTypeInfo.PropertyInfoForTypeInfo;
+                        return converter.TryWriteAsObject(writer, value, Options, ref state);
+                    }
+                }
+
                 return Converter.TryWrite(writer, value, Options, ref state);
             }
         }

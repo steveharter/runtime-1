@@ -18,10 +18,9 @@ namespace System.Text.Json.Serialization
         /// </summary>
         protected internal JsonConverter()
         {
-            // Today only typeof(object) can have polymorphic writes.
-            // In the future, this will be check for !IsSealed (and excluding value types).
-            CanBePolymorphic = TypeToConvert == JsonTypeInfo.ObjectType;
+            // Non-sealed types and typeof(object) for boxing can have polymorphic writes.
             IsValueType = TypeToConvert.IsValueType;
+            CanBePolymorphic = !TypeToConvert.IsSealed || TypeToConvert == JsonTypeInfo.ObjectType;
             CanBeNull = !IsValueType || TypeToConvert.IsNullableOfT();
             IsInternalConverter = GetType().Assembly == typeof(JsonConverter).Assembly;
 

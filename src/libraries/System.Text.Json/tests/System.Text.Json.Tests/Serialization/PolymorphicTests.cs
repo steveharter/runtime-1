@@ -43,6 +43,55 @@ namespace System.Text.Json.Serialization.Tests
             Serializer = serializer;
         }
 
+        public class POCO<T>
+        {
+            public T Value { get; set; }
+        }
+
+        [Fact]
+        public void PolymorphicNestedPoco()
+        {
+            POCO<POCO<int>> value = new() { Value = new() { Value = 42 } };
+
+            // System.InvalidCastException :
+            // Unable to cast object of type 'POCO`1[System.Int32]' to type 'POCO`1[System.Text.Json.Serialization.Tests.PolymorphicTests+POCO`1[System.Int32]]'.
+            //string json = JsonSerializer.Serialize(value);
+            string json = JsonSerializer.Serialize<object>(value);
+        }
+
+        private class MyPocoWithPolymorphic
+        {
+            public MyBase MyBaseProperty { get; set; } = new MyDerived();
+        }
+
+
+        private class MyBase
+        {
+            public int MyBaseProperty { get; set; } = 41;
+        }
+
+        private class MyDerived : MyBase
+        {
+            public int MyDerivedProperty { get; set; } = 42;
+        }
+
+
+        [Fact]
+        public void PolymorphicNestedPoco2()
+        {
+            var poco = new MyPocoWithPolymorphic();
+            string json = JsonSerializer.Serialize(poco);
+            Assert.Equal("{\"MyBaseProperty\":{\"MyDerivedProperty\":42,\"MyBaseProperty\":41}}", json);
+        }
+
+        [Fact]
+        public void PolymorphicRoot()
+        {
+            MyBase poco = new MyDerived();
+            string json = JsonSerializer.Serialize(poco);
+            Assert.Equal("{\"MyDerivedProperty\":42,\"MyBaseProperty\":41}", json);
+        }
+
         [Fact]
         public async Task PrimitivesAsRootObject()
         {
