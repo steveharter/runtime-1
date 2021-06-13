@@ -267,6 +267,7 @@ namespace System.Text.Json
         public bool IncludeFields { get { throw null; } set { } }
         public int MaxDepth { get { throw null; } set { } }
         public System.Text.Json.Serialization.JsonNumberHandling NumberHandling { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.JsonObjectInfoFactory? ObjectInfoFactory { get { throw null; } set { } }
         public bool PropertyNameCaseInsensitive { get { throw null; } set { } }
         public System.Text.Json.JsonNamingPolicy? PropertyNamingPolicy { get { throw null; } set { } }
         public System.Text.Json.JsonCommentHandling ReadCommentHandling { get { throw null; } set { } }
@@ -782,6 +783,14 @@ namespace System.Text.Json.Serialization
         Unspecified = 0,
         BuiltInCamelCase = 1,
     }
+    public partial class JsonNotificationHandler
+    {
+        public JsonNotificationHandler() { }
+        protected internal virtual void OnDeserialized<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
+        protected internal virtual void OnDeserializing<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
+        protected internal virtual void OnSerialized<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
+        protected internal virtual void OnSerializing<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
+    }
     [System.FlagsAttribute]
     public enum JsonNumberHandling
     {
@@ -897,7 +906,9 @@ namespace System.Text.Json.Serialization.Metadata
         public static System.Text.Json.Serialization.JsonConverter<System.Version> VersionConverter { get { throw null; } }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<TElement[]> CreateArrayInfo<TElement>(System.Text.Json.JsonSerializerOptions options, System.Text.Json.Serialization.Metadata.JsonTypeInfo elementInfo, System.Text.Json.Serialization.JsonNumberHandling numberHandling, System.Action<System.Text.Json.Utf8JsonWriter, TElement[]>? serializeFunc) { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<TCollection> CreateDictionaryInfo<TCollection, TKey, TValue>(System.Text.Json.JsonSerializerOptions options, System.Func<TCollection> createObjectFunc, System.Text.Json.Serialization.Metadata.JsonTypeInfo keyInfo, System.Text.Json.Serialization.Metadata.JsonTypeInfo valueInfo, System.Text.Json.Serialization.JsonNumberHandling numberHandling, System.Action<System.Text.Json.Utf8JsonWriter, TCollection>? serializeFunc) where TCollection : System.Collections.Generic.Dictionary<TKey, TValue> where TKey : notnull { throw null; }
+        public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateEmptyObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<TCollection> CreateListInfo<TCollection, TElement>(System.Text.Json.JsonSerializerOptions options, System.Func<TCollection>? createObjectFunc, System.Text.Json.Serialization.Metadata.JsonTypeInfo elementInfo, System.Text.Json.Serialization.JsonNumberHandling numberHandling, System.Action<System.Text.Json.Utf8JsonWriter, TCollection>? serializeFunc) where TCollection : System.Collections.Generic.List<TElement> { throw null; }
+        public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateObjectInfo<T>(System.Text.Json.JsonSerializerOptions options, System.Func<T>? createObjectFunc, System.Func<System.Text.Json.Serialization.JsonSerializerContext, System.Text.Json.Serialization.Metadata.JsonPropertyInfo[]>? propInitFunc, System.Text.Json.Serialization.JsonNumberHandling numberHandling, System.Action<System.Text.Json.Utf8JsonWriter, T>? serializeFunc) where T : notnull { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonPropertyInfo CreatePropertyInfo<T>(System.Text.Json.JsonSerializerOptions options, bool isProperty, System.Type declaringType, System.Text.Json.Serialization.Metadata.JsonTypeInfo propertyTypeInfo, System.Text.Json.Serialization.JsonConverter<T>? converter, System.Func<object, T>? getter, System.Action<object, T>? setter, System.Text.Json.Serialization.JsonIgnoreCondition ignoreCondition, System.Text.Json.Serialization.JsonNumberHandling numberHandling, string propertyName, string? jsonPropertyName) { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateValueInfo<T>(System.Text.Json.JsonSerializerOptions options, System.Text.Json.Serialization.JsonConverter converter) { throw null; }
@@ -911,10 +922,16 @@ namespace System.Text.Json.Serialization.Metadata
     public partial class JsonTypeInfo
     {
         internal JsonTypeInfo() { }
+        public System.Text.Json.Serialization.JsonNumberHandling? NumberHandling { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.JsonPropertyInfo CreateProperty(string name, System.Type type, System.Text.Json.Serialization.JsonConverter? converter = null) { throw null; }
     }
     public abstract partial class JsonTypeInfo<T> : System.Text.Json.Serialization.Metadata.JsonTypeInfo
     {
         internal JsonTypeInfo() { }
         public System.Action<System.Text.Json.Utf8JsonWriter, T>? Serialize { get { throw null; } }
+        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnDeserialized { get { throw null; } set { } }
+        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnDeserializing { get { throw null; } set { } }
+        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnSerialized { get { throw null; } set { } }
+        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnSerializing { get { throw null; } set { } }
     }
 }

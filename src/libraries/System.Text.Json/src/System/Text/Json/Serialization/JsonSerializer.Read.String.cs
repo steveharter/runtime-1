@@ -359,6 +359,8 @@ namespace System.Text.Json
 
             byte[]? tempArray = null;
 
+            jsonTypeInfo.IsReadOnly = true;
+
             // For performance, avoid obtaining actual byte count unless memory usage is higher than the threshold.
             Span<byte> utf8 = json.Length <= (ArrayPoolMaxSizeBeforeUsingNormalAlloc / JsonConstants.MaxExpansionFactorWhileTranscoding) ?
                 // Use a pooled alloc.

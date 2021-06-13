@@ -15,8 +15,6 @@ namespace System.Text.Json.Serialization.Metadata
     [DebuggerDisplay("ConverterStrategy.{ConverterStrategy}, {Type.Name}")]
     public partial class JsonTypeInfo
     {
-        internal const string JsonObjectTypeName = "System.Text.Json.Nodes.JsonObject";
-
         internal delegate object? ConstructorDelegate();
 
         internal delegate T ParameterizedConstructorDelegate<T>(object[] arguments);
@@ -34,6 +32,21 @@ namespace System.Text.Json.Serialization.Metadata
 
         // If enumerable or dictionary, the JsonTypeInfo for the element type.
         private JsonTypeInfo? _elementTypeInfo;
+
+        private bool _isReadonly;
+        internal bool IsReadOnly
+        {
+            get
+            {
+                return _isReadonly;
+            }
+
+            set
+            {
+                Debug.Assert(value == true);
+                _isReadonly = value;
+            }
+        }
 
         /// <summary>
         /// Return the JsonTypeInfo for the element type, or null if the type is not an enumerable or dictionary.
@@ -140,7 +153,48 @@ namespace System.Text.Json.Serialization.Metadata
             }
         }
 
-        internal JsonNumberHandling? NumberHandling { get; set; }
+        private JsonNumberHandling? _numberHandling;
+        /// <summary>
+        /// todo
+        /// </summary>
+        public JsonNumberHandling? NumberHandling
+        {
+            get
+            {
+                return _numberHandling;
+            }
+            set
+            {
+                if (IsReadOnly)
+                {
+                    throw new InvalidOperationException("todo");
+                }
+
+                _numberHandling = value;
+            }
+        }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        /// <param name="converter"></param>
+        /// <returns></returns>
+        public JsonPropertyInfo CreateProperty(string name, Type type, JsonConverter? converter = null)
+        {
+            converter = converter ?? Options.GetConverter(type);
+
+            JsonPropertyInfo property = converter.CreateJsonPropertyInfo();
+            property.ClrName = name;
+            property.InitializeForTypeInfo(
+                Type,
+                this,
+                converter,
+                Options);
+
+            return property;
+        }
 
         internal JsonTypeInfo()
         {
@@ -512,7 +566,7 @@ namespace System.Text.Json.Serialization.Metadata
             if (typeof(IDictionary<string, object>).IsAssignableFrom(memberType) ||
                 typeof(IDictionary<string, JsonElement>).IsAssignableFrom(memberType) ||
                 // Avoid a reference to typeof(JsonNode) to support trimming.
-                (memberType.FullName == JsonObjectTypeName && ReferenceEquals(memberType.Assembly, GetType().Assembly)))
+                (memberType.FullName == nameof(Nodes.JsonNode) && ReferenceEquals(memberType.Assembly, GetType().Assembly)))
             {
                 converter = Options.GetConverterInternal(memberType);
             }

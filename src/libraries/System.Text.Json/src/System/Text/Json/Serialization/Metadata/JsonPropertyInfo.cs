@@ -21,11 +21,9 @@ namespace System.Text.Json.Serialization.Metadata
 
         internal ConverterStrategy ConverterStrategy;
 
-        internal abstract JsonConverter ConverterBase { get; set; }
+        internal JsonPropertyInfo() { }
 
-        internal JsonPropertyInfo()
-        {
-        }
+        internal abstract JsonConverter ConverterBase { get; set; }
 
         internal static JsonPropertyInfo GetPropertyPlaceholder()
         {
@@ -35,7 +33,7 @@ namespace System.Text.Json.Serialization.Metadata
             Debug.Assert(!info.ShouldDeserialize);
             Debug.Assert(!info.ShouldSerialize);
 
-            info.NameAsString = string.Empty;
+            info.NameAsString = info.ClrName = string.Empty;
 
             return info;
         }
@@ -312,7 +310,7 @@ namespace System.Text.Json.Serialization.Metadata
         {
             Debug.Assert(converter != null);
 
-            ClrName = memberInfo?.Name;
+            ClrName = memberInfo?.Name!;
             DeclaringType = parentClassType;
             DeclaredPropertyType = declaredPropertyType;
             RuntimePropertyType = runtimePropertyType;
@@ -335,6 +333,11 @@ namespace System.Text.Json.Serialization.Metadata
         /// True if the corresponding cref="JsonTypeInfo.PropertyInfoForTypeInfo"/> is this instance.
         /// </summary>
         internal bool IsForTypeInfo { get; set; }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        public string JsonName => NameAsString;
 
         // There are 3 copies of the property name:
         // 1) NameAsString. The unescaped property name.
@@ -488,6 +491,9 @@ namespace System.Text.Json.Serialization.Metadata
 
         internal MemberTypes MemberType { get; set; } // TODO: with some refactoring, we should be able to remove this.
 
-        internal string? ClrName { get; set; }
+        /// <summary>
+        /// todo
+        /// </summary>
+        public string ClrName { get; internal set; } = null!;
     }
 }

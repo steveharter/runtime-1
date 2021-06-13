@@ -37,6 +37,7 @@ namespace System.Text.Json
         private MemberAccessor? _memberAccessorStrategy;
         private JsonNamingPolicy? _dictionaryKeyPolicy;
         private JsonNamingPolicy? _jsonPropertyNamingPolicy;
+        private JsonObjectInfoFactory? _objectInfoFactory;
         private JsonCommentHandling _readCommentHandling;
         private ReferenceHandler? _referenceHandler;
         private JavaScriptEncoder? _encoder;
@@ -81,6 +82,7 @@ namespace System.Text.Json
             _memberAccessorStrategy = options._memberAccessorStrategy;
             _dictionaryKeyPolicy = options._dictionaryKeyPolicy;
             _jsonPropertyNamingPolicy = options._jsonPropertyNamingPolicy;
+            _objectInfoFactory = options._objectInfoFactory;
             _readCommentHandling = options._readCommentHandling;
             _referenceHandler = options._referenceHandler;
             _encoder = options._encoder;
@@ -433,6 +435,22 @@ namespace System.Text.Json
         internal int EffectiveMaxDepth { get; private set; } = JsonReaderOptions.DefaultMaxDepth;
 
         /// <summary>
+        /// todo
+        /// </summary>
+        public JsonObjectInfoFactory? ObjectInfoFactory
+        {
+            get
+            {
+                return _objectInfoFactory;
+            }
+            set
+            {
+                VerifyMutable();
+                _objectInfoFactory = value;
+            }
+        }
+
+        /// <summary>
         /// Specifies the policy used to convert a property's name on an object to another format, such as camel-casing.
         /// The resulting property name is expected to match the JSON payload during deserialization, and
         /// will be used when writing the property name during serialization.
@@ -611,6 +629,23 @@ namespace System.Text.Json
             return _typeInfoCreationFunc(type, this);
         }
 
+        internal bool TryAddTypeInfo(JsonTypeInfo typeInfo)
+        {
+            _haveTypesBeenCreated = true;
+            return _classes.TryAdd(typeInfo.Type, typeInfo);
+        }
+
+        internal JsonTypeInfo CreateTypeInfo(Type type)
+        {
+            if (_typeInfoCreationFunc == null)
+            {
+                ThrowHelper.ThrowNotSupportedException_NoMetadataForType(type);
+                return null!;
+            }
+
+            return _typeInfoCreationFunc(type, this);
+        }
+
         /// <summary>
         /// Return the TypeInfo for root API calls.
         /// This has a LRU cache that is intended only for public API calls that specify the root type.
@@ -622,6 +657,11 @@ namespace System.Text.Json
             {
                 jsonTypeInfo = GetOrAddClass(type);
                 _lastClass = jsonTypeInfo;
+            }
+            else
+            {
+                // Assume this method is called during (de)serialization and thus lock down the type.
+                jsonTypeInfo.IsReadOnly = true;
             }
 
             return jsonTypeInfo;

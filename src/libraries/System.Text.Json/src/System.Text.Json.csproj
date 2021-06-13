@@ -92,9 +92,12 @@
     <Compile Include="System\Text\Json\Serialization\Attributes\JsonSerializableAttribute.cs" />
     <Compile Include="System\Text\Json\Serialization\Converters\JsonMetadataServicesConverter.cs" />
     <Compile Include="System\Text\Json\Serialization\IgnoreReferenceResolver.cs" />
+    <Compile Include="System\Text\Json\Serialization\Metadata\JsonObjectInfoFactory.cs" />
+    <Compile Include="System\Text\Json\Serialization\JsonNotificationHandler.cs" />
     <Compile Include="System\Text\Json\Serialization\JsonSerializerContext.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Collections.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Converters.cs" />
+    <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Objects.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfoInternalOfT.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfoOfT.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.cs" />
@@ -315,6 +318,8 @@
     <ProjectReference Include="$(LibrariesProjectRoot)Microsoft.Bcl.AsyncInterfaces\src\Microsoft.Bcl.AsyncInterfaces.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!--
     <AnalyzerReference Include="..\gen\System.Text.Json.SourceGeneration.csproj" />
+    -->
   </ItemGroup>
 </Project>
