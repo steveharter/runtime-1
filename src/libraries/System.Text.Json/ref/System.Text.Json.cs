@@ -915,9 +915,17 @@ namespace System.Text.Json.Serialization.Metadata
         public static System.Text.Json.Serialization.JsonConverter<T> GetEnumConverter<T>(System.Text.Json.JsonSerializerOptions options) where T : struct { throw null; }
         public static System.Text.Json.Serialization.JsonConverter<T?> GetNullableConverter<T>(System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> underlyingTypeInfo) where T : struct { throw null; }
     }
+    public abstract partial class JsonObjectInfoFactory
+    {
+        protected JsonObjectInfoFactory(System.Text.Json.JsonSerializerOptions options) { }
+        public System.Text.Json.JsonSerializerOptions Options { get { throw null; } }
+        protected abstract System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> Create<T>();
+    }
     public abstract partial class JsonPropertyInfo
     {
         internal JsonPropertyInfo() { }
+        public string ClrName { get { throw null; } }
+        public string JsonName { get { throw null; } }
     }
     public partial class JsonTypeInfo
     {
