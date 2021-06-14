@@ -15,6 +15,8 @@ namespace System.Text.Json.Serialization.Metadata
     [DebuggerDisplay("ConverterStrategy.{ConverterStrategy}, {Type.Name}")]
     public partial class JsonTypeInfo
     {
+        internal const string JsonObjectTypeName = "System.Text.Json.Nodes.JsonObject";
+
         internal delegate object? ConstructorDelegate();
 
         internal delegate T ParameterizedConstructorDelegate<T>(object[] arguments);
@@ -565,8 +567,8 @@ namespace System.Text.Json.Serialization.Metadata
             JsonConverter? converter = null;
             if (typeof(IDictionary<string, object>).IsAssignableFrom(memberType) ||
                 typeof(IDictionary<string, JsonElement>).IsAssignableFrom(memberType) ||
-                // Avoid a reference to typeof(JsonNode) to support trimming.
-                (memberType.FullName == nameof(Nodes.JsonNode) && ReferenceEquals(memberType.Assembly, GetType().Assembly)))
+                // Avoid a reference to typeof(JsonObject) to support trimming.
+                (memberType.FullName == JsonObjectTypeName && ReferenceEquals(memberType.Assembly, GetType().Assembly)))
             {
                 converter = Options.GetConverterInternal(memberType);
             }

@@ -594,6 +594,10 @@ namespace System.Text.Json.Serialization.Tests
                     options.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                     options.UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode;
                 }
+                else if (propertyType == typeof(Metadata.JsonObjectInfoFactory))
+                {
+                    options.ObjectInfoFactory = null;
+                }
                 else
                 {
                     // An exception thrown from here means this test should be updated

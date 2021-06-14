@@ -117,8 +117,8 @@ namespace System.Text.Json
 #endif
                 if (jsonPropertyInfo.RuntimeTypeInfo.CreateObject == null)
                 {
-                    // Avoid a reference to the JsonNode type for trimming
-                    if (jsonPropertyInfo.DeclaredPropertyType.FullName == nameof(Nodes.JsonObject))
+                    // Avoid a reference to the JsonObject type for trimming
+                    if (jsonPropertyInfo.DeclaredPropertyType.FullName == JsonTypeInfo.JsonObjectTypeName)
                     {
                         extensionData = jsonPropertyInfo.ConverterBase.CreateObject(options);
                     }
