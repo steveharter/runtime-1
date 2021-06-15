@@ -97,7 +97,7 @@
     <Compile Include="System\Text\Json\Serialization\JsonSerializerContext.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Collections.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Converters.cs" />
-    <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.Objects.cs" />
+    <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfo.CreateProperty.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfoInternalOfT.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonTypeInfoOfT.cs" />
     <Compile Include="System\Text\Json\Serialization\Metadata\JsonMetadataServices.cs" />

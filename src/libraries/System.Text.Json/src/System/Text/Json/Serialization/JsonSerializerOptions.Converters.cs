@@ -195,7 +195,7 @@ namespace System.Text.Json
             if (converter == null)
             {
                 JsonConverterAttribute? converterAttribute = (JsonConverterAttribute?)
-                    GetAttributeThatCanHaveMultiple(typeToConvert, typeof(JsonConverterAttribute));
+                    typeToConvert.GetCustomAttribute(typeof(JsonConverterAttribute));
 
                 if (converterAttribute != null)
                 {
@@ -316,17 +316,7 @@ namespace System.Text.Json
         private static Attribute? GetAttributeThatCanHaveMultiple(Type classType, Type attributeType, MemberInfo memberInfo)
         {
             object[] attributes = memberInfo.GetCustomAttributes(attributeType, inherit: false);
-            return GetAttributeThatCanHaveMultiple(attributeType, classType, memberInfo, attributes);
-        }
 
-        internal static Attribute? GetAttributeThatCanHaveMultiple(Type classType, Type attributeType)
-        {
-            object[] attributes = classType.GetCustomAttributes(attributeType, inherit: false);
-            return GetAttributeThatCanHaveMultiple(attributeType, classType, null, attributes);
-        }
-
-        private static Attribute? GetAttributeThatCanHaveMultiple(Type attributeType, Type classType, MemberInfo? memberInfo, object[] attributes)
-        {
             if (attributes.Length == 0)
             {
                 return null;
