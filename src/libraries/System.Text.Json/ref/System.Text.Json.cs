@@ -267,7 +267,7 @@ namespace System.Text.Json
         public bool IncludeFields { get { throw null; } set { } }
         public int MaxDepth { get { throw null; } set { } }
         public System.Text.Json.Serialization.JsonNumberHandling NumberHandling { get { throw null; } set { } }
-        public System.Text.Json.Serialization.Metadata.JsonObjectInfoFactory? ObjectInfoFactory { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.JsonObjectInfoHandler? ObjectInfoHandler { get { throw null; } set { } }
         public bool PropertyNameCaseInsensitive { get { throw null; } set { } }
         public System.Text.Json.JsonNamingPolicy? PropertyNamingPolicy { get { throw null; } set { } }
         public System.Text.Json.JsonCommentHandling ReadCommentHandling { get { throw null; } set { } }
@@ -913,11 +913,11 @@ namespace System.Text.Json.Serialization.Metadata
         public static System.Text.Json.Serialization.JsonConverter<T> GetEnumConverter<T>(System.Text.Json.JsonSerializerOptions options) where T : struct { throw null; }
         public static System.Text.Json.Serialization.JsonConverter<T?> GetNullableConverter<T>(System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> underlyingTypeInfo) where T : struct { throw null; }
     }
-    public abstract partial class JsonObjectInfoFactory
+    public abstract partial class JsonObjectInfoHandler
     {
-        protected JsonObjectInfoFactory(System.Text.Json.JsonSerializerOptions options) { }
+        protected JsonObjectInfoHandler(System.Text.Json.JsonSerializerOptions options) { }
         public System.Text.Json.JsonSerializerOptions Options { get { throw null; } }
-        protected abstract System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> Create<T>();
+        protected abstract void Created(System.Text.Json.Serialization.Metadata.JsonTypeInfo objectTypeInfo);
     }
     public abstract partial class JsonPropertyInfo
     {

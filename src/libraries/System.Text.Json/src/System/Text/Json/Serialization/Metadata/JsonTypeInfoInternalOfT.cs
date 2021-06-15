@@ -17,6 +17,7 @@ namespace System.Text.Json.Serialization.Metadata
         public JsonTypeInfoInternal(JsonSerializerOptions options, ConverterStrategy converterStrategy)
             : base(typeof(T), options, converterStrategy)
         {
+            CallObjectInfoHandler();
         }
 
         /// <summary>
@@ -46,6 +47,7 @@ namespace System.Text.Json.Serialization.Metadata
             PropInitFunc = propInitFunc;
             Serialize = serializeFunc;
             SetCreateObjectFunc(createObjectFunc);
+            CallObjectInfoHandler();
         }
 
         /// <summary>
@@ -68,6 +70,7 @@ namespace System.Text.Json.Serialization.Metadata
             PropertyInfoForTypeInfo = JsonMetadataServices.CreateJsonPropertyInfoForClassInfo(typeof(T), this, converter, options);
             Serialize = serializeFunc;
             SetCreateObjectFunc(createObjectFunc);
+            CallObjectInfoHandler();
         }
 
         /// <summary>
@@ -95,6 +98,7 @@ namespace System.Text.Json.Serialization.Metadata
             PropertyInfoForTypeInfo = JsonMetadataServices.CreateJsonPropertyInfoForClassInfo(typeof(T), this, converter, options);
             Serialize = serializeFunc;
             SetCreateObjectFunc(createObjectFunc);
+            CallObjectInfoHandler();
         }
 
         private void SetCreateObjectFunc(Func<T>? createObjectFunc)
@@ -102,6 +106,15 @@ namespace System.Text.Json.Serialization.Metadata
             if (createObjectFunc != null)
             {
                 CreateObject = () => createObjectFunc();
+            }
+        }
+
+        private void CallObjectInfoHandler()
+        {
+            if (PropertyInfoForTypeInfo.ConverterStrategy == ConverterStrategy.Object)
+            {
+                JsonObjectInfoHandler? handler = Options.ObjectInfoHandler;
+                handler?.OnCreated(this);
             }
         }
     }

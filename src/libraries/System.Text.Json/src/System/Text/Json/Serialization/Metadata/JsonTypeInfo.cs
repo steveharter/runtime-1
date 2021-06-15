@@ -464,7 +464,7 @@ namespace System.Text.Json.Serialization.Metadata
             // the parameter name to the object property name and do not use the JSON version of the name here.
             var nameLookup = new Dictionary<ParameterLookupKey, ParameterLookupValue>(PropertyCache!.Count);
 
-            foreach (KeyValuePair<string, JsonPropertyInfo?> kvp in PropertyCache.List)
+            foreach (KeyValuePair<string, JsonPropertyInfo?> kvp in PropertyCache.RawList)
             {
                 JsonPropertyInfo jsonProperty = kvp.Value!;
                 string propertyName = jsonProperty.MemberInfo!.Name;

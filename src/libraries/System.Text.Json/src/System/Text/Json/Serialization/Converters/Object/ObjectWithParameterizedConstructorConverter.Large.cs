@@ -56,7 +56,7 @@ namespace System.Text.Json.Serialization.Converters
                 typeInfo.CreateObjectWithArgs = options.MemberAccessorStrategy.CreateParameterizedConstructor<T>(ConstructorInfo!);
             }
 
-            List<KeyValuePair<string, JsonParameterInfo?>> cache = typeInfo.ParameterCache!.List;
+            List<KeyValuePair<string, JsonParameterInfo?>> cache = typeInfo.ParameterCache!.RawList;
             object[] arguments = ArrayPool<object>.Shared.Rent(cache.Count);
             for (int i = 0; i < typeInfo.ParameterCount; i++)
             {

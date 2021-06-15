@@ -280,7 +280,7 @@ namespace System.Text.Json.Nodes
                         node.Parent = this;
                     }
 
-                    dictionary.Add(new KeyValuePair<string, JsonNode?>(jElementProperty.Name, node));
+                    dictionary.Add(jElementProperty.Name, node);
                 }
 
                 _jsonElement = null;

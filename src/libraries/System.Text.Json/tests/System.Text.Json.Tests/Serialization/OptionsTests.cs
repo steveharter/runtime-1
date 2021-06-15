@@ -594,9 +594,9 @@ namespace System.Text.Json.Serialization.Tests
                     options.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                     options.UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode;
                 }
-                else if (propertyType == typeof(Metadata.JsonObjectInfoFactory))
+                else if (propertyType == typeof(Metadata.JsonObjectInfoHandler))
                 {
-                    options.ObjectInfoFactory = null;
+                    options.ObjectInfoHandler = null;
                 }
                 else
                 {

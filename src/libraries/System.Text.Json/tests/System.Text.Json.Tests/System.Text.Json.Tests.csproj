@@ -133,6 +133,7 @@
     <Compile Include="Serialization\MetadataTests\MetadataTests.JsonMetadataServices.cs" />
     <Compile Include="Serialization\MetadataTests\MetadataTests.JsonSerializer.cs" />
     <Compile Include="Serialization\MetadataTests\MetadataTests.Options.cs" />
+    <Compile Include="Serialization\MetadataTests\ObjectInfoTests.cs" />
     <Compile Include="Serialization\Null.ReadTests.cs" />
     <Compile Include="Serialization\Null.WriteTests.cs" />
     <Compile Include="Serialization\NullableTests.cs" />

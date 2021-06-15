@@ -32,9 +32,9 @@ namespace System.Text.Json
         }
 
         // Enable direct access to the List for performance reasons.
-        public List<KeyValuePair<string, T?>> List => _propertyList;
+        public List<KeyValuePair<string, T?>> RawList => _propertyList;
 
-        public void Add(string propertyName, T? value)
+        public void Add(string propertyName, T? value, int? index = null)
         {
             if (IsReadOnly)
             {
@@ -46,17 +46,7 @@ namespace System.Text.Json
                 throw new ArgumentNullException(nameof(propertyName));
             }
 
-            AddValue(propertyName, value);
-        }
-
-        public void Add(KeyValuePair<string, T?> property)
-        {
-            if (IsReadOnly)
-            {
-                ThrowHelper.ThrowNotSupportedException_NodeCollectionIsReadOnly();
-            }
-
-            Add(property.Key, property.Value);
+            AddValue(propertyName, value, index);
         }
 
         public bool TryAdd(string propertyName, T value)
@@ -116,6 +106,27 @@ namespace System.Text.Json
             return TryRemoveProperty(propertyName, out T? removedValue);
         }
 
+        public void RemoveAt(int index)
+        {
+            if (IsReadOnly)
+            {
+                ThrowHelper.ThrowNotSupportedException_NodeCollectionIsReadOnly();
+            }
+
+            if (index < 0 || index > _propertyList.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index)); //todo
+            }
+
+            if (_propertyDictionary != null)
+            {
+                KeyValuePair<string, T?> kvp = _propertyList[index];
+                _propertyDictionary.Remove(kvp.Key);
+            }
+
+            _propertyList.RemoveAt(index);
+        }
+
         public bool Contains(KeyValuePair<string, T?> item)
         {
             foreach (KeyValuePair<string, T?> existing in this)
@@ -144,6 +155,24 @@ namespace System.Text.Json
                 }
 
                 array[index++] = item;
+            }
+        }
+
+        public void CopyTo(T?[] array, int index)
+        {
+            if (index < 0)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_NodeArrayIndexNegative(nameof(index));
+            }
+
+            foreach (KeyValuePair<string, T?> item in _propertyList)
+            {
+                if (index >= array.Length)
+                {
+                    ThrowHelper.ThrowArgumentException_NodeArrayTooSmall(nameof(array));
+                }
+
+                array[index++] = item.Value;
             }
         }
 
@@ -274,15 +303,15 @@ namespace System.Text.Json
             return existing;
         }
 
-        private void AddValue(string propertyName, T? value)
+        private void AddValue(string propertyName, T? value, int? index)
         {
-            if (!TryAddValue(propertyName, value))
+            if (!TryAddValue(propertyName, value, index))
             {
                 ThrowHelper.ThrowArgumentException_DuplicateKey(propertyName);
             }
         }
 
-        private bool TryAddValue(string propertyName, T? value)
+        private bool TryAddValue(string propertyName, T? value, int? index = null)
         {
             if (IsReadOnly)
             {
@@ -307,7 +336,14 @@ namespace System.Text.Json
                 }
             }
 
-            _propertyList.Add(new KeyValuePair<string, T?>(propertyName, value));
+            if (index.HasValue)
+            {
+                _propertyList.Insert(index.Value, new KeyValuePair<string, T?>(propertyName, value));
+            }
+            else
+            {
+                _propertyList.Add(new KeyValuePair<string, T?>(propertyName, value));
+            }
             return true;
         }
 
@@ -330,6 +366,20 @@ namespace System.Text.Json
             }
 
             return false;
+        }
+
+        public int IndexOf(T? value)
+        {
+            for (int i = 0; i < _propertyList.Count; i++)
+            {
+                KeyValuePair<string, T?> current = _propertyList[i];
+                if (ReferenceEquals(current.Value, value))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public KeyValuePair<string, T?>? FindValue(T? value)

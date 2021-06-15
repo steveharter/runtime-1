@@ -86,7 +86,7 @@ namespace System.Text.Json.Serialization.Converters
 
             var arguments = new Arguments<TArg0, TArg1, TArg2, TArg3>();
 
-            List<KeyValuePair<string, JsonParameterInfo?>> cache = typeInfo.ParameterCache!.List;
+            List<KeyValuePair<string, JsonParameterInfo?>> cache = typeInfo.ParameterCache!.RawList;
             for (int i = 0; i < typeInfo.ParameterCount; i++)
             {
                 JsonParameterInfo? parameterInfo = cache[i].Value;

@@ -31,12 +31,12 @@ namespace System.Text.Json.Serialization.Metadata
     /// Determines the policy used to define the metadata for a JSON object which includes the list of properties
     /// and their behavior.
     /// </summary>
-    public abstract class JsonObjectInfoFactory
+    public abstract class JsonObjectInfoHandler
     {
         /// <summary>
-        /// Initializes a new instance of <see cref="JsonObjectInfoFactory"/>.
+        /// Initializes a new instance of <see cref="JsonObjectInfoHandler"/>.
         /// </summary>
-        protected JsonObjectInfoFactory(JsonSerializerOptions options)
+        protected JsonObjectInfoHandler(JsonSerializerOptions options)
         {
             Options = options;
         }
@@ -46,10 +46,14 @@ namespace System.Text.Json.Serialization.Metadata
         /// </summary>
         public JsonSerializerOptions Options { get; }
 
+        internal void OnCreated(JsonTypeInfo objectTypeInfo)
+        {
+            Created(objectTypeInfo);
+        }
+
         /// <summary>
         /// todo
         /// </summary>
-        /// <returns></returns>
-        protected abstract JsonTypeInfo<T> Create<T>();
+        protected abstract void Created(JsonTypeInfo objectTypeInfo);
     }
 }
