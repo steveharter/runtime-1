@@ -948,19 +948,19 @@ namespace System.Text.Json.Serialization.Metadata
     public partial class JsonTypeInfo
     {
         internal JsonTypeInfo() { }
-        public System.Text.Json.Serialization.Metadata.JsonPropertyInfo CreateProperty(System.Reflection.MemberInfo memberInfo) { throw null; }
-        public System.Text.Json.Serialization.Metadata.JsonPropertyInfoCollection Properties { get { throw null; } set { } }
         public System.Text.Json.Serialization.JsonNumberHandling? NumberHandling { get { throw null; } set { } }
+        public System.Action<object>? OnDeserialized { get { throw null; } set { } }
+        public System.Action<object>? OnDeserializing { get { throw null; } set { } }
+        public System.Action<object>? OnSerialized { get { throw null; } set { } }
+        public System.Action<object>? OnSerializing { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.JsonPropertyInfoCollection Properties { get { throw null; } set { } }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateEmptyObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }
+        public System.Text.Json.Serialization.Metadata.JsonPropertyInfo CreateProperty(System.Reflection.MemberInfo memberInfo) { throw null; }
     }
     public abstract partial class JsonTypeInfo<T> : System.Text.Json.Serialization.Metadata.JsonTypeInfo
     {
         internal JsonTypeInfo() { }
         public System.Action<System.Text.Json.Utf8JsonWriter, T>? Serialize { get { throw null; } }
-        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnDeserialized { get { throw null; } set { } }
-        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnDeserializing { get { throw null; } set { } }
-        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnSerialized { get { throw null; } set { } }
-        public System.Action<T, System.Text.Json.Serialization.Metadata.JsonTypeInfo>? OnSerializing { get { throw null; } set { } }
     }
 }
