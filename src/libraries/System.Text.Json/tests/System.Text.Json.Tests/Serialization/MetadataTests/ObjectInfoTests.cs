@@ -33,9 +33,8 @@ namespace System.Text.Json.Tests.Serialization
 
             protected override void Created(JsonTypeInfo objectTypeInfo)
             {
-                IList<JsonPropertyInfo> list = objectTypeInfo.Properties.List;
-
-                List<JsonPropertyInfo> original = list.ToList();
+                // Make a copy of the original since changing the property name affects the underlying list and existing enumerators.
+                List<JsonPropertyInfo> original = objectTypeInfo.Properties.List.ToList();
 
                 foreach (JsonPropertyInfo info in original)
                 {

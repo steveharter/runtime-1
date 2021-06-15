@@ -18,6 +18,7 @@ namespace System.Text.Json.Serialization.Metadata
             : base(typeof(T), options, converterStrategy)
         {
             CallObjectInfoHandler();
+            GetAllOnSerializeAttributes();
         }
 
         internal JsonTypeInfoInternal(JsonConverter converter, JsonSerializerOptions options)
@@ -40,6 +41,8 @@ namespace System.Text.Json.Serialization.Metadata
             {
                 ThrowHelper.ThrowInvalidOperationException_PropInitAndSerializeFuncsNull();
             }
+
+            // todo: pass in the OnSerialize methods
 
 #pragma warning disable CS8714
             // The type cannot be used as type parameter in the generic type or method.
@@ -75,7 +78,6 @@ namespace System.Text.Json.Serialization.Metadata
             PropertyInfoForTypeInfo = JsonMetadataServices.CreateJsonPropertyInfoForClassInfo(typeof(T), this, converter, options);
             Serialize = serializeFunc;
             SetCreateObjectFunc(createObjectFunc);
-            CallObjectInfoHandler();
         }
 
         /// <summary>
@@ -103,7 +105,6 @@ namespace System.Text.Json.Serialization.Metadata
             PropertyInfoForTypeInfo = JsonMetadataServices.CreateJsonPropertyInfoForClassInfo(typeof(T), this, converter, options);
             Serialize = serializeFunc;
             SetCreateObjectFunc(createObjectFunc);
-            CallObjectInfoHandler();
         }
 
         private void SetCreateObjectFunc(Func<T>? createObjectFunc)

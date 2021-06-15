@@ -783,14 +783,6 @@ namespace System.Text.Json.Serialization
         Unspecified = 0,
         BuiltInCamelCase = 1,
     }
-    public partial class JsonNotificationHandler
-    {
-        public JsonNotificationHandler() { }
-        protected internal virtual void OnDeserialized<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
-        protected internal virtual void OnDeserializing<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
-        protected internal virtual void OnSerialized<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
-        protected internal virtual void OnSerializing<T>(in T obj, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo) { }
-    }
     [System.FlagsAttribute]
     public enum JsonNumberHandling
     {
@@ -804,6 +796,25 @@ namespace System.Text.Json.Serialization
     {
         public JsonNumberHandlingAttribute(System.Text.Json.Serialization.JsonNumberHandling handling) { }
         public System.Text.Json.Serialization.JsonNumberHandling Handling { get { throw null; } }
+    }
+    public sealed partial class JsonOnDeserializedAttribute : System.Text.Json.Serialization.JsonAttribute
+    {
+        public JsonOnDeserializedAttribute() { }
+    }
+    [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple = false)]
+    public sealed partial class JsonOnDeserializingAttribute : System.Text.Json.Serialization.JsonAttribute
+    {
+        public JsonOnDeserializingAttribute() { }
+    }
+    [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple = false)]
+    public sealed partial class JsonOnSerializedAttribute : System.Text.Json.Serialization.JsonAttribute
+    {
+        public JsonOnSerializedAttribute() { }
+    }
+    [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple = false)]
+    public sealed partial class JsonOnSerializingAttribute : System.Text.Json.Serialization.JsonAttribute
+    {
+        public JsonOnSerializingAttribute() { }
     }
     [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple=false)]
     public sealed partial class JsonPropertyNameAttribute : System.Text.Json.Serialization.JsonAttribute

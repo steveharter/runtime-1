@@ -599,6 +599,7 @@ namespace System.Text.Json
             {
                 JsonTypeInfo typeInfo = new(type, options);
                 typeInfo.CallObjectInfoHandler();
+                typeInfo.GetAllOnSerializeAttributes();
                 return typeInfo;
             }
         }
