@@ -595,7 +595,12 @@ namespace System.Text.Json
             _typeInfoCreationFunc ??= CreateJsonTypeInfo;
 
             [RequiresUnreferencedCode(JsonSerializer.SerializationUnreferencedCodeMessage)]
-            static JsonTypeInfo CreateJsonTypeInfo(Type type, JsonSerializerOptions options) => new JsonTypeInfo(type, options);
+            static JsonTypeInfo CreateJsonTypeInfo(Type type, JsonSerializerOptions options)
+            {
+                JsonTypeInfo typeInfo = new(type, options);
+                typeInfo.CallObjectInfoHandler();
+                return typeInfo;
+            }
         }
 
         internal JsonTypeInfo GetOrAddClass(Type type)

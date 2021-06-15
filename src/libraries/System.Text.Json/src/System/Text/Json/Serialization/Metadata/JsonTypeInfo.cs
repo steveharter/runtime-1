@@ -682,5 +682,13 @@ namespace System.Text.Json.Serialization.Metadata
             return false;
 #endif
         }
+
+        internal void CallObjectInfoHandler()
+        {
+            if (PropertyInfoForTypeInfo?.ConverterStrategy == ConverterStrategy.Object)
+            {
+                Options.ObjectInfoHandler?.OnCreated(this);
+            }
+        }
     }
 }

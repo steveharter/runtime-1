@@ -4,7 +4,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization.Metadata;
 
 namespace System.Text.Json.Serialization.Metadata
 {
@@ -13,13 +12,29 @@ namespace System.Text.Json.Serialization.Metadata
     /// </summary>
     public sealed class JsonPropertyInfoCollection
     {
-        private JsonPropertyDictionary<JsonPropertyInfo> _collection;
+        internal JsonPropertyDictionary<JsonPropertyInfo> _collection;
         private IListWrapper? _listWrapper;
         private IDictionaryWrapper? _dictionaryWrapper;
 
         internal JsonPropertyInfoCollection(JsonPropertyDictionary<JsonPropertyInfo> collection)
         {
             _collection = collection;
+        }
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        /// <param name="properties"></param>
+        /// <param name="caseInsensitive"></param>
+        public JsonPropertyInfoCollection(IList<JsonPropertyInfo> properties, bool caseInsensitive = false)
+        {
+            _listWrapper = null;
+            _dictionaryWrapper = null;
+            _collection = new JsonPropertyDictionary<JsonPropertyInfo>(caseInsensitive);
+            for (int i = 0; i < properties.Count; i++)
+            {
+                List.Add(properties[i]);
+            }
         }
 
         /// <summary>
@@ -33,7 +48,6 @@ namespace System.Text.Json.Serialization.Metadata
                 return _listWrapper;
             }
         }
-
 
         /// <summary>
         /// todo

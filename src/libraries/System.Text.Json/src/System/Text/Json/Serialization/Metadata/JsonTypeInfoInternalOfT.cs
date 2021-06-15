@@ -20,6 +20,11 @@ namespace System.Text.Json.Serialization.Metadata
             CallObjectInfoHandler();
         }
 
+        internal JsonTypeInfoInternal(JsonConverter converter, JsonSerializerOptions options)
+            : base(typeof(T), converter, options)
+        {
+        }
+
         /// <summary>
         /// Creates serialization metadata for an object.
         /// </summary>
@@ -106,15 +111,6 @@ namespace System.Text.Json.Serialization.Metadata
             if (createObjectFunc != null)
             {
                 CreateObject = () => createObjectFunc();
-            }
-        }
-
-        private void CallObjectInfoHandler()
-        {
-            if (PropertyInfoForTypeInfo.ConverterStrategy == ConverterStrategy.Object)
-            {
-                JsonObjectInfoHandler? handler = Options.ObjectInfoHandler;
-                handler?.OnCreated(this);
             }
         }
     }

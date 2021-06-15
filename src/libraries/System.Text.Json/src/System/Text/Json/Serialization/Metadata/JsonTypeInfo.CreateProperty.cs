@@ -45,6 +45,7 @@ namespace System.Text.Json.Serialization.Metadata
                 parentClassType: Type,
                 declaredPropertyType: memberType,
                 runtimePropertyType: runtimeType,
+                runtimeTypeInfo : this,
                 runtimeClassType: converter.ConverterStrategy,
                 memberInfo,
                 converter,
@@ -73,6 +74,7 @@ namespace System.Text.Json.Serialization.Metadata
                 parentClassType: JsonTypeInfo.ObjectType, // a dummy value (not used),
                 declaredPropertyType,
                 runtimePropertyType,
+                runtimeTypeInfo : this,
                 runtimeClassType: converter.ConverterStrategy,
                 memberInfo: null,  // Not a real property so this is null.
                 converter,

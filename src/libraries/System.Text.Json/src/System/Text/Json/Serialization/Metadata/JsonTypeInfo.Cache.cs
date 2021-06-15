@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -37,6 +36,30 @@ namespace System.Text.Json.Serialization.Metadata
 
         // All of the serializable properties on a POCO (except the optional extension property) keyed on property name.
         internal JsonPropertyDictionary<JsonPropertyInfo>? PropertyCache;
+
+        private JsonPropertyInfoCollection? _propertyInfoCollection;
+        /// <summary>
+        ///  todo
+        /// </summary>
+        public JsonPropertyInfoCollection Properties
+        {
+            get
+            {
+                if (_propertyInfoCollection == null)
+                {
+                    Debug.Assert(PropertyCache != null);
+                    _propertyInfoCollection = new JsonPropertyInfoCollection(PropertyCache);
+                }
+
+                return _propertyInfoCollection;
+            }
+            set
+            {
+                // todo: validation
+                _propertyInfoCollection = value;
+                PropertyCache = _propertyInfoCollection._collection;
+            }
+        }
 
         // Fast cache of constructor parameters by first JSON ordering; may not contain all parameters. Accessed before ParameterCache.
         // Use an array (instead of List<T>) for highest performance.

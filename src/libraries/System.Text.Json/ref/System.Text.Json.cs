@@ -923,13 +923,22 @@ namespace System.Text.Json.Serialization.Metadata
     {
         internal JsonPropertyInfo() { }
         public string ClrName { get { throw null; } }
-        public string JsonName { get { throw null; } }
-        public JsonNumberHandling? NumberHandling { get { throw null; } set { } }
+        public string JsonName { get { throw null; } set { } }
+        public System.Text.Json.Serialization.JsonNumberHandling? NumberHandling { get { throw null; } set { } }
+    }
+
+    public sealed partial class JsonPropertyInfoCollection
+    {
+        internal JsonPropertyInfoCollection() { }
+        public JsonPropertyInfoCollection(System.Collections.Generic.IList<System.Text.Json.Serialization.Metadata.JsonPropertyInfo> properties, bool caseInsensitive = false) { }
+        public System.Collections.Generic.IDictionary<string, System.Text.Json.Serialization.Metadata.JsonPropertyInfo> Dictionary { get { throw null; } }
+        public System.Collections.Generic.IList<System.Text.Json.Serialization.Metadata.JsonPropertyInfo> List { get { throw null; } }
     }
     public partial class JsonTypeInfo
     {
         internal JsonTypeInfo() { }
         public System.Text.Json.Serialization.Metadata.JsonPropertyInfo CreateProperty(System.Reflection.MemberInfo memberInfo) { throw null; }
+        public System.Text.Json.Serialization.Metadata.JsonPropertyInfoCollection Properties { get { throw null; } set { } }
         public System.Text.Json.Serialization.JsonNumberHandling? NumberHandling { get { throw null; } set { } }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateEmptyObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }

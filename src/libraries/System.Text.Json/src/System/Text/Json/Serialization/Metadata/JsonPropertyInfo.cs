@@ -278,6 +278,7 @@ namespace System.Text.Json.Serialization.Metadata
             Type parentClassType,
             Type declaredPropertyType,
             Type? runtimePropertyType,
+            JsonTypeInfo runtimeTypeInfo,
             ConverterStrategy runtimeClassType,
             MemberInfo? memberInfo,
             JsonConverter converter,
@@ -289,6 +290,7 @@ namespace System.Text.Json.Serialization.Metadata
             DeclaringType = parentClassType;
             DeclaredPropertyType = declaredPropertyType;
             RuntimePropertyType = runtimePropertyType;
+            RuntimeTypeInfo = runtimeTypeInfo;
             ConverterStrategy = runtimeClassType;
             ConverterBase = converter;
             Options = options;
@@ -317,7 +319,33 @@ namespace System.Text.Json.Serialization.Metadata
         /// <summary>
         /// todo
         /// </summary>
-        public string JsonName => NameAsString;
+        public string JsonName
+        {
+            get
+            {
+                return NameAsString;
+            }
+            set
+            {
+                if (value != NameAsString)
+                {
+                    if (value == null)
+                    {
+                        throw new ArgumentNullException(nameof(value));
+                    }
+
+                    JsonPropertyInfo existing = RuntimeTypeInfo!.PropertyCache![NameAsString!]!;
+                    bool success = RuntimeTypeInfo.PropertyCache!.Remove(NameAsString);
+                    Debug.Assert(success);
+
+                    NameAsString = value;
+                    NameAsUtf8Bytes = Encoding.UTF8.GetBytes(NameAsString);
+                    EscapedNameSection = JsonHelpers.GetEscapedPropertyNameSection(NameAsUtf8Bytes, Options.Encoder);
+
+                    RuntimeTypeInfo!.PropertyCache!.Add(value, existing);
+                }
+            }
+        }
 
         // There are 3 copies of the property name:
         // 1) NameAsString. The unescaped property name.
@@ -437,11 +465,7 @@ namespace System.Text.Json.Serialization.Metadata
         {
             get
             {
-                if (_runtimeTypeInfo == null)
-                {
-                    _runtimeTypeInfo = Options.GetOrAddClass(RuntimePropertyType!);
-                }
-
+                Debug.Assert(_runtimeTypeInfo != null);
                 return _runtimeTypeInfo;
             }
             set
