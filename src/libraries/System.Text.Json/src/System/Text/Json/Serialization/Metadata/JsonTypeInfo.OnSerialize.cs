@@ -5,13 +5,19 @@ using System.Reflection;
 
 namespace System.Text.Json.Serialization.Metadata
 {
+    /// <summary>
+    /// todo
+    /// </summary>
+    /// <param name="o"></param>
+    public delegate void SerializeCallback(object o);
+
     public partial class JsonTypeInfo
     {
-        private Action<object>? _onSerializing;
+        private SerializeCallback? _onSerializing;
         /// <summary>
         /// todo
         /// </summary>
-        public Action<object>? OnSerializing
+        public SerializeCallback? OnSerializing
         {
             get
             {
@@ -29,11 +35,11 @@ namespace System.Text.Json.Serialization.Metadata
             }
         }
 
-        private Action<object>? _onSerialized;
+        private SerializeCallback? _onSerialized;
         /// <summary>
         /// todo
         /// </summary>
-        public Action<object>? OnSerialized
+        public SerializeCallback? OnSerialized
         {
             get
             {
@@ -51,11 +57,11 @@ namespace System.Text.Json.Serialization.Metadata
             }
         }
 
-        private Action<object>? _onDeserializing;
+        private SerializeCallback? _onDeserializing;
         /// <summary>
         /// todo
         /// </summary>
-        public Action<object>? OnDeserializing
+        public SerializeCallback? OnDeserializing
         {
             get
             {
@@ -73,11 +79,11 @@ namespace System.Text.Json.Serialization.Metadata
             }
         }
 
-        private Action<object>? _onDeserialized;
+        private SerializeCallback? _onDeserialized;
         /// <summary>
         /// todo
         /// </summary>
-        public Action<object>? OnDeserialized
+        public SerializeCallback? OnDeserialized
         {
             get
             {
@@ -97,21 +103,22 @@ namespace System.Text.Json.Serialization.Metadata
 
         internal void GetAllOnSerializeAttributes()
         {
-            OnSerializing = GetOnSerializeAttribute<JsonOnSerializingAttribute>();
-            OnSerialized = GetOnSerializeAttribute<JsonOnSerializedAttribute>();
-            OnDeserializing = GetOnSerializeAttribute<JsonOnDeserializingAttribute>();
-            OnDeserialized = GetOnSerializeAttribute<JsonOnDeserializedAttribute>();
+            MethodInfo[] methods = Type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            OnSerializing = GetOnSerializeAttribute(typeof(JsonOnSerializingAttribute), methods);
+            OnSerialized = GetOnSerializeAttribute(typeof(JsonOnSerializedAttribute), methods);
+            OnDeserializing = GetOnSerializeAttribute(typeof(JsonOnDeserializingAttribute), methods);
+            OnDeserialized = GetOnSerializeAttribute(typeof(JsonOnDeserializedAttribute), methods);
         }
 
-        private Action<object>? GetOnSerializeAttribute<TAttribute>() where TAttribute : Attribute
+        private SerializeCallback? GetOnSerializeAttribute(Type attributeType, MethodInfo[] methods)
         {
-            MethodInfo[] methods = Type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             MethodInfo? current = null;
 
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo mi = methods[i];
-                if (!mi.IsDefined(typeof(TAttribute), false))
+                if (!mi.IsDefined(attributeType, false))
                 {
                     continue;
                 }
@@ -136,7 +143,7 @@ namespace System.Text.Json.Serialization.Metadata
 
             if (current != null)
             {
-                return (Action<object>)current.CreateDelegate(typeof(Action<object>));
+                return (obj) => current.Invoke(obj, null); // todo: IL Emit or strongly-typed delegate without extra thunk
             }
 
             return null;

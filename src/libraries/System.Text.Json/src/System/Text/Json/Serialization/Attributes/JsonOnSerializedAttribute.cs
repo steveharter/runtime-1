@@ -6,7 +6,7 @@ namespace System.Text.Json.Serialization
     /// <summary>
     /// todo
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed class JsonOnSerializedAttribute : JsonAttribute
     {
         /// <summary>

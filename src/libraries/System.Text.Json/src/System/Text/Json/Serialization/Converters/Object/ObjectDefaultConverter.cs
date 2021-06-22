@@ -36,6 +36,8 @@ namespace System.Text.Json.Serialization.Converters
 
                 obj = jsonTypeInfo.CreateObject!()!;
 
+                jsonTypeInfo.OnDeserializing?.Invoke(obj);
+
                 // Process all properties.
                 while (true)
                 {
@@ -107,6 +109,8 @@ namespace System.Text.Json.Serialization.Converters
                     }
 
                     obj = jsonTypeInfo.CreateObject!()!;
+
+                    jsonTypeInfo.OnDeserializing?.Invoke(obj);
 
                     state.Current.ReturnValue = obj;
                     state.Current.ObjectState = StackFrameObjectState.CreatedObject;
@@ -216,6 +220,8 @@ namespace System.Text.Json.Serialization.Converters
                 }
             }
 
+            jsonTypeInfo.OnDeserialized?.Invoke(obj);
+
             // Check if we are trying to build the sorted cache.
             if (state.Current.PropertyRefCache != null)
             {
@@ -237,6 +243,8 @@ namespace System.Text.Json.Serialization.Converters
 
             // Minimize boxing for structs by only boxing once here
             object objectValue = value!;
+
+            jsonTypeInfo.OnSerializing?.Invoke(objectValue);
 
             if (!state.SupportContinuation)
             {
@@ -282,6 +290,9 @@ namespace System.Text.Json.Serialization.Converters
                 }
 
                 writer.WriteEndObject();
+
+                jsonTypeInfo.OnSerialized?.Invoke(objectValue);
+
                 return true;
             }
             else
@@ -364,6 +375,8 @@ namespace System.Text.Json.Serialization.Converters
                     state.Current.ProcessedEndToken = true;
                     writer.WriteEndObject();
                 }
+
+                jsonTypeInfo.OnSerialized?.Invoke(objectValue);
 
                 return true;
             }

@@ -797,21 +797,23 @@ namespace System.Text.Json.Serialization
         public JsonNumberHandlingAttribute(System.Text.Json.Serialization.JsonNumberHandling handling) { }
         public System.Text.Json.Serialization.JsonNumberHandling Handling { get { throw null; } }
     }
+    [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+
     public sealed partial class JsonOnDeserializedAttribute : System.Text.Json.Serialization.JsonAttribute
     {
         public JsonOnDeserializedAttribute() { }
     }
-    [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple = false)]
+    [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed partial class JsonOnDeserializingAttribute : System.Text.Json.Serialization.JsonAttribute
     {
         public JsonOnDeserializingAttribute() { }
     }
-    [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple = false)]
+    [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed partial class JsonOnSerializedAttribute : System.Text.Json.Serialization.JsonAttribute
     {
         public JsonOnSerializedAttribute() { }
     }
-    [System.AttributeUsageAttribute(System.AttributeTargets.Field | System.AttributeTargets.Property, AllowMultiple = false)]
+    [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed partial class JsonOnSerializingAttribute : System.Text.Json.Serialization.JsonAttribute
     {
         public JsonOnSerializingAttribute() { }
@@ -949,10 +951,10 @@ namespace System.Text.Json.Serialization.Metadata
     {
         internal JsonTypeInfo() { }
         public System.Text.Json.Serialization.JsonNumberHandling? NumberHandling { get { throw null; } set { } }
-        public System.Action<object>? OnDeserialized { get { throw null; } set { } }
-        public System.Action<object>? OnDeserializing { get { throw null; } set { } }
-        public System.Action<object>? OnSerialized { get { throw null; } set { } }
-        public System.Action<object>? OnSerializing { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.SerializeCallback OnDeserialized { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.SerializeCallback OnDeserializing { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.SerializeCallback OnSerializing { get { throw null; } set { } }
+        public System.Text.Json.Serialization.Metadata.SerializeCallback OnSerialized { get { throw null; } set { } }
         public System.Text.Json.Serialization.Metadata.JsonPropertyInfoCollection Properties { get { throw null; } set { } }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateEmptyObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }
         public static System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> CreateObjectInfo<T>(System.Text.Json.JsonSerializerOptions? options = null) { throw null; }
@@ -963,4 +965,5 @@ namespace System.Text.Json.Serialization.Metadata
         internal JsonTypeInfo() { }
         public System.Action<System.Text.Json.Utf8JsonWriter, T>? Serialize { get { throw null; } }
     }
+    public delegate void SerializeCallback(object o);
 }
