@@ -36,6 +36,11 @@ namespace System.Text.Json.Serialization.Converters
 
                 obj = jsonTypeInfo.CreateObject!()!;
 
+                if (obj is IJsonOnDeserializing onDeserializing)
+                {
+                    onDeserializing.OnDeserializing();
+                }
+
                 // Process all properties.
                 while (true)
                 {
@@ -110,6 +115,11 @@ namespace System.Text.Json.Serialization.Converters
 
                     state.Current.ReturnValue = obj;
                     state.Current.ObjectState = StackFrameObjectState.CreatedObject;
+
+                    if (obj is IJsonOnDeserializing onDeserializing)
+                    {
+                        onDeserializing.OnDeserializing();
+                    }
                 }
                 else
                 {
@@ -216,6 +226,11 @@ namespace System.Text.Json.Serialization.Converters
                 }
             }
 
+            if (obj is IJsonOnDeserialized onDeserialized)
+            {
+                onDeserialized.OnDeserialized();
+            }
+
             // Check if we are trying to build the sorted cache.
             if (state.Current.PropertyRefCache != null)
             {
@@ -236,17 +251,22 @@ namespace System.Text.Json.Serialization.Converters
             JsonTypeInfo jsonTypeInfo = state.Current.JsonTypeInfo;
 
             // Minimize boxing for structs by only boxing once here
-            object objectValue = value!;
+            object obj = value!;
 
             if (!state.SupportContinuation)
             {
                 writer.WriteStartObject();
                 if (options.ReferenceHandlingStrategy == ReferenceHandlingStrategy.Preserve)
                 {
-                    if (JsonSerializer.WriteReferenceForObject(this, objectValue, ref state, writer) == MetadataPropertyName.Ref)
+                    if (JsonSerializer.WriteReferenceForObject(this, obj, ref state, writer) == MetadataPropertyName.Ref)
                     {
                         return true;
                     }
+                }
+
+                if (obj is IJsonOnSerializing onSerializing)
+                {
+                    onSerializing.OnSerializing();
                 }
 
                 List<KeyValuePair<string, JsonPropertyInfo?>> properties = state.Current.JsonTypeInfo.PropertyCache!.List;
@@ -259,7 +279,7 @@ namespace System.Text.Json.Serialization.Converters
                         state.Current.DeclaredJsonPropertyInfo = jsonPropertyInfo;
                         state.Current.NumberHandling = jsonPropertyInfo.NumberHandling;
 
-                        bool success = jsonPropertyInfo.GetMemberAndWriteJson(objectValue, ref state, writer);
+                        bool success = jsonPropertyInfo.GetMemberAndWriteJson(obj, ref state, writer);
                         // Converters only return 'false' when out of data which is not possible in fast path.
                         Debug.Assert(success);
 
@@ -275,14 +295,13 @@ namespace System.Text.Json.Serialization.Converters
                     state.Current.DeclaredJsonPropertyInfo = dataExtensionProperty;
                     state.Current.NumberHandling = dataExtensionProperty.NumberHandling;
 
-                    bool success = dataExtensionProperty.GetMemberAndWriteJsonExtensionData(objectValue, ref state, writer);
+                    bool success = dataExtensionProperty.GetMemberAndWriteJsonExtensionData(obj, ref state, writer);
                     Debug.Assert(success);
 
                     state.Current.EndProperty();
                 }
 
                 writer.WriteEndObject();
-                return true;
             }
             else
             {
@@ -291,10 +310,15 @@ namespace System.Text.Json.Serialization.Converters
                     writer.WriteStartObject();
                     if (options.ReferenceHandlingStrategy == ReferenceHandlingStrategy.Preserve)
                     {
-                        if (JsonSerializer.WriteReferenceForObject(this, objectValue, ref state, writer) == MetadataPropertyName.Ref)
+                        if (JsonSerializer.WriteReferenceForObject(this, obj, ref state, writer) == MetadataPropertyName.Ref)
                         {
                             return true;
                         }
+                    }
+
+                    if (obj is IJsonOnSerializing onSerializing)
+                    {
+                        onSerializing.OnSerializing();
                     }
 
                     state.Current.ProcessedStartToken = true;
@@ -310,7 +334,7 @@ namespace System.Text.Json.Serialization.Converters
                         state.Current.DeclaredJsonPropertyInfo = jsonPropertyInfo;
                         state.Current.NumberHandling = jsonPropertyInfo.NumberHandling;
 
-                        if (!jsonPropertyInfo.GetMemberAndWriteJson(objectValue!, ref state, writer))
+                        if (!jsonPropertyInfo.GetMemberAndWriteJson(obj!, ref state, writer))
                         {
                             Debug.Assert(jsonPropertyInfo.ConverterBase.ConverterStrategy != ConverterStrategy.Value ||
                                          jsonPropertyInfo.ConverterBase.TypeToConvert == JsonTypeInfo.ObjectType);
@@ -342,7 +366,7 @@ namespace System.Text.Json.Serialization.Converters
                         state.Current.DeclaredJsonPropertyInfo = dataExtensionProperty;
                         state.Current.NumberHandling = dataExtensionProperty.NumberHandling;
 
-                        if (!dataExtensionProperty.GetMemberAndWriteJsonExtensionData(objectValue, ref state, writer))
+                        if (!dataExtensionProperty.GetMemberAndWriteJsonExtensionData(obj, ref state, writer))
                         {
                             return false;
                         }
@@ -366,9 +390,14 @@ namespace System.Text.Json.Serialization.Converters
                     state.Current.ProcessedEndToken = true;
                     writer.WriteEndObject();
                 }
-
-                return true;
             }
+
+            if (obj is IJsonOnSerialized onSerialized)
+            {
+                onSerialized.OnSerialized();
+            }
+
+            return true;
         }
 
         // AggressiveInlining since this method is only called from two locations and is on a hot path.

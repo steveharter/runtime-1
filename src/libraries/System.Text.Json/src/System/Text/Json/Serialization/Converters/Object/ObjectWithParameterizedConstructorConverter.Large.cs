@@ -44,6 +44,12 @@ namespace System.Text.Json.Serialization.Converters
             object obj = createObject(arguments);
 
             ArrayPool<object>.Shared.Return(arguments, clearArray: true);
+
+            if (obj is IJsonOnDeserializing onDeserializing)
+            {
+                onDeserializing.OnDeserializing();
+            }
+
             return obj;
         }
 

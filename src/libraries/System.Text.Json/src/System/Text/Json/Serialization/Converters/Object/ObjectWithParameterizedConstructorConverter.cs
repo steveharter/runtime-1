@@ -128,6 +128,11 @@ namespace System.Text.Json.Serialization.Converters
                 }
             }
 
+            if (obj is IJsonOnDeserialized onDeserialized)
+            {
+                onDeserialized.OnDeserialized();
+            }
+
             // Check if we are trying to build the sorted cache.
             if (state.Current.PropertyRefCache != null)
             {

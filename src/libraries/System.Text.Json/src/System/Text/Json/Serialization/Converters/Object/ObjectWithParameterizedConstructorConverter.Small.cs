@@ -18,7 +18,15 @@ namespace System.Text.Json.Serialization.Converters
             var createObject = (JsonTypeInfo.ParameterizedConstructorDelegate<T, TArg0, TArg1, TArg2, TArg3>)
                 frame.JsonTypeInfo.CreateObjectWithArgs!;
             var arguments = (Arguments<TArg0, TArg1, TArg2, TArg3>)frame.CtorArgumentState!.Arguments;
-            return createObject!(arguments.Arg0, arguments.Arg1, arguments.Arg2, arguments.Arg3);
+
+            object obj = createObject!(arguments.Arg0, arguments.Arg1, arguments.Arg2, arguments.Arg3);
+
+            if (obj is IJsonOnDeserializing onDeserializing)
+            {
+                onDeserializing.OnDeserializing();
+            }
+
+            return obj;
         }
 
         protected override bool ReadAndCacheConstructorArgument(
